@@ -1,0 +1,23 @@
+#!/bin/sh
+
+#
+# Show ID_LIKE or ID from /etc/os-release
+
+set -eu
+
+
+: "${UNAME:?}"
+
+value() { grep "^${1:-ID_LIKE}=" /etc/os-release 2>/dev/null | cut -d= -f2; }
+
+main() {
+  case "${1-}" in
+    -h|--help) >&2 printf "%s\n" "Show ID_LIKE or ID from /etc/os-release" "  usage: $0"; exit ;;
+  esac
+  test -f /etc/os-release || exit 0
+
+  ID_LIKE="$(value)"
+  echo "${ID_LIKE:-$(value ID)}"
+}
+
+main "$@"

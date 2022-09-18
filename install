@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -eu
+
+path="$(cd "$(dirname "$0")" && pwd -P)/bin/alias.sh"
+PATTERN="! test -f \"${path}\" || eval \"\$(${path})\""
+SUDO="/usr/bin/sudo"
+test -x "${SUDO}" || SUDO=""
+grep -q "${PATTERN}" /etc/profile || echo "${PATTERN}" | ${SUDO} tee -a /etc/profile >/dev/null

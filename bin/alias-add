@@ -1,0 +1,38 @@
+#!/bin/sh
+
+set -eu
+
+: "${ALIAS:?}"
+
+cd "${ALIAS}"
+
+alias="${1:-.}"
+dirs=false
+if test -d "${alias}"; then
+  dirs=true
+  expansion="$(cd "${alias}" && pwd -P)"
+  alias=".${expansion##*/}"
+  dest="dirs/$(hostname).sh"
+else
+  dest="sudo/${2:-common}.sh"
+fi
+
+line="alias ${alias}=\"${expansion:-sudo ${alias}}\""
+
+if file="$(grep -R -l "${line}" dirs lib sudo)"; then
+  >&2 echo "${alias}: already in: ${file}"
+  exit 1
+elif $dirs && grep -R -q "alias ${alias}=" dirs/; then
+  >&2 echo "${alias}: already aliased"
+  exit 1
+fi
+
+
+tmp="$(mktemp)"
+{ cat "${dest}"; echo "${line}"; } | sort -u > "${tmp}"
+mv "${tmp}" "${dest}"
+
+git add .
+git commit -a -m "${0}${command:+: ${command}}"
+git push
+

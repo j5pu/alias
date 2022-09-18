@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="fedora" type="docker-deploy" factoryName="docker-image" singleton="false" server-name="macos">
+    <deployment type="docker-image">
+      <settings>
+        <option name="imageTag" value="fedora:latest" />
+        <option name="containerName" value="fedora" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>

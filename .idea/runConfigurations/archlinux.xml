@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="archlinux" type="docker-deploy" factoryName="docker-image" singleton="false" server-name="macos">
+    <deployment type="docker-image">
+      <settings>
+        <option name="imageTag" value="archlinux:latest" />
+        <option name="containerName" value="archlinux" />
+      </settings>
+    </deployment>
+    <method v="2" />
+  </configuration>
+</component>

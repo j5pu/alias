@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+cd "$(dirname "$0")/.."
+
+LIB="lib"
+
+command="$1"
+line="alias ${command}=\"sudo ${command}\""
+
+tmp="$(mktemp)"
+if file="$(grep -R -l "${line}" alias dirs sudo)"; then
+  for file in ${file}; do
+    sed "/${line}/d" "${file}" > "${tmp}"
+    mv "${tmp}" "${file}"
+  done
+  git add .
+  git commit -a -m "${0}: ${command}"
+  git push
+fi
