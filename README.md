@@ -1,15 +1,24 @@
-# alias
+# env
 
+## [Install](./install)
+Installs to /etc/profile to source `env.sh` which is only source in interactive shells and when sudo is installed.
+
+````shell
+git clone https://github.com/j5pu/env.git && ./env/install && . /etc/profile
+````
+
+
+## [Update](./bin/alias-pull)
+To get the latest aliases.
+````shell
+alias-pull
+````
+
+## alias commands
 Commands to manage [change directory aliases](./dirs) and [sudo aliases](./sudo).
 
 [library aliases](./lib) are added manually but can be removed with `alias-del`.
 
-## [Install](./install)
-Installs to /etc/profile to source `alias.sh` which is only source in interactive shells and when sudo is installed.
-
-````shell
-git clone https://github.com/j5pu/alias.git && ./alias/install && . /etc/profile
-````
 
 # [Update aliases/pull](./bin/alias-pull)
 To get the latest aliases.

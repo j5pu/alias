@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -eu
-
-TOP="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
-
-test -z "$(git -C "${TOP}" status --porcelain)" || { >&2 echo "${TOP}: directory is not clean"; exit 1; }
-git -C "${TOP}" pull

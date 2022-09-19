@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -eu
+
+: "${ENV_TOP:?}"
+
+
+git add .
+git commit -a -m "${0}${command:+: ${command}}"
+git push
+
+! git push --dry-run 2>&1 | grep -q behind || { >&2 echo "${ENV_TOP}: behind remote"; exit 1; }
+
+test -n "$(git -C "${ENV_TOP}" status --porcelain)" || { >&2 echo "${ENV_TOP}: directory is not clean"; exit 1; }
+
+
+git add .
+git commit -a -m "${0}${command:+: ${command}}"
+git push
+
+
+git -C "${ENV_TOP}" pull

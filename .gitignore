@@ -1,3 +1,6 @@
+.env.sh
+custom/*/[A-Z,a-z,0-9]*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
