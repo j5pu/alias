@@ -37,8 +37,8 @@ _gen_env_dirs() {
   $_ENV_CHANGED || return 0
   for _gen_env_dir in ${ENV_SUPPORTED}; do
 
-    find "${ENV_GENERATED}" -mindepth 2 -maxdepth 2 -type d -mindepth 2 -maxdepth 2 \
-      | while read -r _gen_env_dir_generated; do
+    { find "${ENV_GENERATED}" -mindepth 2 -maxdepth 2 -type d; echo "${ENV_GENERATED}/functions"; } | \
+      while read -r _gen_env_dir_generated; do
         _gen_env_dir_generated_absolute="${ENV_GENERATED_ALIASES_D}/${_gen_env_dir}"
         ! test -d "${_gen_env_dir_generated_absolute}" || continue
         case "${_gen_env_dir_generated_absolute}" in
@@ -53,12 +53,12 @@ _gen_env_dirs() {
         esac
       done
 
-    find "${ENV_ETC}" -mindepth 2 -maxdepth 2 -type d -not -name "bash_completion.d" \
-      | while read -r _gen_env_dir_etc; do
+    find "${ENV_ETC}" -mindepth 2 -maxdepth 2 -type d -not -name "bash_completion.d" | \
+      while read -r _gen_env_dir_etc; do
         _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}"
         ! test -d "${_gen_env_dir_etc_absolute}" || continue
         case "${_gen_env_dir}" in
-          */rhel | */"rhel fedora")
+          */rhel|*/rhel_fedora)
             cd "${_gen_env_dir_etc}"
             ln -s fedora "${_gen_env_dir}"
             ;;
@@ -67,8 +67,8 @@ _gen_env_dirs() {
             touch "${_gen_env_dir_etc_absolute}/.gitkeep"
             ;;
         esac
-        [ ! "${_gen_env_dir_etc}" = hooks.d ] || continue
-        for _gen_env_dir_etc_shell in sh bash bash-4 sh; do
+        [ ! "${_gen_env_dir_etc##*/}" = hooks.d ] || continue
+        for _gen_env_dir_etc_shell in sh bash bash-4 zsh; do
           _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir_etc_shell}"
           ! test -d "${_gen_env_dir_etc_absolute}" || continue
           mkdir -p "${_gen_env_dir_etc_absolute}"
@@ -111,7 +111,7 @@ if ! echo "\${PATH}" | grep -q "$(pwd -P)/bin:" || test "\${ENV_VARS_SOURCED}" -
 EOF
     _echo_env_sh_export PATH "$(pwd -P)/bin:\${PATH}"
     _echo_env_sh_export ID_LIKE "$(! test -f /etc/os-release || grep "^ID_LIKE=" /etc/os-release \
-      || grep "^ID=" /etc/os-release | cut -d= -f2)"
+      || grep "^ID=" /etc/os-release | cut -d= -f2 | tr ' ' '_')"
     _echo_env_sh_export ENV_ETC "$(pwd -P)/etc"
     _echo_env_sh_export ENV_CUSTOM "$(pwd -P)/custom"
     _echo_env_sh_export ENV_ETC_BASH_COMPLETION_D "$(pwd -P)/etc/bash_completion.d"
@@ -122,7 +122,7 @@ EOF
     _echo_env_sh_export ENV_GENERATED_ALIASES_D_HOSTNAME "$(pwd -P)/generated/aliases.d/${HOSTNAME=$(hostname)}"
     _echo_env_sh_export ENV_GENERATED_USERS_D "$(pwd -P)/generated/users.d"
     _echo_env_sh_export ENV_GENERATED_VARS_D "$(pwd -P)/generated/vars.d"
-    _echo_env_sh_export ENV_SUPPORTED "arch common Darwin debian fedora Linux rhel 'rhel fedora' \
+    _echo_env_sh_export ENV_SUPPORTED "arch common Darwin debian fedora Linux rhel rhel_fedora \
       ${HOSTNAME=$(hostname)}"
     _echo_env_sh_export ENV_TOP "$(pwd -P)"
     _echo_env_sh_export HOSTNAME "${HOSTNAME=$(hostname)}"
