@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2064
 
 #
 # sources files in alias repository
@@ -18,16 +19,15 @@ _ENV_FILE="$(pwd -P)/.env.sh"
 _ENV_TMP="$(mktemp)"
 _ENV_CHANGED=false
 
-
 _echo_env_sh_export() { echo "  export ${1}=\"${2}\"" >> "${_ENV_TMP}"; }
 
 _echo_env_sh_source() {
   for _echo_env_sh_source in "$1"/*; do
     case "${_echo_env_sh_source##*/}" in
-      .DS_Store|.gitkeep|.localized) continue ;;
+      .DS_Store | .gitkeep | .localized) continue ;;
       sudo.sh) [ "${SUDO-}" ] || continue ;;
     esac
-    echo "  . \"${_echo_env_sh_source}\""
+    echo "  . \"${_echo_env_sh_source}\"" >>"${_ENV_TMP}"
   done
 
   unset _echo_env_sh_source
@@ -37,28 +37,28 @@ _gen_env_dirs() {
   $_ENV_CHANGED || return 0
   for _gen_env_dir in ${ENV_SUPPORTED}; do
 
-    find "${ENV_GENERATED}" -mindepth 2 -maxdepth 2 -type d -mindepth 2 -maxdepth 2 | \
-      while read -r _gen_env_dir_generated; do
-      _gen_env_dir_generated_absolute="${ENV_GENERATED_ALIASES_D}/${_gen_env_dir}"
-      ! test -d "${_gen_env_dir_generated_absolute}" || continue
-      case "${_gen_env_dir_generated_absolute}" in
-        */rhel|*/"rhel fedora")
-          cd "${ENV_GENERATED_ALIASES_D}"
-          ln -s fedora "${_gen_env_dir}"
-          ;;
-        *)
-          mkdir -p "${_gen_env_dir_generated_absolute}"
-          touch "${_gen_env_dir_generated_absolute}/.gitkeep"
-          ;;
-      esac
-    done
+    find "${ENV_GENERATED}" -mindepth 2 -maxdepth 2 -type d -mindepth 2 -maxdepth 2 \
+      | while read -r _gen_env_dir_generated; do
+        _gen_env_dir_generated_absolute="${ENV_GENERATED_ALIASES_D}/${_gen_env_dir}"
+        ! test -d "${_gen_env_dir_generated_absolute}" || continue
+        case "${_gen_env_dir_generated_absolute}" in
+          */rhel | */"rhel fedora")
+            cd "${ENV_GENERATED_ALIASES_D}"
+            ln -s fedora "${_gen_env_dir}"
+            ;;
+          *)
+            mkdir -p "${_gen_env_dir_generated_absolute}"
+            touch "${_gen_env_dir_generated_absolute}/.gitkeep"
+            ;;
+        esac
+      done
 
-    find "${ENV_ETC}" -mindepth 2 -maxdepth 2 -type d -not -name "bash_completion.d" | \
-      while read -r _gen_env_dir_etc; do
+    find "${ENV_ETC}" -mindepth 2 -maxdepth 2 -type d -not -name "bash_completion.d" \
+      | while read -r _gen_env_dir_etc; do
         _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}"
         ! test -d "${_gen_env_dir_etc_absolute}" || continue
         case "${_gen_env_dir}" in
-          */rhel|*/"rhel fedora")
+          */rhel | */"rhel fedora")
             cd "${_gen_env_dir_etc}"
             ln -s fedora "${_gen_env_dir}"
             ;;
@@ -81,8 +81,11 @@ _gen_env_dirs() {
 
   for _gen_env_dir_home in profile.d rc.d; do
     _gen_env_dir_home_absolute="${ENV_TOP}/custom/${_gen_env_dir_home}"
-    test -f "${_gen_env_dir_home_absolute}/.gitkeep" || \
-      { mkdir -p "${_gen_env_dir_home_absolute}"; touch "${_gen_env_dir_home_absolute}/.gitkeep"; }
+    test -f "${_gen_env_dir_home_absolute}/.gitkeep" \
+      || {
+        mkdir -p "${_gen_env_dir_home_absolute}"
+        touch "${_gen_env_dir_home_absolute}/.gitkeep"
+      }
   done
 
   unset _gen_env_dir _gen_env_dir_absolute _gen_env_dir_generated_absolute \
@@ -90,7 +93,7 @@ _gen_env_dirs() {
 }
 
 _gen_env_sh_vars_export() {
-  if ! test -f "${_ENV_FILE}"  || test "${ENV_FORCE}" -eq 1; then
+  if ! test -f "${_ENV_FILE}" || test "${ENV_FORCE}" -eq 1; then
     _ENV_CHANGED=true
     cat > "${_ENV_TMP}" <<EOF
 # shellcheck shell=sh
@@ -102,10 +105,11 @@ _gen_env_sh_vars_export() {
 #
 # Env profile vars has been sourced already
 : "\${ENV_VARS_SOURCED=0}"; export ENV_PROFILE_SOURCED
+
 if ! echo "\${PATH}" | grep -q "$(pwd -P)/bin:" || test "\${ENV_VARS_SOURCED}" -eq 0; then
   export ENV_VARS_SOURCED=1
 EOF
-    _echo_env_sh_export PATH "$(pwd -P)/bin:${PATH}"
+    _echo_env_sh_export PATH "$(pwd -P)/bin:\${PATH}"
     _echo_env_sh_export ID_LIKE "$(! test -f /etc/os-release || grep "^ID_LIKE=" /etc/os-release \
       || grep "^ID=" /etc/os-release | cut -d= -f2)"
     _echo_env_sh_export ENV_ETC "$(pwd -P)/etc"
@@ -118,14 +122,14 @@ EOF
     _echo_env_sh_export ENV_GENERATED_ALIASES_D_HOSTNAME "$(pwd -P)/generated/aliases.d/${HOSTNAME=$(hostname)}"
     _echo_env_sh_export ENV_GENERATED_USERS_D "$(pwd -P)/generated/users.d"
     _echo_env_sh_export ENV_GENERATED_VARS_D "$(pwd -P)/generated/vars.d"
-    _echo_env_sh_export ENV_SUPPORTED="arch common Darwin debian fedora Linux rhel 'rhel fedora' \
+    _echo_env_sh_export ENV_SUPPORTED "arch common Darwin debian fedora Linux rhel 'rhel fedora' \
       ${HOSTNAME=$(hostname)}"
     _echo_env_sh_export ENV_TOP "$(pwd -P)"
     _echo_env_sh_export HOSTNAME "${HOSTNAME=$(hostname)}"
     _echo_env_sh_export MACOS "$(if test "$(uname -s)" = "Darwin"; then echo "true"; else echo "false"; fi)"
     _echo_env_sh_export SUDO "$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)"
     _echo_env_sh_export UNAME "$(uname -s)"
-    echo "fi" > "${_ENV_TMP}"
+    echo "fi" >> "${_ENV_TMP}"
   fi
 }
 
@@ -136,7 +140,7 @@ _gen_env_sh_etc_profile_d_source() {
 _gen_env_sh_etc_rc_d_source() {
   $_ENV_CHANGED || return 0
 
-  cat >> "${_ENV_TMP}" <<EOF
+  cat >>"${_ENV_TMP}" <<EOF
 
 #
 # RC for interactive shells has been sourced already
@@ -158,12 +162,11 @@ EOF
     "${ENV_GENERATED_ALIASES_D}/${UNAME}" \
     $([ ! "${ID_LIKE-}" ] || echo "${ENV_GENERATED_ALIASES_D}/${ID_LIKE}") \
     "${HOME}/.profile.d" \
-    "${HOME}/.rc.d" \
-    ; do
+    "${HOME}/.rc.d"; do
     _echo_env_sh_source "${ENV_TOP}/${_gen_env_sh_rc_source}"
   done
 
-  cat >> "${_ENV_TMP}" <<EOF
+  cat >>"${_ENV_TMP}" <<EOF
 fi
 
 export ENV="\${ENV_FILE}"
@@ -173,8 +176,14 @@ EOF
 }
 
 _gen_env_sh_vars_export
-. "${_ENV_TMP}"
-_gen_env_dirs
 
-mv "${_ENV_TMP}" "${_ENV_FILE}"
+if $_ENV_CHANGED; then
+  . "${_ENV_TMP}"
+  _gen_env_dirs
+
+  mv "${_ENV_TMP}" "${_ENV_FILE}"
+  envsync
+
+fi
+
 unset -f _echo_env_sh_export _echo_env_sh_source _gen_env_dirs _gen_env_sh_profile _gen_env_sh_rc
