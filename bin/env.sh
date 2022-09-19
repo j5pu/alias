@@ -39,11 +39,12 @@ _gen_env_dirs() {
 
     { find "${ENV_GENERATED}" -mindepth 2 -maxdepth 2 -type d; echo "${ENV_GENERATED}/functions"; } | \
       while read -r _gen_env_dir_generated; do
-        _gen_env_dir_generated_absolute="${ENV_GENERATED_ALIASES_D}/${_gen_env_dir}"
+        _gen_env_dir_generated_absolute="${_gen_env_dir_generated}/${_gen_env_dir}"
         ! test -d "${_gen_env_dir_generated_absolute}" || continue
         case "${_gen_env_dir_generated_absolute}" in
-          */rhel | */"rhel fedora")
-            cd "${ENV_GENERATED_ALIASES_D}"
+          */rhel | */"rhel_fedora")
+            cd "${_gen_env_dir_generated}"
+            ! test -e "${_gen_env_dir}" || rm "${_gen_env_dir}"
             ln -s fedora "${_gen_env_dir}"
             ;;
           *)
@@ -60,6 +61,7 @@ _gen_env_dirs() {
         case "${_gen_env_dir}" in
           */rhel|*/rhel_fedora)
             cd "${_gen_env_dir_etc}"
+            ! test -e "${_gen_env_dir}" || rm "${_gen_env_dir}"
             ln -s fedora "${_gen_env_dir}"
             ;;
           *)
@@ -174,7 +176,7 @@ EOF
 
   unset _gen_env_sh_rc_source
 }
-
+set -x
 _gen_env_sh_vars_export
 
 if $_ENV_CHANGED; then
