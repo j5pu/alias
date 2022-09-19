@@ -39,10 +39,10 @@ _gen_env_dirs() {
 
     find "${ENV_GENERATED}" -mindepth 2 -maxdepth 2 -type d | while read -r _gen_env_dir_generated; do
         _gen_env_dir_generated_absolute="${_gen_env_dir_generated}/${_gen_env_dir}"
-        case "${_gen_env_dir_generated_absolute}" in
-          */rhel | */"rhel_fedora")
+        case "${_gen_env_dir}" in
+          rhel|rhel_fedora)
             cd "${_gen_env_dir_generated}"
-            ! test -e "${_gen_env_dir}" || rm "${_gen_env_dir}"
+            ! test -e "${_gen_env_dir}" || rm -r "${_gen_env_dir}"
             ln -s fedora "${_gen_env_dir}"
             ;;
           *)
@@ -56,9 +56,9 @@ _gen_env_dirs() {
       echo "${ENV_ETC}/functions"; }| while read -r _gen_env_dir_etc; do
         _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}"
         case "${_gen_env_dir}" in
-          */rhel|*/rhel_fedora)
+          rhel|rhel_fedora)
             cd "${_gen_env_dir_etc}"
-            ! test -e "${_gen_env_dir}" || rm "${_gen_env_dir}"
+            ! test -e "${_gen_env_dir}" || rm -r "${_gen_env_dir}"
             ln -s fedora "${_gen_env_dir}"
             ;;
           *)
@@ -70,7 +70,7 @@ _gen_env_dirs() {
         for _gen_env_dir_etc_shell in sh bash bash-4 zsh; do
           _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}/${_gen_env_dir_etc_shell}"
           case "${_gen_env_dir}" in
-            */rhel|*/rhel_fedora) echo "${_gen_env_dir}";;
+            rhel|rhel_fedora) echo "${_gen_env_dir}";;
             *)
               mkdir -p "${_gen_env_dir_etc_absolute}"
               touch "${_gen_env_dir_etc_absolute}/.gitkeep"
