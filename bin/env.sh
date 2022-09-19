@@ -53,7 +53,7 @@ _gen_env_dirs() {
       done
 
     { find "${ENV_ETC}" -mindepth 2 -maxdepth 2 -type d -not -name "bash_completion.d"; \
-      echo "${ENV_GENERATED}/functions"; }| while read -r _gen_env_dir_etc; do
+      echo "${ENV_ETC}/functions"; }| while read -r _gen_env_dir_etc; do
         _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}"
         case "${_gen_env_dir}" in
           */rhel|*/rhel_fedora)
@@ -177,7 +177,7 @@ EOF
 
   unset _gen_env_sh_rc_source
 }
-set -x
+
 _gen_env_sh_vars_export
 
 if $_ENV_CHANGED; then
