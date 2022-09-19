@@ -70,7 +70,7 @@ _gen_env_dirs() {
         for _gen_env_dir_etc_shell in sh bash bash-4 zsh; do
           _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}/${_gen_env_dir_etc_shell}"
           case "${_gen_env_dir}" in
-            */rhel|*/rhel_fedora) : ;;
+            */rhel|*/rhel_fedora) echo "${_gen_env_dir}";;
             *)
               mkdir -p "${_gen_env_dir_etc_absolute}"
               touch "${_gen_env_dir_etc_absolute}/.gitkeep"
