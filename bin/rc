@@ -121,21 +121,19 @@ find_dirs_to_source() {
     \) | sort -n
 }
 
-_gnu_completions() {
-  brew_bin="$(brew --prefix)/bin"
-  # shellcheck disable=SC3044,SC2046
-  complete -p $(find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g") 2>/dev/null || true
+gnu_completions() {
+  $MACOS || return 0
+  
+  brew_bin="$(brew --prefix)"
+  cd "$(brew --prefix bash-completion@2)/share/bash-completion/completions"
+  find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g" || while read -r i; do
+    test -f "${i}" || continue
+    rm -f "g${i}"
+    ln -s "${i}" "g${i}"
+  done
 }
 
-gnu_completions() (
-  $MACOS || return 0
-  # shellcheck disable=SC3045
-  export -f _gnu_completions
-unset BASH_COMPLETION_VERSINFO
-  /usr/local/bin/bash -li -c 'set -x; unset BASH_COMPLETION_VERSINFO; . /usr/local/etc/profile.d/bash_completion.sh ; complete -p printf'
-)
-
-hooks() { find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_rc_source_dir; }
+hooks() { find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_rc_source_dir ""; }
 
 hooks_no() { find_dirs_to_source "$1" 2 | grep -v "/hooks.d/" | echo_rc_source_dir; }
 
@@ -332,6 +330,8 @@ main() {
 
     mv "${_RC_TMP}" "${_RC_FILE}"
     sync "$@"
+
+    gnu_completions
   fi
 
   if $hook; then
