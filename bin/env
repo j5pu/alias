@@ -11,7 +11,7 @@ cd "$(dirname "$0")/.."
 # Force creation of .env.sh
 : "${ENV_FORCE=0}"
 
-# TODO: Faltarían los hooks con el shell y cuando sea hooks.d poner 3 de depth
+# TODO: Faltaría el SH y las variables de system.sh y probarlo un poco y los comandos de alias
 
 create_dirs_and_files() {
   for _gen_env_dir in ${ENV_SUPPORTED}; do
@@ -230,7 +230,16 @@ main() {
     envsync
   fi
 
-  echo "${_ENV_FILE}"
+  for arg; do
+    case "${arg}" in
+      -h|--help|help) : ;;
+      add) : ;;
+      clean) : ;;
+      del) : ;;
+      hook) echo "${_ENV_FILE}" ;;
+    esac
+  done
+
 }
 
 main "$@"
