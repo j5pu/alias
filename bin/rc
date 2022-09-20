@@ -134,10 +134,8 @@ gnu_completions() {
   brew_bin="$(brew --prefix)/bin"
   cmds="$(find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g" | grep -v "\[")"
 
-  bash -li -c \
-  "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; done < <(echo \"${cmds}\" | tr ' ' '\n')"
-    bash -li -c \
-  "while IFS=' ' read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; done <<<${cmds}"
+  bash -li -c "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; \
+    done < <(echo \"${cmds}\" | tr ' ' '\n')" > "${RC_CUSTOM}/completions/gnu-completions.bash"
 
 #  bash -li -c "(
 #    PS1='> '
