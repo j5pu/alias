@@ -142,8 +142,8 @@ gnu_completions() {
 
   for cmd in ${cmds}; do
     { test -f "${cmd}" && ! test -L "${cmd}"; } || continue
-    echo rm -f "g${cmd}"
-    echo ln -s "${cmd}" "g${cmd}"
+    rm -f "g${cmd}"
+    ln -s "${cmd}" "g${cmd}"
   done
 }
 
