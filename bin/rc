@@ -178,7 +178,6 @@ write_profile() {
 if [ "\${RC_PROFILE_D_SOURCED}" -eq 0 ]; then
   RC_PROFILE_D_SOURCED=1
 
-if ! echo "\${PATH}" | grep -q "${RC_TOP}/bin:"; then
 $(for var in $(echo "${RC_VARS}" | tr ' ' '\n' | sort); do
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
 done)
