@@ -163,7 +163,6 @@ if ! echo "\${PATH}" | grep -q "${ENV_TOP}/bin:"; then
   : "\${HOSTNAME=\$(hostname)}"; export HOSTNAME
 
 $(for var in $(echo "${ENV_VARS}" | tr ' ' '\n' | sort); do
-  >&2 echo "${var}"
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
 done)
 
