@@ -53,12 +53,16 @@ _gen_env_dirs() {
         _gen_env_dir_generated_absolute="${_gen_env_dir_generated}/${_gen_env_dir}"
         case "${_gen_env_dir}" in
           rhel|rhel_fedora)
-            cd "${_gen_env_dir_generated}"
-            ! test -e "${_gen_env_dir}" || rm -r "${_gen_env_dir}"
-            ln -s fedora "${_gen_env_dir}"
+            if [ "${_gen_env_dir_generated##*/}" = aliases.d ]; then
+              cd "${_gen_env_dir_generated}"
+              ! test -e "${_gen_env_dir}.sh" || rm -r "${_gen_env_dir}.sh"
+              ln -s fedora.sh "${_gen_env_dir}.sh"
+            else
+              touch "${_gen_env_dir_generated_absolute}.sh"
+            fi
             ;;
           *)
-            if [ "${_gen_env_dir_generated##*/}" = alias.d ]; then
+            if [ "${_gen_env_dir_generated##*/}" = aliases.d ]; then
               mkdir -p "${_gen_env_dir_generated_absolute}"
               touch "${_gen_env_dir_generated_absolute}/dirs.sh"
               touch "${_gen_env_dir_generated_absolute}/sudo.sh"
