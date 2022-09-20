@@ -216,10 +216,30 @@ set_vars() {
   ENV_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}"
 }
 
-main() {
-  set_vars
+sync() {
+  if git status  | grep -q "have diverged"; then
+    >&2 echo "${0##*/}: Diverged"
+    exit 1
+  elif git status | grep -q "Your branch is behind" && test -n "$(git status --porcelain)"; then
+    >&2 echo "${0##*/}: Behind remote & directory is not clean"
+    exit 1
+  elif git status | grep -q "Your branch is behind"; then
+    git pull --tags
+    exit 0
+  elif test -n "$(git status --porcelain)"; then
+    git add .
+    git commit -a -m "${0##*/}${1:+: ${1}}"
+  fi
 
-  if ! test -f "${_ENV_FILE}" || test "${ENV_FORCE}" -eq 1; then
+  ! git status | grep -q "Your branch is ahead" || git push
+}
+
+main() {
+  [ "${ENV-}" ] || set_vars
+
+  if ! test -f "${ENV:-${_ENV_FILE}}" || test "${ENV_FORCE}" -eq 1; then
+    set_vars
+
     create_dirs_and_files
 
     write_functions
@@ -227,15 +247,13 @@ main() {
     write_rc
 
     mv "${_ENV_TMP}" "${_ENV_FILE}"
-    envsync
+    sync "$@"
   fi
 
   for arg; do
     case "${arg}" in
       -h|--help|help) : ;;
-      add) : ;;
-      clean) : ;;
-      del) : ;;
+      add|clean|del|sync) "${arg}" "$@" ;;
       hook) echo "${_ENV_FILE}" ;;
     esac
   done
