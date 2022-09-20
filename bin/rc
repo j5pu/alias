@@ -135,7 +135,7 @@ gnu_completions() {
   cmds="$(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" -not -name "\[" \
     | sed -e 's|.*/bin/g||g')"
   dest="$(brew --prefix bash-completion@2)/share/bash-completion/completions"
-return
+
   cd "${dest}"
   bash -li -c "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\" > g\$i; \
     done < <(echo \"${cmds}\" | tr ' ' '\n')"
