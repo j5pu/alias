@@ -132,7 +132,7 @@ gnu_completions() {
   $MACOS || return 0
 
   brew_bin="$(brew --prefix)/bin"
-  cmds="$(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" -not -name "[" \
+  cmds="$(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" -not -name "\[" \
     | sed -e 's|.*/bin/g||g')"
   dest="$(brew --prefix bash-completion@2)/share/bash-completion/completions"
 return
