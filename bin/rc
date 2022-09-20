@@ -123,7 +123,7 @@ find_dirs_to_source() {
 
 gnu_completions() {
   $MACOS || return 0
-  
+
   brew_bin="$(brew --prefix)"
   cd "$(brew --prefix bash-completion@2)/share/bash-completion/completions"
   find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g" || while read -r i; do
@@ -187,7 +187,8 @@ done)
 
   unset INFOPATH MANPATH
   if \$MACOS; then
-    PATH="\$(/usr/libexec/path_helper -s):${CLT}/usr/bin"
+    eval "\$(/usr/libexec/path_helper -s)"
+    PATH="\$(/usr/libexec/path_helper -s):\${CLT}/usr/bin"
   else
     PATH="/home/linuxbrew/.linuxbrew/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
   fi
@@ -250,13 +251,9 @@ set_vars() {
   UNAME="$(uname -s)" && add_var UNAME
 
   VGA=1 && add_var VGA
-  unset PATH
   if $MACOS; then
     CLT="/Library/Developer/CommandLineTools" && add_var CLT
-    VGA=1
-    PATH="$(/usr/libexec/path_helper -s)"
   else
-    PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
     lspci 2>/dev/null | grep -q VGA || VGA=""
   fi
   [ ! "${GITHUB_RUN_ID-}" ] || VGA=""
