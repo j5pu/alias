@@ -37,8 +37,7 @@ find_dirs_to_source() {
       -or -name "${HOSTNAME}" \
       -or -name "${ID_LIKE}" \
       -or -name "${UNAME}" \
-    \) \
-    -exec echo . \""{}"\" \; | sort -n
+    \) | sort -n
 }
 
 create_dirs_and_files() {
