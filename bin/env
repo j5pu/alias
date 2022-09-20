@@ -65,21 +65,22 @@ create_dirs_and_files() {
             ;;
           *)
             mkdir -p "${_gen_env_dir_etc_absolute}"
-            [ "${_gen_env_dir_etc##*/}" != hooks.d ] || continue
-            touch "${_gen_env_dir_etc_absolute}/.gitkeep"
+            if [ "${_gen_env_dir_etc##*/}" = hooks.d ]; then
+              for _gen_env_dir_etc_shell in sh bash bash-4 zsh; do
+                _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}/${_gen_env_dir_etc_shell}"
+                case "${_gen_env_dir}" in
+                  rhel|rhel_fedora) : ;;
+                  *)
+                    mkdir -p "${_gen_env_dir_etc_absolute}"
+                    touch "${_gen_env_dir_etc_absolute}/.gitkeep"
+                    ;;
+                esac
+              done
+            else
+              touch "${_gen_env_dir_etc_absolute}/.gitkeep"
+            fi
             ;;
         esac
-        [ "${_gen_env_dir_etc##*/}" = hooks.d ] || continue
-        for _gen_env_dir_etc_shell in sh bash bash-4 zsh; do
-          _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}/${_gen_env_dir_etc_shell}"
-          case "${_gen_env_dir}" in
-            rhel|rhel_fedora) : ;;
-            *)
-              mkdir -p "${_gen_env_dir_etc_absolute}"
-              touch "${_gen_env_dir_etc_absolute}/.gitkeep"
-              ;;
-          esac
-        done
     done
   done
 
