@@ -17,7 +17,7 @@ echo_files_to_source() {
     -or -name "${HOSTNAME}.*" \
     -or -name "${ID_LIKE}.*" \
     -or -name "${UNAME}.*" \) \
-    -exec echo \"  . "{}"\" \; | sort -n
+    -exec echo "  . \"{}\"" \; | sort -n
 }
 
 create_dirs_and_files() {
