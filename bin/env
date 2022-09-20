@@ -154,6 +154,8 @@ $(hooks_no "${ENV_ETC_PROFILE_D}")
 $(hooks "${ENV_ETC_PROFILE_D}")
 
 $(echo_files_to_source "${ENV_GENERATED_PROFILE_D}")
+
+env_source_dir_no "${ENV_CUSTOM_PROFILE_D}"
 fi
 EOF
 }
@@ -183,6 +185,8 @@ $(echo_files_to_source "${ENV_GENERATED_RC_D}" "  " | grep "/sudo.sh\"$")
   if has complete; then
     env_source_dir "${ENV_ETC_COMPLETION}"
   fi
+
+env_source_dir_no "${ENV_CUSTOM_RC_D}"
 fi
 
 export ENV="${_ENV_FILE}"
@@ -205,6 +209,8 @@ set_vars() {
   _ENV_TMP="$(mktemp)"
 
   ENV_CUSTOM="${ENV_TOP}/custom"
+  ENV_CUSTOM_PROFILE_D="${ENV_CUSTOM}/profile.d"
+  ENV_CUSTOM_RC_D="${ENV_CUSTOM}/rc.d"
   ENV_ETC="${ENV_TOP}/etc"
   ENV_ETC_COMPLETION="${ENV_ETC}/bash_completion.d"
   ENV_ETC_FUNCTIONS="${ENV_ETC}/functions.d"
