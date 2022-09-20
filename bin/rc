@@ -172,7 +172,7 @@ write_profile() {
   cat >> "${_RC_TMP}" <<EOF
 
 #
-# RC profile.d for interactive shells has been sourced already
+# RC: profile.d for interactive shells has been sourced already
 : "\${RC_PROFILE_D_SOURCED=0}"; export RC_PROFILE_D_SOURCED
 
 if [ "\${RC_PROFILE_D_SOURCED}" -eq 0 ]; then
@@ -208,7 +208,7 @@ write_rc() {
   cat >> "${_RC_TMP}" <<EOF
 
 #
-# RC rc.d for interactive shells has been sourced already
+# RC: rc.d for interactive shells has been sourced already
 : "\${RC_RC_D_SOURCED=0}"
 
 if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && [ "\${RC_RC_D_SOURCED}" -eq 0 ]; then
