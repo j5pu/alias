@@ -111,7 +111,7 @@ EOF
 }
 
 write_profile() {
-  cat > "${_ENV_TMP}" <<EOF
+  cat >> "${_ENV_TMP}" <<EOF
 
 if ! echo "\${PATH}" | grep -q "${ENV_TOP}/bin:"; then
   export PATH="${ENV_TOP}/bin:\${PATH}"
