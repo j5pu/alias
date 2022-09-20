@@ -22,7 +22,7 @@ env_vars() {
   MACOS="$(if test "$(uname -s)" = "Darwin"; then echo "true"; else echo "false"; fi)"
   SUDO="$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)"
   UNAME="$(uname -s)"
-  VGA="$([ ! "${GITHUB_RUN_ID-}" ] || if $MACOS; then echo 1; else lspci 2>/dev/null | awk '/VGA/ { print 1 }'; fi)"
+  VGA="$([ ! "${GITHUB_RUN_ID-}" ] || { if $MACOS; then echo 1; else lspci 2>/dev/null | awk '/VGA/ { print 1 }'; fi; })"
 
   _ENV_CHANGED=false
   _ENV_FILE="${ENV_TOP}/.env.sh"
@@ -31,7 +31,7 @@ env_vars() {
   ENV_CUSTOM="${ENV_TOP}/custom"
   ENV_ETC="${ENV_TOP}/etc"
   ENV_GENERATED="${ENV_TOP}/generated"
-  ENV_SUPPORTED="arch 00-common Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}"
+  ENV_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}"
 }
 
 gen_profile() {
