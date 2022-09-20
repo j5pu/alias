@@ -132,10 +132,13 @@ gnu_completions() {
   $MACOS || return 0
 
   brew_bin="$(brew --prefix)/bin"
-  commands="$(find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g" | grep -v "\[")"
+  cmds="$(find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g" | grep -v "\[")"
 
   bash -li -c \
-  "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; done < <(echo \"${commands}\" | tr ' ' '\n')"
+  "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; done < <(echo \"${cmds}\" | tr ' ' '\n')"
+    bash -li -c \
+  "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; done <<<${cmds}"
+
 #  bash -li -c "(
 #    PS1='> '
 #    . \"$(brew --prefix)/etc/profile.d/bash_completion.sh\"
@@ -148,10 +151,10 @@ gnu_completions() {
 
   cd "$(brew --prefix bash-completion@2)/share/bash-completion/completions"
 
-#  for command in ${commands}; do
-#    { test -f "${command}" && ! test -L "${command}"; } || continue
-#    echo rm -f "g${command}"
-#    echo ln -s "${command}" "g${command}"
+#  for command in ${cmds}; do
+#    { test -f "${cmds}" && ! test -L "${cmds}"; } || continue
+#    echo rm -f "g${cmds}"
+#    echo ln -s "${cmds}" "g${cmds}"
 #  done
 }
 
