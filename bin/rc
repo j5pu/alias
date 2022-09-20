@@ -133,7 +133,17 @@ gnu_completions() {
   brew_bin="$(brew --prefix)/bin"
   commands="$(find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g" | grep -v "\[")"
 
+  (
+    PS1='> '
+    . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
+    for i in ${commands}; do
+      # shellcheck disable=SC3044
+      complete -p "${i}" 2>/dev/null | sed "s|${i}$|g${i}|g"
+    done
+  ) > "${RC_CUSTOM}/completions/gnu-completions.bash"
+    
   cd "$(brew --prefix bash-completion@2)/share/bash-completion/completions"
+
   for command in ${commands}; do
     { test -f "${command}" && ! test -L "${command}"; } || continue
     echo rm -f "g${command}"
