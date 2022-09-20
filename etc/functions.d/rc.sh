@@ -16,8 +16,8 @@ rc_source_dir() {
 
 has() { command -v "$1" >/dev/null; }
 
-rebash() {
-  unset -f rebash
+resh() {
+  unset -f resh
   unset BASH_COMPLETION_VERSINFO HOMEBREW_PROFILE_D_SOURCED RC_PROFILE_D_SOURCED RC_RC_D_SOURCED
   . "${ENV?}"
 }
