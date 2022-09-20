@@ -41,37 +41,6 @@ _find_source_dirs() {
 
 _gen_env_dirs() {
   $_ENV_CHANGED || return 0
-  for _gen_env_dir in ${ENV_SUPPORTED}; do
-
-    { find "${ENV_ETC}" -mindepth 2 -maxdepth 2 -type d -not -name "bash_completion.d"; \
-      echo "${ENV_ETC}/functions.d"; }| while read -r _gen_env_dir_etc; do
-        _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}"
-        case "${_gen_env_dir}" in
-          rhel|rhel_fedora)
-            cd "${_gen_env_dir_etc}"
-            ! test -e "${_gen_env_dir}" || rm -r "${_gen_env_dir}"
-            ln -s fedora "${_gen_env_dir}"
-            ;;
-          *)
-            mkdir -p "${_gen_env_dir_etc_absolute}"
-            touch "${_gen_env_dir_etc_absolute}/.gitkeep"
-            ;;
-        esac
-        [ "${_gen_env_dir_etc##*/}" = hooks.d ] || continue
-        for _gen_env_dir_etc_shell in sh bash bash-4 zsh; do
-          _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}/${_gen_env_dir_etc_shell}"
-          case "${_gen_env_dir}" in
-            rhel|rhel_fedora) : ;;
-            *)
-              mkdir -p "${_gen_env_dir_etc_absolute}"
-              touch "${_gen_env_dir_etc_absolute}/.gitkeep"
-              ;;
-          esac
-        done
-      done
-  done
-
-  test -f "${ENV_ETC_BASH_COMPLETION_D}/.gitkeep" || touch "${ENV_ETC_BASH_COMPLETION_D}/.gitkeep"
 
   for _gen_env_dir_home in profile.d rc.d; do
     _gen_env_dir_home_absolute="${ENV_TOP}/custom/${_gen_env_dir_home}"
