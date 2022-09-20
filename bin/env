@@ -188,7 +188,7 @@ $(echo_files_to_source "${ENV_GENERATED_RC_D}" "  " | grep "/sudo.sh\"$")
   fi
 
   if has complete; then
-    env_source_dir "${ENV_ETC_COMPLETION}"
+$(find_dirs_to_source "${ENV_ETC_COMPLETION}")
   fi
 
 env_source_dir "${ENV_CUSTOM_RC_D}"
