@@ -121,15 +121,23 @@ find_dirs_to_source() {
     \) | sort -n
 }
 
+commands() {
+    brew_bin="$(brew --prefix)/bin"
+  cd "$(brew --prefix bash-completion@2)/share/bash-completion/completions"
+  find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g"
+}
+
 gnu_completions() {
   $MACOS || return 0
 
   brew_bin="$(brew --prefix)/bin"
+  commands="$(find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g" | grep -v "\[")"
+
   cd "$(brew --prefix bash-completion@2)/share/bash-completion/completions"
-  find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g" | while read -r i; do
-    { test -f "${i}" && ! test -L "${i}"; } || continue
-    echo rm -f "g${i}"
-    echo ln -s "${i}" "g${i}"
+  for command in ${commands}; do
+    { test -f "${command}" && ! test -L "${command}"; } || continue
+    echo rm -f "g${command}"
+    echo ln -s "${command}" "g${command}"
   done
 }
 
