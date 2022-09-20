@@ -173,10 +173,10 @@ write_profile() {
 
 #
 # RC profile.d for interactive shells has been sourced already
-: "\${RC_PROFILE_D_SOURCED=0}"
+: "\${RC_PROFILE_D_SOURCED=0}"; export RC_PROFILE_D_SOURCED
 
 if [ "\${RC_PROFILE_D_SOURCED}" -eq 0 ]; then
-  export RC_PROFILE_D_SOURCED=1
+  RC_PROFILE_D_SOURCED=1
 
 $(for var in $(echo "${RC_VARS}" | tr ' ' '\n' | sort); do
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
