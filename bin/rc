@@ -270,8 +270,6 @@ main() {
   [ "${ENV-}" ] || set_vars
 
   if ! test -f "${ENV:-${_ENV_FILE}}" || test "${ENV_FORCE}" -eq 1; then
-    set_vars
-
     create_dirs_and_files
 
     write_functions
