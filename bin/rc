@@ -132,8 +132,8 @@ gnu_completions() {
   $MACOS || return 0
 
   brew_bin="$(brew --prefix)/bin"
-  cmds="$(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" -not -name "\[" \
-    | sed -e 's|.*/bin/g||g')"
+  cmds="$(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" \
+    | sed -e 's|.*/bin/g||g' | grep -v "\[")"
   dest="$(brew --prefix bash-completion@2)/share/bash-completion/completions"
 
   cd "${dest}"
