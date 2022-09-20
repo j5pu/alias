@@ -305,7 +305,24 @@ sync() {
 main() {
   [ "${ENV-}" ] || set_vars
 
-  if ! test -f "${ENV:-${_RC_FILE}}" || test "${RC_FORCE}" -eq 1; then
+  hook=false
+  for arg; do
+    case "${arg}" in
+      -h|--help|help) : ;;
+      --force) RC_FORCE=1  ;;
+      add|clean|del|gnu|sync|gnu_completions) function="${arg}" ;;
+      hook) hook=true ;;
+      *) >&2 echo "${0##*/}: Unknown argument: ${arg}" ;;
+    esac
+  done
+
+  [ "${RC_FORCE}" -eq 0 ] || [ ! "${function-}" ] || \
+    { >&2 echo "${0##*/}: --force can not be used with ${function}"; exit 1; }
+
+  if ! test -f "${ENV:-${_RC_FILE}}" || [ "${RC_FORCE}" -eq 1 ]; then
+    # shellcheck disable=SC2010
+    ls -la "${_RC_FILE}" | grep -q " ${USER} " || >&2 echo "${0##*/}: ${_RC_FILE} is not owned by: ${USER}"
+
     create_dirs_and_files
 
     write_functions
@@ -317,14 +334,11 @@ main() {
     sync "$@"
   fi
 
-  for arg; do
-    case "${arg}" in
-      -h|--help|help) : ;;
-      add|clean|del|gnu|sync|gnu_completions) "${arg}" "$@" ;;
-      hook) echo "${_RC_FILE}" ;;
-      *) >&2 echo "${0##*/}: Unknown argument: ${arg}" ;;
-    esac
-  done
+  if $hook; then
+    echo "${_RC_FILE}"
+  elif [ "${function-}" ]; then
+    "${function}" "$@"
+  fi
 
 }
 

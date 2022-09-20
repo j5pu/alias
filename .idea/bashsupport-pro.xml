@@ -2,20 +2,14 @@
 <project version="4">
   <component name="bashsupport-pro.project">
     <scriptLibraries>
-      <library name=".env.sh">
+      <library name=".rc.sh">
         <sources>
-          <source path=".env.sh" />
+          <source path=".rc.sh" />
         </sources>
         <targets>
           <target recursive="true" />
         </targets>
       </library>
-      <library name="Library 2" />
     </scriptLibraries>
-    <globalVariables>
-      <var name="cword" />
-      <var name="words" />
-      <var name="cur" />
-    </globalVariables>
   </component>
 </project>
