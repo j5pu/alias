@@ -134,7 +134,7 @@ gnu_completions() {
   brew_bin="$(brew --prefix)/bin"
   commands="$(find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g" | grep -v "\[")"
 
-  bash -li -c "while read -r i; do complete -p \${i} 2>/dev/null; done < <(echo ${commands}\" | tr -d ' ' '\n')"
+  bash -li -c "while read -r i; do complete -p \${i} 2>/dev/null; done < <(echo ${commands} | tr -d ' ' '\n')"
 #  bash -li -c "(
 #    PS1='> '
 #    . \"$(brew --prefix)/etc/profile.d/bash_completion.sh\"
@@ -147,11 +147,11 @@ gnu_completions() {
 
   cd "$(brew --prefix bash-completion@2)/share/bash-completion/completions"
 
-  for command in ${commands}; do
-    { test -f "${command}" && ! test -L "${command}"; } || continue
-    echo rm -f "g${command}"
-    echo ln -s "${command}" "g${command}"
-  done
+#  for command in ${commands}; do
+#    { test -f "${command}" && ! test -L "${command}"; } || continue
+#    echo rm -f "g${command}"
+#    echo ln -s "${command}" "g${command}"
+#  done
 }
 
 hooks() { find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_rc_source_dir ""; }
