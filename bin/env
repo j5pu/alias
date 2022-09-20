@@ -13,35 +13,6 @@ cd "$(dirname "$0")/.."
 
 # TODO: Faltarían los hooks con el shell y cuando sea hooks.d poner 3 de depth
 
-echo_files_to_source() {
-  find "$1" -type f \
-    \( \
-      -path "*/00-common/*" \
-      -or -path "*/${HOSTNAME}/*" \
-      -or -path "*/${ID_LIKE}/*" \
-      -or -path "*/${UNAME}/*" \
-      -or -name "00-common.*" \
-      -or -name "${HOSTNAME}.*" \
-      -or -name "${ID_LIKE}.*" \
-      -or -name "${UNAME}.*" \
-    \) \
-    -exec echo "  ${2-}. \"{}\"" \; | sort -n
-}
-
-find_dirs_to_source() {
-  find "$1" -mindepth "$2" -maxdepth "$2" -type d \
-    \( \
-      -path "*/00-common/*" \
-      -or -path "*/${HOSTNAME}/*" \
-      -or -path "*/${ID_LIKE}/*" \
-      -or -path "*/${UNAME}/*" \
-      -or -name "00-common" \
-      -or -name "${HOSTNAME}" \
-      -or -name "${ID_LIKE}" \
-      -or -name "${UNAME}" \
-    \) | sort -n
-}
-
 create_dirs_and_files() {
   for _gen_env_dir in ${ENV_SUPPORTED}; do
     find "${ENV_GENERATED}" -mindepth 1 -maxdepth 1 -type d | while read -r _gen_env_dir_generated; do
@@ -109,6 +80,41 @@ create_dirs_and_files() {
   done
 }
 
+echo_files_to_source() {
+  find "$1" -type f \
+    \( \
+      -path "*/00-common/*" \
+      -or -path "*/${HOSTNAME}/*" \
+      -or -path "*/${ID_LIKE}/*" \
+      -or -path "*/${UNAME}/*" \
+      -or -name "00-common.*" \
+      -or -name "${HOSTNAME}.*" \
+      -or -name "${ID_LIKE}.*" \
+      -or -name "${UNAME}.*" \
+    \) \
+    -exec echo "  ${2-}. \"{}\"" \; | sort -n
+}
+
+find_dirs_to_source() {
+  find "$1" -mindepth "$2" -maxdepth "$2" -type d \
+    \( \
+      -path "*/00-common/*" \
+      -or -path "*/${HOSTNAME}/*" \
+      -or -path "*/${ID_LIKE}/*" \
+      -or -path "*/${UNAME}/*" \
+      -or -name "00-common" \
+      -or -name "${HOSTNAME}" \
+      -or -name "${ID_LIKE}" \
+      -or -name "${UNAME}" \
+    \) | sort -n
+}
+
+hooks() { find_dirs_to_source "${1}/hooks.d" 3 | while read -r i; do echo "  env_source_dir \"${i}\""; done; }
+
+hooks_no() {
+  find_dirs_to_source "$1" 2 | grep -v "/hooks.d/" | while read -r i; do echo "  env_source_dir_no \"${i}\""; done
+}
+
 write_functions() {
   cat > "${_ENV_TMP}" <<EOF
 # shellcheck shell=sh
@@ -139,7 +145,9 @@ $(for var in ENV_CUSTOM ENV_ETC ENV_GENERATED ENV_SUPPORTED ENV_TOP \
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
 done)
 
-$(find_dirs_to_source "${ENV_ETC_PROFILE_D}" 3 | while read -r i; do echo "  env_source_dir \"${i}\""; done)
+$(hooks_no "${ENV_ETC_PROFILE_D}")
+
+$(hooks "${ENV_ETC_PROFILE_D}")
 
 $(echo_files_to_source "${ENV_GENERATED_PROFILE_D}")
 fi
@@ -158,7 +166,9 @@ if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && [ "\${ENV_SOURCED}" -eq 0 ];
 
   unalias cp egrep fgrep grep l l. la ll lld ls mv rm xzegrep xzfgrep xzgrep zegrep zfgrep zgrep 2>/dev/null
 
-$(find_dirs_to_source "${ENV_ETC_RC_D}" 3 | while read -r i; do echo "  env_source_dir \"${i}\""; done)
+$(hooks_no "${ENV_ETC_RC_D}")
+
+$(hooks "${ENV_ETC_RC_D}")
 
 $(echo_files_to_source "${ENV_GENERATED_RC_D}" | grep "/dirs.sh\"$")
 
