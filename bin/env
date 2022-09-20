@@ -119,7 +119,8 @@ unset ENV
 
 if ! command -v reenv >/dev/null; then
   . "${ENV_ETC_FUNCTIONS}/env.sh"
-$(find_dirs_to_source "${ENV_ETC_FUNCTIONS}" 1 | while read -r variable; do echo "  env_source_dir \"${variable}\""; done)
+
+$(find_dirs_to_source "${ENV_ETC_FUNCTIONS}" 1 | while read -r i; do echo "  env_source_dir \"${i}\""; done)
 fi
 EOF
 }
