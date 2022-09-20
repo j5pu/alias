@@ -138,10 +138,10 @@ gnu_completions() {
     . "$(brew --prefix)/etc/profile.d/bash_completion.sh"
     for i in ${commands}; do
       # shellcheck disable=SC3044
-      complete -p "${i}" 2>/dev/null | sed "s|${i}$|g${i}|g"
+      bash -li -c "complete -p ${i} 2>/dev/null | sed \"s|${i}$|g${i}|g\""
     done
   ) > "${RC_CUSTOM}/completions/gnu-completions.bash"
-    
+
   cd "$(brew --prefix bash-completion@2)/share/bash-completion/completions"
 
   for command in ${commands}; do
