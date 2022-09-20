@@ -160,7 +160,7 @@ unset ENV
 
 : "\${RC_TRACE=0}"; [ "\${RC_TRACE}" -eq 0 ] || set -x
 
-if ! command -v rebash >/dev/null; then
+if ! command -v resh >/dev/null; then
   . "${RC_ETC_FUNCTIONS}/${0##*/}.sh"
 
 $(find_dirs_to_source "${RC_ETC_FUNCTIONS}" 1 | echo_rc_source_dir)
