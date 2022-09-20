@@ -26,6 +26,15 @@ echo_files_to_source() {
     -exec echo "  ${2-}. \"{}\"" \; | sort -n
 }
 
+find_dirs_to_source() {
+  find "$1" -mindepth "$2" -maxdepth "$2" --type d \
+    \( -path "*/00-common/*" \
+    -or -path "*/${HOSTNAME}/*" \
+    -or -path "*/${ID_LIKE}/*" \
+    -or -path "*/${UNAME}/*" \) \
+    -exec echo . \""{}"\" \; | sort -n
+}
+
 create_dirs_and_files() {
   for _gen_env_dir in ${ENV_SUPPORTED}; do
     find "${ENV_GENERATED}" -mindepth 1 -maxdepth 1 -type d | while read -r _gen_env_dir_generated; do
@@ -105,7 +114,7 @@ unset ENV
 
 if ! command -v reenv >/dev/null; then
   . "${ENV_ETC_FUNCTIONS}/env.sh"
-
+$(find_dirs_to_source "${ENV_ETC_FUNCTIONS}" 1 | while read -r variable; do echo "  env_source_dir \"${variable}\""; done)
 fi
 EOF
 }
@@ -152,15 +161,6 @@ fi
 
 export ENV="${_ENV_FILE}"
 EOF
-}
-
-find_dirs() {
-  find "$1" -type d \
-    \( -path "*/00-common/*" \
-    -or -path "*/${HOSTNAME}/*" \
-    -or -path "*/${ID_LIKE}/*" \
-    -or -path "*/${UNAME}/*" \) \
-    -exec echo . \""{}"\" \; | sort -n
 }
 
 set_vars() {
