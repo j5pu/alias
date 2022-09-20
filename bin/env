@@ -15,9 +15,9 @@ echo_files_to_source() {
   find "$1" -type f \
     \( \
       -path "*/00-common/*" \
-      -or -path "*/${HOSTNAME}.*" \
-      -or -path "*/${ID_LIKE}.*" \
-      -or -path "*/${UNAME}.*" \
+      -or -path "*/${HOSTNAME}/*" \
+      -or -path "*/${ID_LIKE}/*" \
+      -or -path "*/${UNAME}/*" \
       -or -name "00-common.*" \
       -or -name "${HOSTNAME}.*" \
       -or -name "${ID_LIKE}.*" \
