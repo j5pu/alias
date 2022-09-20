@@ -53,12 +53,13 @@ _gen_env_dirs() {
         _gen_env_dir_generated_absolute="${_gen_env_dir_generated}/${_gen_env_dir}"
         case "${_gen_env_dir}" in
           rhel|rhel_fedora)
+            cd "${_gen_env_dir_generated}"
             if [ "${_gen_env_dir_generated##*/}" = aliases.d ]; then
-              cd "${_gen_env_dir_generated}"
-              ! test -e "${_gen_env_dir}.sh" || rm -r "${_gen_env_dir}.sh"
-              ln -s fedora.sh "${_gen_env_dir}.sh"
+             ! test -e "${_gen_env_dir}" || rm -r "${_gen_env_dir}"
+             ln -s fedora "${_gen_env_dir}"
             else
-              touch "${_gen_env_dir_generated_absolute}.sh"
+             ! test -e "${_gen_env_dir}.sh" || rm -r "${_gen_env_dir}.sh"
+             ln -s fedora.sh "${_gen_env_dir}.sh"
             fi
             ;;
           *)
