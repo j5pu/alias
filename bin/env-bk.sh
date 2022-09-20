@@ -12,12 +12,6 @@ cd "$(dirname "$0")/.."
 # Force creation of .env.sh _env_arg
 : "${ENV_FORCE=0}"
 
-#
-# ENV _env_arg
-_ENV_FILE="$(pwd -P)/.env.sh"
-
-_ENV_TMP="$(mktemp)"
-_ENV_CHANGED=false
 
 _echo_env_sh_export() { echo "  export ${1}=\"${2}\"" >> "${_ENV_TMP}"; }
 
