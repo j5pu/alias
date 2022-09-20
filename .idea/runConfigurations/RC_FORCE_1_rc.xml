@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="ENV_FORCE=1 rc" type="BashProRunConfiguration" singleton="false">
+  <configuration default="false" name="RC_FORCE=1 rc" type="BashProRunConfiguration" singleton="false">
     <option name="scriptPath" value="$PROJECT_DIR$/bin/rc" />
     <EXTENSION ID="net.ashald.envfile">
       <option name="IS_ENABLED" value="true" />

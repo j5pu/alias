@@ -1,4 +1,4 @@
-.env.sh
+.rc.sh
 custom/*/[A-Z,a-z,0-9]*
 
 # Byte-compiled / optimized / DLL files

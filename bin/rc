@@ -9,18 +9,18 @@ cd "$(dirname "$0")/.."
 
 #
 # Force creation of .env.sh
-: "${ENV_FORCE=0}"
+: "${RC_FORCE=0}"
 
-: "${ENV_TRACE=0}"; [ "${ENV_TRACE}" -eq 0 ] || set -x
+: "${RC_TRACE=0}"; [ "${RC_TRACE}" -eq 0 ] || set -x
 
 
 # TODO: Faltaría el SH y las variables de system.sh y probarlo un poco y los comandos de alias
 
-add_var() { ENV_VARS="${ENV_VARS:+${ENV_VARS} }$1"; }
+add_var() { RC_VARS="${RC_VARS:+${RC_VARS} }$1"; }
 
 create_dirs_and_files() {
-  for _gen_env_dir in ${ENV_SUPPORTED}; do
-    find "${ENV_GENERATED}" -mindepth 1 -maxdepth 1 -type d | while read -r _gen_env_dir_generated; do
+  for _gen_env_dir in ${RC_SUPPORTED}; do
+    find "${RC_GENERATED}" -mindepth 1 -maxdepth 1 -type d | while read -r _gen_env_dir_generated; do
       _gen_env_dir_generated_absolute="${_gen_env_dir_generated}/${_gen_env_dir}"
         case "${_gen_env_dir}" in
           rhel|rhel_fedora)
@@ -45,9 +45,9 @@ create_dirs_and_files() {
         esac
     done
 
-    { find "${ENV_ETC}" -mindepth 2 -maxdepth 2 -type d \
-      -not \( -path "${ENV_ETC_COMPLETION}/*" -or -path "${ENV_ETC_FUNCTIONS}/*" \); \
-      printf "%s\n" "${ENV_ETC_COMPLETION}" "${ENV_ETC_FUNCTIONS}"; } | while read -r _gen_env_dir_etc; do
+    { find "${RC_ETC}" -mindepth 2 -maxdepth 2 -type d \
+      -not \( -path "${RC_ETC_COMPLETION}/*" -or -path "${RC_ETC_FUNCTIONS}/*" \); \
+      printf "%s\n" "${RC_ETC_COMPLETION}" "${RC_ETC_FUNCTIONS}"; } | while read -r _gen_env_dir_etc; do
         _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}"
         case "${_gen_env_dir}" in
           rhel|rhel_fedora)
@@ -77,7 +77,7 @@ create_dirs_and_files() {
   done
 
   for _gen_env_dir_home in profile.d rc.d; do
-    _gen_env_dir_home_absolute="${ENV_CUSTOM}/${_gen_env_dir_home}"
+    _gen_env_dir_home_absolute="${RC_CUSTOM}/${_gen_env_dir_home}"
     if ! test -f "${_gen_env_dir_home_absolute}/.gitkeep"; then
       mkdir -p "${_gen_env_dir_home_absolute}"
       touch "${_gen_env_dir_home_absolute}/.gitkeep"
@@ -130,13 +130,12 @@ unset BASH_COMPLETION_VERSINFO
   /usr/local/bin/bash -li -c 'set -x; unset BASH_COMPLETION_VERSINFO; . /usr/local/etc/profile.d/bash_completion.sh ; complete -p printf'
 )
 
-
 hooks() { find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_env_source_dir; }
 
 hooks_no() { find_dirs_to_source "$1" 2 | grep -v "/hooks.d/" | echo_env_source_dir; }
 
 write_functions() {
-  cat > "${_ENV_TMP}" <<EOF
+  cat > "${_RC_TMP}" <<EOF
 # shellcheck shell=sh
 
 #
@@ -145,78 +144,78 @@ write_functions() {
 
 unset ENV
 
-: "\${ENV_TRACE=0}"; [ "\${ENV_TRACE}" -eq 0 ] || set -x
+: "\${RC_TRACE=0}"; [ "\${RC_TRACE}" -eq 0 ] || set -x
 
 if ! command -v reenv >/dev/null; then
-  . "${ENV_ETC_FUNCTIONS}/${0##*/}.sh"
+  . "${RC_ETC_FUNCTIONS}/${0##*/}.sh"
 
-$(find_dirs_to_source "${ENV_ETC_FUNCTIONS}" 1 | echo_env_source_dir)
+$(find_dirs_to_source "${RC_ETC_FUNCTIONS}" 1 | echo_env_source_dir)
 fi
 EOF
 }
 
 write_profile() {
-  cat >> "${_ENV_TMP}" <<EOF
+  cat >> "${_RC_TMP}" <<EOF
 
-if ! echo "\${PATH}" | grep -q "${ENV_TOP}/bin:"; then
-  export PATH="${ENV_TOP}/bin:\${PATH}"
+if ! echo "\${PATH}" | grep -q "${RC_TOP}/bin:"; then
+  export PATH="${RC_TOP}/bin:\${PATH}"
   : "\${HOSTNAME=\$(hostname)}"; export HOSTNAME
 
-$(for var in $(echo "${ENV_VARS}" | tr ' ' '\n' | sort); do
+$(for var in $(echo "${RC_VARS}" | tr ' ' '\n' | sort); do
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
 done)
 
-$(hooks_no "${ENV_ETC_PROFILE_D}")
+$(hooks_no "${RC_ETC_PROFILE_D}")
 
-$(hooks "${ENV_ETC_PROFILE_D}")
+$(hooks "${RC_ETC_PROFILE_D}")
 
-$(echo_files_to_source "${ENV_GENERATED_PROFILE_D}")
+$(echo_files_to_source "${RC_GENERATED_PROFILE_D}")
 
-env_source_dir "${ENV_CUSTOM_PROFILE_D}"
+env_source_dir "${RC_CUSTOM_PROFILE_D}"
 fi
 EOF
 }
 
 write_rc() {
-  cat >> "${_ENV_TMP}" <<EOF
+  cat >> "${_RC_TMP}" <<EOF
 
 #
 # RC for interactive shells has been sourced already
-: "\${ENV_SOURCED=0}"
+: "\${RC_SOURCED=0}"
 
-if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && [ "\${ENV_SOURCED}" -eq 0 ]; then
-  ENV_SOURCED=1
+if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && [ "\${RC_SOURCED}" -eq 0 ]; then
+  RC_SOURCED=1
 
   unalias cp egrep fgrep grep l l. la ll lld ls mv rm xzegrep xzfgrep xzgrep zegrep zfgrep zgrep 2>/dev/null
 
-$(hooks_no "${ENV_ETC_RC_D}")
+$(hooks_no "${RC_ETC_RC_D}")
 
-$(hooks "${ENV_ETC_RC_D}")
+$(hooks "${RC_ETC_RC_D}")
 
-$(echo_files_to_source "${ENV_GENERATED_RC_D}" | grep "/dirs.sh\"$")
+$(echo_files_to_source "${RC_GENERATED_RC_D}" | grep "/dirs.sh\"$")
 
   if [ "\${SUDO-}" ]; then
-$(echo_files_to_source "${ENV_GENERATED_RC_D}" "  " | grep "/sudo.sh\"$")
+$(echo_files_to_source "${RC_GENERATED_RC_D}" "  " | grep "/sudo.sh\"$")
   fi
 
   if has complete; then
-    . "${ENV_ETC_COMPLETION}/${0##*/}.bash"
+    . "${RC_ETC_COMPLETION}/${0##*/}.bash"
 
-$(find_dirs_to_source "${ENV_ETC_COMPLETION}" 1 | echo_env_source_dir "  ")
+$(find_dirs_to_source "${RC_ETC_COMPLETION}" 1 | echo_env_source_dir "  ")
   fi
 
-env_source_dir "${ENV_CUSTOM_RC_D}"
+env_source_dir "${RC_CUSTOM_RC_D}"
 fi
 
-export ENV="${_ENV_FILE}"
+export ENV="${_RC_FILE}"
 
-[ "\${ENV_TRACE}" -eq 0 ] || set +x
+[ "\${RC_TRACE}" -eq 0 ] || set +x
 EOF
 }
 
 set_vars() {
-  ENV_TOP="$(pwd -P)" && add_var ENV_TOP
-  PATH="${ENV_TOP}/bin:${PATH}"
+  RC_TOP="$(pwd -P)" && add_var RC_TOP
+  PATH="${RC_TOP}/bin:${PATH}"
 
   HOSTNAME="${HOSTNAME=$(hostname)}"
   ID_LIKE="$(! test -f /etc/os-release || grep "^ID_LIKE=" /etc/os-release \
@@ -227,23 +226,23 @@ set_vars() {
   VGA="$([ "${GITHUB_RUN_ID-}" ] || if $MACOS; then echo 1; else lspci 2>/dev/null | awk '/VGA/ { print 1 }'; fi)" && \
     add_var VGA
 
-  _ENV_FILE="${ENV_TOP}/.env.sh"
-  _ENV_TMP="$(mktemp)"
-  ENV_CUSTOM="${ENV_TOP}/custom" && add_var ENV_CUSTOM
-  ENV_CUSTOM_PROFILE_D="${ENV_CUSTOM}/profile.d" && add_var ENV_CUSTOM_PROFILE_D
-  ENV_CUSTOM_RC_D="${ENV_CUSTOM}/rc.d" && add_var ENV_CUSTOM_RC_D
-  ENV_ETC="${ENV_TOP}/etc" && add_var ENV_ETC
-  ENV_ETC_COMPLETION="${ENV_ETC}/bash_completion.d" && add_var ENV_ETC_COMPLETION
-  ENV_ETC_FUNCTIONS="${ENV_ETC}/functions.d" && add_var ENV_ETC_FUNCTIONS
-  ENV_ETC_PROFILE_D="${ENV_ETC}/profile.d" && add_var ENV_ETC_PROFILE_D
-  ENV_ETC_RC_D="${ENV_ETC}/rc.d" && add_var ENV_ETC_RC_D
-  ENV_GENERATED="${ENV_TOP}/generated" && add_var ENV_GENERATED
-  ENV_GENERATED_PROFILE_D="${ENV_GENERATED}/profile.d" && add_var ENV_GENERATED_PROFILE_D
-  ENV_GENERATED_RC_D="${ENV_GENERATED}/rc.d" && add_var ENV_GENERATED_RC_D
-  ENV_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}" && add_var ENV_SUPPORTED
+  _RC_FILE="${RC_TOP}/.${0##*/}.sh"
+  _RC_TMP="$(mktemp)"
+  RC_CUSTOM="${RC_TOP}/custom" && add_var RC_CUSTOM
+  RC_CUSTOM_PROFILE_D="${RC_CUSTOM}/profile.d" && add_var RC_CUSTOM_PROFILE_D
+  RC_CUSTOM_RC_D="${RC_CUSTOM}/rc.d" && add_var RC_CUSTOM_RC_D
+  RC_ETC="${RC_TOP}/etc" && add_var RC_ETC
+  RC_ETC_COMPLETION="${RC_ETC}/bash_completion.d" && add_var RC_ETC_COMPLETION
+  RC_ETC_FUNCTIONS="${RC_ETC}/functions.d" && add_var RC_ETC_FUNCTIONS
+  RC_ETC_PROFILE_D="${RC_ETC}/profile.d" && add_var RC_ETC_PROFILE_D
+  RC_ETC_RC_D="${RC_ETC}/rc.d" && add_var RC_ETC_RC_D
+  RC_GENERATED="${RC_TOP}/generated" && add_var RC_GENERATED
+  RC_GENERATED_PROFILE_D="${RC_GENERATED}/profile.d" && add_var RC_GENERATED_PROFILE_D
+  RC_GENERATED_RC_D="${RC_GENERATED}/rc.d" && add_var RC_GENERATED_RC_D
+  RC_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}" && add_var RC_SUPPORTED
 
   # Adds dinamically completions with __load_completion()/_completion_loader
-  BASH_COMPLETION_USER_DIR="${ENV_ETC_COMPLETION}"
+  BASH_COMPLETION_USER_DIR="${RC_ETC_COMPLETION}"
 
 }
 
@@ -268,14 +267,14 @@ sync() {
 main() {
   [ "${ENV-}" ] || set_vars
 
-  if ! test -f "${ENV:-${_ENV_FILE}}" || test "${ENV_FORCE}" -eq 1; then
+  if ! test -f "${ENV:-${_RC_FILE}}" || test "${RC_FORCE}" -eq 1; then
     create_dirs_and_files
 
     write_functions
     write_profile
     write_rc
 
-    mv "${_ENV_TMP}" "${_ENV_FILE}"
+    mv "${_RC_TMP}" "${_RC_FILE}"
     sync "$@"
   fi
 
@@ -283,7 +282,7 @@ main() {
     case "${arg}" in
       -h|--help|help) : ;;
       add|clean|del|gnu|sync|gnu_completions) "${arg}" "$@" ;;
-      hook) echo "${_ENV_FILE}" ;;
+      hook) echo "${_RC_FILE}" ;;
       *) >&2 echo "${0##*/}: Unknown argument: ${arg}" ;;
     esac
   done

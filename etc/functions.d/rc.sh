@@ -18,7 +18,7 @@ has() { command -v "$1" >/dev/null; }
 
 reenv() {
   unset -f reenv
-  PATH="$(echo "${PATH}" | sed "s|${ENV_TOP}/bin:||")"
-  unset BASH_COMPLETION_VERSINFO ENV_SOURCED
+  PATH="$(echo "${PATH}" | sed "s|${RC_TOP}/bin:||")"
+  unset BASH_COMPLETION_VERSINFO RC_SOURCED
   . "${ENV?}"
 }

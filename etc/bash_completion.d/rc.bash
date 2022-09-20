@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 
 #######################################
-# alias-del completion
+# rc completion
 # Arguments:
 #   1
 #   3
@@ -9,7 +9,7 @@
 #   0 ...
 #   1 ...
 #######################################
-_env() {
+_rc() {
   _init_completion -n :=/ || return
 
   test "${cword}" -lt 4 || return 0
@@ -27,10 +27,10 @@ _env() {
       ;;
     3)
       if [ "${cword[2]}" != "del" ]; then
-        mapfile -t COMPREPLY < <(compgen -o nospace -W "${ENV_SUPPORTED}" -- "${cur}")
+        mapfile -t COMPREPLY < <(compgen -o nospace -W "${RC_SUPPORTED}" -- "${cur}")
       fi
       ;;
   esac
 }
 
-complete -F _env env
+complete -F _rc rc
