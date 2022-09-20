@@ -140,11 +140,11 @@ gnu_completions() {
   bash -li -c "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\" > g\$i; \
     done < <(echo \"${cmds}\" | tr ' ' '\n')"
 
-  for cmd in ${cmds}; do
-    { test -f "${cmd}" && ! test -L "${cmd}"; } || continue
-    rm -f "g${cmd}"
-    ln -s "${cmd}" "g${cmd}"
-  done
+#  for cmd in ${cmds}; do
+#    { test -f "${cmd}" && ! test -L "${cmd}"; } || continue
+#    rm -f "g${cmd}"
+#    ln -s "${cmd}" "g${cmd}"
+#  done
 }
 
 hooks() { find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_rc_source_dir ""; }
