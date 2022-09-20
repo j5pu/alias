@@ -16,6 +16,8 @@ cd "$(dirname "$0")/.."
 
 # TODO: Faltaría el SH y las variables de system.sh y probarlo un poco y los comandos de alias
 
+add_var() { ENV_VARS="${ENV_VARS:+${ENV_VARS} }$1"; }
+
 create_dirs_and_files() {
   for _gen_env_dir in ${ENV_SUPPORTED}; do
     find "${ENV_GENERATED}" -mindepth 1 -maxdepth 1 -type d | while read -r _gen_env_dir_generated; do
@@ -114,6 +116,21 @@ find_dirs_to_source() {
     \) | sort -n
 }
 
+_gnu_completions() {
+  brew_bin="$(brew --prefix)/bin"
+  # shellcheck disable=SC3044,SC2046
+  complete -p $(find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g") 2>/dev/null || true
+}
+
+gnu_completions() (
+  $MACOS || return 0
+  # shellcheck disable=SC3045
+  export -f _gnu_completions
+unset BASH_COMPLETION_VERSINFO
+  /usr/local/bin/bash -li -c 'set -x; unset BASH_COMPLETION_VERSINFO; . /usr/local/etc/profile.d/bash_completion.sh ; complete -p printf'
+)
+
+
 hooks() { find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_env_source_dir; }
 
 hooks_no() { find_dirs_to_source "$1" 2 | grep -v "/hooks.d/" | echo_env_source_dir; }
@@ -145,8 +162,7 @@ if ! echo "\${PATH}" | grep -q "${ENV_TOP}/bin:"; then
   export PATH="${ENV_TOP}/bin:\${PATH}"
   : "\${HOSTNAME=\$(hostname)}"; export HOSTNAME
 
-$(for var in ENV_CUSTOM ENV_ETC ENV_GENERATED ENV_SUPPORTED ENV_TOP \
-  ID_LIKE MACOS SUDO UNAME VGA; do
+$(for var in $(echo "${ENV_VARS}" | tr '' '\n' | sort); do
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
 done)
 
@@ -199,32 +215,36 @@ EOF
 }
 
 set_vars() {
-  ENV_TOP="$(pwd -P)"
+  ENV_TOP="$(pwd -P)" && add_var ENV_TOP
   PATH="${ENV_TOP}/bin:${PATH}"
 
   HOSTNAME="${HOSTNAME=$(hostname)}"
   ID_LIKE="$(! test -f /etc/os-release || grep "^ID_LIKE=" /etc/os-release \
-      || grep "^ID=" /etc/os-release | cut -d= -f2 | tr ' ' '_')"
-  MACOS="$(if test "$(uname -s)" = "Darwin"; then echo true; else echo false; fi)"
-  SUDO="$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)"
-  UNAME="$(uname -s)"
-  VGA="$([ "${GITHUB_RUN_ID-}" ] || if $MACOS; then echo 1; else lspci 2>/dev/null | awk '/VGA/ { print 1 }'; fi)"
+      || grep "^ID=" /etc/os-release | cut -d= -f2 | tr ' ' '_')" && add_var ID_LIKE
+  MACOS="$(if test "$(uname -s)" = "Darwin"; then echo true; else echo false; fi)" && add_var MACOS
+  SUDO="$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)" && add_var SUDO
+  UNAME="$(uname -s)" && add_var UNAME
+  VGA="$([ "${GITHUB_RUN_ID-}" ] || if $MACOS; then echo 1; else lspci 2>/dev/null | awk '/VGA/ { print 1 }'; fi)" && \
+    add_var VGA
 
   _ENV_FILE="${ENV_TOP}/.env.sh"
   _ENV_TMP="$(mktemp)"
+  ENV_CUSTOM="${ENV_TOP}/custom" && add_var ENV_CUSTOM
+  ENV_CUSTOM_PROFILE_D="${ENV_CUSTOM}/profile.d" && add_var ENV_CUSTOM_PROFILE_D
+  ENV_CUSTOM_RC_D="${ENV_CUSTOM}/rc.d" && add_var ENV_CUSTOM_RC_D
+  ENV_ETC="${ENV_TOP}/etc" && add_var ENV_ETC
+  ENV_ETC_COMPLETION="${ENV_ETC}/bash_completion.d" && add_var ENV_ETC_COMPLETION
+  ENV_ETC_FUNCTIONS="${ENV_ETC}/functions.d" && add_var ENV_ETC_FUNCTIONS
+  ENV_ETC_PROFILE_D="${ENV_ETC}/profile.d" && add_var ENV_ETC_PROFILE_D
+  ENV_ETC_RC_D="${ENV_ETC}/rc.d" && add_var ENV_ETC_RC_D
+  ENV_GENERATED="${ENV_TOP}/generated" && add_var ENV_GENERATED
+  ENV_GENERATED_PROFILE_D="${ENV_GENERATED}/profile.d" && add_var ENV_GENERATED_PROFILE_D
+  ENV_GENERATED_RC_D="${ENV_GENERATED}/rc.d" && add_var ENV_GENERATED_RC_D
+  ENV_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}" && add_var ENV_SUPPORTED
 
-  ENV_CUSTOM="${ENV_TOP}/custom"
-  ENV_CUSTOM_PROFILE_D="${ENV_CUSTOM}/profile.d"
-  ENV_CUSTOM_RC_D="${ENV_CUSTOM}/rc.d"
-  ENV_ETC="${ENV_TOP}/etc"
-  ENV_ETC_COMPLETION="${ENV_ETC}/bash_completion.d"
-  ENV_ETC_FUNCTIONS="${ENV_ETC}/functions.d"
-  ENV_ETC_PROFILE_D="${ENV_ETC}/profile.d"
-  ENV_ETC_RC_D="${ENV_ETC}/rc.d"
-  ENV_GENERATED="${ENV_TOP}/generated"
-  ENV_GENERATED_PROFILE_D="${ENV_GENERATED}/profile.d"
-  ENV_GENERATED_RC_D="${ENV_GENERATED}/rc.d"
-  ENV_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}"
+  # Adds dinamically completions with __load_completion()/_completion_loader
+  BASH_COMPLETION_USER_DIR="${ENV_ETC_COMPLETION}"
+
 }
 
 sync() {
@@ -264,8 +284,9 @@ main() {
   for arg; do
     case "${arg}" in
       -h|--help|help) : ;;
-      add|clean|del|sync) "${arg}" "$@" ;;
+      add|clean|del|gnu|sync|gnu_completions) "${arg}" "$@" ;;
       hook) echo "${_ENV_FILE}" ;;
+      *) >&2 echo "${0##*/}: Unknown argument: ${arg}" ;;
     esac
   done
 

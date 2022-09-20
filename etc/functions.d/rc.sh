@@ -19,6 +19,6 @@ has() { command -v "$1" >/dev/null; }
 reenv() {
   unset -f reenv
   PATH="$(echo "${PATH}" | sed "s|${ENV_TOP}/bin:||")"
-  unset ENV_SOURCED
+  unset BASH_COMPLETION_VERSINFO ENV_SOURCED
   . "${ENV?}"
 }
