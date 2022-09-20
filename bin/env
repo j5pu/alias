@@ -55,7 +55,7 @@ create_dirs_and_files() {
 
     { find "${ENV_ETC}" -mindepth 2 -maxdepth 2 -type d \
       -not \( -path "${ENV_ETC_COMPLETION}/*" -path "${ENV_ETC_FUNCTIONS}/*" \); \
-       } | while read -r _gen_env_dir_etc; do
+      echo "${ENV_ETC_FUNCTIONS}"; } | while read -r _gen_env_dir_etc; do
         _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}"
         case "${_gen_env_dir}" in
           rhel|rhel_fedora)
