@@ -28,10 +28,16 @@ echo_files_to_source() {
 
 find_dirs_to_source() {
   find "$1" -mindepth "$2" -maxdepth "$2" -type d \
-    \( -path "*/00-common/*" \
-    -or -path "*/${HOSTNAME}/*" \
-    -or -path "*/${ID_LIKE}/*" \
-    -or -path "*/${UNAME}/*" \) \
+    \( \
+      -path "*/00-common/*" \
+      -or -path "*/${HOSTNAME}/*" \
+      -or -path "*/${ID_LIKE}/*" \
+      -or -path "*/${UNAME}/*" \
+      -or -name "00-common" \
+      -or -name "${HOSTNAME}" \
+      -or -name "${ID_LIKE}" \
+      -or -name "${UNAME}" \
+    \) \
     -exec echo . \""{}"\" \; | sort -n
 }
 
