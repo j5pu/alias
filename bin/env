@@ -13,7 +13,7 @@ cd "$(dirname "$0")/.."
 
 
 env_vars() {
-  ENV_TOP="$(pwd -P)"; export ENV_TOP
+  ENV_TOP="$(pwd -P)"
   PATH="${ENV_TOP}/bin:${PATH}"
 
   HOSTNAME="${HOSTNAME=$(hostname)}"

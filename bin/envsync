@@ -2,9 +2,7 @@
 
 set -eu
 
-: "${ENV_TOP:?}"
-
-cd "${ENV_TOP}"
+cd "$(dirname "$0")/.."
 
 if git status  | grep -q "have diverged"; then
   >&2 echo "${0##*/}: Diverged"
