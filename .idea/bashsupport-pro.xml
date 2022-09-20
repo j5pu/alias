@@ -12,5 +12,10 @@
       </library>
       <library name="Library 2" />
     </scriptLibraries>
+    <globalVariables>
+      <var name="cword" />
+      <var name="words" />
+      <var name="cur" />
+    </globalVariables>
   </component>
 </project>
