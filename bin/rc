@@ -176,7 +176,7 @@ write_profile() {
 : "\${RC_PROFILE_D_SOURCED=0}"
 
 if [ "\${RC_PROFILE_D_SOURCED}" -eq 0 ]; then
-  RC_PROFILE_D_SOURCED=1
+  export RC_PROFILE_D_SOURCED=1
 
 $(for var in $(echo "${RC_VARS}" | tr ' ' '\n' | sort); do
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
