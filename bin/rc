@@ -266,7 +266,7 @@ sync() {
 
 main() {
   [ "${ENV-}" ] || set_vars
-echo "$RC_FORCE"
+
   if ! test -f "${ENV:-${_RC_FILE}}" || test "${RC_FORCE}" -eq 1; then
     create_dirs_and_files
 
