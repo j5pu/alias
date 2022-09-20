@@ -172,7 +172,6 @@ write_profile() {
   cat >> "${_RC_TMP}" <<EOF
 
 if ! echo "\${PATH}" | grep -q "${RC_TOP}/bin:"; then
-
 $(for var in $(echo "${RC_VARS}" | tr ' ' '\n' | sort); do
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
 done)
@@ -185,6 +184,7 @@ done)
   fi
   ! has brew || brew shellenv
   export PATH="${RC_TOP}/bin:\${PATH}"
+
   : "\${HOSTNAME=\$(hostname)}"; export HOSTNAME
 
 $(hooks_no "${RC_ETC_PROFILE_D}")
@@ -193,7 +193,7 @@ $(hooks "${RC_ETC_PROFILE_D}")
 
 $(echo_files_to_source "${RC_GENERATED_PROFILE_D}")
 
-rc_source_dir "${RC_CUSTOM_PROFILE_D}"
+  rc_source_dir "${RC_CUSTOM_PROFILE_D}"
 fi
 EOF
 }
@@ -226,7 +226,7 @@ $(echo_files_to_source "${RC_GENERATED_RC_D}" "  " | grep "/sudo.sh\"$")
 $(find_dirs_to_source "${RC_ETC_COMPLETION}" 1 | echo_rc_source_dir "  ")
   fi
 
-rc_source_dir "${RC_CUSTOM_RC_D}"
+  rc_source_dir "${RC_CUSTOM_RC_D}"
 fi
 
 export ENV="${_RC_FILE}"
