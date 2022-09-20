@@ -43,31 +43,6 @@ _gen_env_dirs() {
   $_ENV_CHANGED || return 0
   for _gen_env_dir in ${ENV_SUPPORTED}; do
 
-    find "${ENV_GENERATED}" -mindepth 1 -maxdepth 1 -type d | while read -r _gen_env_dir_generated; do
-        _gen_env_dir_generated_absolute="${_gen_env_dir_generated}/${_gen_env_dir}"
-        case "${_gen_env_dir}" in
-          rhel|rhel_fedora)
-            cd "${_gen_env_dir_generated}"
-            if [ "${_gen_env_dir_generated##*/}" = rc.d ]; then
-             ! test -e "${_gen_env_dir}" || rm -r "${_gen_env_dir}"
-             ln -s fedora "${_gen_env_dir}"
-            else
-             ! test -e "${_gen_env_dir}.sh" || rm -r "${_gen_env_dir}.sh"
-             ln -s fedora.sh "${_gen_env_dir}.sh"
-            fi
-            ;;
-          *)
-            if [ "${_gen_env_dir_generated##*/}" = rc.d ]; then
-              mkdir -p "${_gen_env_dir_generated_absolute}"
-              touch "${_gen_env_dir_generated_absolute}/dirs.sh"
-              touch "${_gen_env_dir_generated_absolute}/sudo.sh"
-            else
-              touch "${_gen_env_dir_generated_absolute}.sh"
-            fi
-            ;;
-        esac
-      done
-
     { find "${ENV_ETC}" -mindepth 2 -maxdepth 2 -type d -not -name "bash_completion.d"; \
       echo "${ENV_ETC}/functions.d"; }| while read -r _gen_env_dir_etc; do
         _gen_env_dir_etc_absolute="${_gen_env_dir_etc}/${_gen_env_dir}"
