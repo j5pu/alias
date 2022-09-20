@@ -22,7 +22,7 @@ env_vars() {
   MACOS="$(if test "$(uname -s)" = "Darwin"; then echo true; else echo false; fi)"
   SUDO="$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)"
   UNAME="$(uname -s)"
-  VGA="$([ ! "${GITHUB_RUN_ID-}" ] || { if $MACOS; then echo 1; else lspci 2>/dev/null | awk '/VGA/ { print 1 }'; fi; })"
+  VGA="$([ "${GITHUB_RUN_ID-}" ] || if $MACOS; then echo 1; else lspci 2>/dev/null | awk '/VGA/ { print 1 }'; fi)"
 
   _ENV_CHANGED=false
   _ENV_FILE="${ENV_TOP}/.env.sh"
