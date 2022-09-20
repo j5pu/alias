@@ -11,7 +11,16 @@ cd "$(dirname "$0")/.."
 # Force creation of .env.sh
 : "${ENV_FORCE=0}"
 
-env_dirs() {
+echo_files_to_source() {
+    find "$1" -type f \
+    \( -name "00-common.*" \
+    -or -name "${HOSTNAME}.*" \
+    -or -name "${ID_LIKE}.*" \
+    -or -name "${UNAME}.*" \) \
+    -exec echo . \""{}"\" \; | sort -n
+}
+
+create_dirs_and_files() {
   $_ENV_CHANGED || return 0
 
   for _gen_env_dir in ${ENV_SUPPORTED}; do
@@ -43,29 +52,8 @@ env_dirs() {
 
 }
 
-env_vars() {
-  ENV_TOP="$(pwd -P)"
-  PATH="${ENV_TOP}/bin:${PATH}"
 
-  HOSTNAME="${HOSTNAME=$(hostname)}"
-  ID_LIKE="$(! test -f /etc/os-release || grep "^ID_LIKE=" /etc/os-release \
-      || grep "^ID=" /etc/os-release | cut -d= -f2 | tr ' ' '_')"
-  MACOS="$(if test "$(uname -s)" = "Darwin"; then echo true; else echo false; fi)"
-  SUDO="$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)"
-  UNAME="$(uname -s)"
-  VGA="$([ "${GITHUB_RUN_ID-}" ] || if $MACOS; then echo 1; else lspci 2>/dev/null | awk '/VGA/ { print 1 }'; fi)"
-
-  _ENV_CHANGED=false
-  _ENV_FILE="${ENV_TOP}/.env.sh"
-  _ENV_TMP="$(mktemp)"
-
-  ENV_CUSTOM="${ENV_TOP}/custom"
-  ENV_ETC="${ENV_TOP}/etc"
-  ENV_GENERATED="${ENV_TOP}/generated"
-  ENV_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}"
-}
-
-env_sh_profile() {
+write_profile() {
   ! test -f "${_ENV_FILE}" || test "${ENV_FORCE}" -eq 1 || return 0
   _ENV_CHANGED=true
   cat > "${_ENV_TMP}" <<EOF
@@ -85,11 +73,12 @@ $(for var in ENV_CUSTOM ENV_ETC ENV_GENERATED ENV_SUPPORTED ENV_TOP \
   ID_LIKE MACOS SUDO UNAME VGA; do
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
 done)
+$(echo_files_to_source "${ENV_GENERATED_PROFILE_D}")
 fi
 EOF
 }
 
-env_sh_rc() {
+write_rc() {
   $_ENV_CHANGED || return 0
 
   cat >> "${_ENV_TMP}" <<EOF
@@ -98,7 +87,7 @@ env_sh_rc() {
 # RC for interactive shells has been sourced already
 : "\${ENV_SOURCED=0}"
 
-if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && test "\${ENV_SOURCED}" -eq 0; then \
+if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && [ "\${ENV_SOURCED}" -eq 0 ]; then
   ENV_SOURCED=1
   unalias cp egrep fgrep grep l l. la ll lld ls mv rm xzegrep xzfgrep xzgrep zegrep zfgrep zgrep 2>/dev/null
 fi
@@ -107,13 +96,46 @@ export ENV="${_ENV_FILE}"
 EOF
 }
 
-main() {
-  env_vars
-  env_dirs
+find_dirs() {
+  find "$1" -type d \
+    \( -path "*/00-common/*" \
+    -or -path "*/${HOSTNAME}/*" \
+    -or -path "*/${ID_LIKE}/*" \
+    -or -path "*/${UNAME}/*" \) \
+    -exec echo . \""{}"\" \; | sort -n
+}
 
-  env_sh_profile
-  env_sh_rc
-  
+set_vars() {
+  ENV_TOP="$(pwd -P)"
+  PATH="${ENV_TOP}/bin:${PATH}"
+
+  HOSTNAME="${HOSTNAME=$(hostname)}"
+  ID_LIKE="$(! test -f /etc/os-release || grep "^ID_LIKE=" /etc/os-release \
+      || grep "^ID=" /etc/os-release | cut -d= -f2 | tr ' ' '_')"
+  MACOS="$(if test "$(uname -s)" = "Darwin"; then echo true; else echo false; fi)"
+  SUDO="$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)"
+  UNAME="$(uname -s)"
+  VGA="$([ "${GITHUB_RUN_ID-}" ] || if $MACOS; then echo 1; else lspci 2>/dev/null | awk '/VGA/ { print 1 }'; fi)"
+
+  _ENV_CHANGED=false
+  _ENV_FILE="${ENV_TOP}/.env.sh"
+  _ENV_TMP="$(mktemp)"
+
+  ENV_CUSTOM="${ENV_TOP}/custom"
+  ENV_ETC="${ENV_TOP}/etc"
+  ENV_GENERATED="${ENV_TOP}/generated"
+  ENV_GENERATED_PROFILE_D="${ENV_GENERATED}/profile.d"
+  ENV_GENERATED_RC_D="${ENV_GENERATED}/rc.d"
+  ENV_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}"
+}
+
+main() {
+  set_vars
+  create_dirs_and_files
+
+  write_profile
+  write_rc
+
   mv "${_ENV_TMP}" "${_ENV_FILE}"
   envsync
 }
