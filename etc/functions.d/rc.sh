@@ -18,7 +18,6 @@ has() { command -v "$1" >/dev/null; }
 
 rebash() {
   unset -f rebash
-  PATH="$(echo "${PATH}" | sed "s|${RC_TOP}/bin:||")"
-  unset BASH_COMPLETION_VERSINFO HOMEBREW_PROFILE_D_SOURCED RC_SOURCED
+  unset BASH_COMPLETION_VERSINFO HOMEBREW_PROFILE_D_SOURCED RC_PROFILE_D_SOURCED RC_RC_D_SOURCED
   . "${ENV?}"
 }

@@ -171,6 +171,13 @@ EOF
 write_profile() {
   cat >> "${_RC_TMP}" <<EOF
 
+#
+# RC profile.d for interactive shells has been sourced already
+: "\${RC_PROFILE_D_SOURCED=0}"
+
+if [ "\${RC_PROFILE_D_SOURCED}" -eq 0 ]; then
+  RC_PROFILE_D_SOURCED=1
+
 if ! echo "\${PATH}" | grep -q "${RC_TOP}/bin:"; then
 $(for var in $(echo "${RC_VARS}" | tr ' ' '\n' | sort); do
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
@@ -202,11 +209,11 @@ write_rc() {
   cat >> "${_RC_TMP}" <<EOF
 
 #
-# RC for interactive shells has been sourced already
-: "\${RC_SOURCED=0}"
+# RC rc.d for interactive shells has been sourced already
+: "\${RC_RC_D_SOURCED=0}"
 
-if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && [ "\${RC_SOURCED}" -eq 0 ]; then
-  RC_SOURCED=1
+if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && [ "\${RC_RC_D_SOURCED}" -eq 0 ]; then
+  RC_RC_D_SOURCED=1
 
   unalias cp egrep fgrep grep l l. la ll lld ls mv rm xzegrep xzfgrep xzgrep zegrep zfgrep zgrep 2>/dev/null
 
