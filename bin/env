@@ -19,7 +19,7 @@ env_vars() {
   HOSTNAME="${HOSTNAME=$(hostname)}"
   ID_LIKE="$(! test -f /etc/os-release || grep "^ID_LIKE=" /etc/os-release \
       || grep "^ID=" /etc/os-release | cut -d= -f2 | tr ' ' '_')"
-  MACOS="$(if test "$(uname -s)" = "Darwin"; then echo "true"; else echo "false"; fi)"
+  MACOS="$(if test "$(uname -s)" = "Darwin"; then echo true; else echo false; fi)"
   SUDO="$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)"
   UNAME="$(uname -s)"
   VGA="$([ ! "${GITHUB_RUN_ID-}" ] || { if $MACOS; then echo 1; else lspci 2>/dev/null | awk '/VGA/ { print 1 }'; fi; })"
