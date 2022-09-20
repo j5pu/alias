@@ -20,5 +20,5 @@ reenv() {
   unset -f reenv
   PATH="$(echo "${PATH}" | sed "s|${ENV_TOP}/bin:||")"
   unset ENV_SOURCED
-  . "${ENV}"
+  . "${ENV?}"
 }
