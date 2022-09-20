@@ -27,7 +27,7 @@ echo_files_to_source() {
 }
 
 find_dirs_to_source() {
-  find "$1" -mindepth "$2" -maxdepth "$2" --type d \
+  find "$1" -mindepth "$2" -maxdepth "$2" -type d \
     \( -path "*/00-common/*" \
     -or -path "*/${HOSTNAME}/*" \
     -or -path "*/${ID_LIKE}/*" \
