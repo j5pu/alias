@@ -49,7 +49,7 @@ _gen_env_dirs() {
   $_ENV_CHANGED || return 0
   for _gen_env_dir in ${ENV_SUPPORTED}; do
 
-    find "${ENV_GENERATED}" -mindepth 2 -maxdepth 2 -type d | while read -r _gen_env_dir_generated; do
+    find "${ENV_GENERATED}" -mindepth 1 -maxdepth 1 -type d | while read -r _gen_env_dir_generated; do
         _gen_env_dir_generated_absolute="${_gen_env_dir_generated}/${_gen_env_dir}"
         case "${_gen_env_dir}" in
           rhel|rhel_fedora)
