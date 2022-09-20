@@ -279,7 +279,7 @@ set_vars() {
 
   # Adds dinamically completions with __load_completion()/_completion_loader
   # /completions is added by __load_completions(
-  BASH_COMPLETION_USER_DIR="${RC_ETC}" && add_var BASH_COMPLETION_USER_DIR
+  BASH_COMPLETION_USER_DIR="${RC_CUSTOM}" && add_var BASH_COMPLETION_USER_DIR
   RC_COMPLETIONS="${RC_CUSTOM}/completions" && add_var RC_COMPLETIONS
 
 }
