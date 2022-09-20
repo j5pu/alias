@@ -63,8 +63,8 @@ create_dirs_and_files() {
             ln -s fedora "${_gen_env_dir}"
             ;;
           *)
-            [ "${_gen_env_dir_etc##*/}" != hooks.d ] || continue
             mkdir -p "${_gen_env_dir_etc_absolute}"
+            [ "${_gen_env_dir_etc##*/}" != hooks.d ] || continue
             touch "${_gen_env_dir_etc_absolute}/.gitkeep"
             ;;
         esac
