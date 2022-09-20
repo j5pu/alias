@@ -137,7 +137,7 @@ gnu_completions() {
   bash -li -c \
   "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; done < <(echo \"${cmds}\" | tr ' ' '\n')"
     bash -li -c \
-  "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; done <<<${cmds}"
+  "while IFS=' ' read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; done <<<${cmds}"
 
 #  bash -li -c "(
 #    PS1='> '
