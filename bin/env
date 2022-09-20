@@ -83,6 +83,8 @@ create_dirs_and_files() {
   done
 }
 
+echo_env_source_dir() { while read -r i; do echo "  env_source_dir \"${i}\""; done; }
+
 echo_files_to_source() {
   find "$1" -type f \
     \( \
@@ -113,9 +115,7 @@ find_dirs_to_source() {
 }
 
 hooks() {
-  find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | while read -r i; do
-    echo "  env_source_dir \"${i}\""
-  done
+  find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_env_source_dir; 
 }
 
 hooks_no() {
@@ -188,7 +188,7 @@ $(echo_files_to_source "${ENV_GENERATED_RC_D}" "  " | grep "/sudo.sh\"$")
   fi
 
   if has complete; then
-$(find_dirs_to_source "${ENV_ETC_COMPLETION}" 1)
+$(find_dirs_to_source "${ENV_ETC_COMPLETION}" 1 | while read -r i; do echo "  env_source_dir \"${i}\""; done)
   fi
 
 env_source_dir "${ENV_CUSTOM_RC_D}"
