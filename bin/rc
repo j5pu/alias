@@ -134,7 +134,7 @@ gnu_completions() {
   brew_bin="$(brew --prefix)/bin"
   commands="$(find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g" | grep -v "\[")"
 
-  bash -li -c "while read -r i; do echo \${i} 2>/dev/null; done < <(echo \"${commands}\" | tr -d ' ' '\n')"
+  bash -li -c "while read -r i; do echo \${i} 2>/dev/null; done < <(echo \"${commands}\" | tr ' ' '\n')"
 #  bash -li -c "(
 #    PS1='> '
 #    . \"$(brew --prefix)/etc/profile.d/bash_completion.sh\"
