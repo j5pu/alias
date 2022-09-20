@@ -78,6 +78,7 @@ $(for var in ENV_CUSTOM ENV_ETC ENV_GENERATED ENV_SUPPORTED ENV_TOP \
   ID_LIKE MACOS SUDO UNAME VGA; do
   echo "  export ${var}=\"$(eval echo "\$${var}")\""
 done)
+
 $(echo_files_to_source "${ENV_GENERATED_PROFILE_D}")
 fi
 EOF
