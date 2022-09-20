@@ -231,10 +231,6 @@ $(echo_files_to_source "${RC_GENERATED_RC_D}" | grep "/dirs.sh\"$")
 $(echo_files_to_source "${RC_GENERATED_RC_D}" "  " | grep "/sudo.sh\"$")
   fi
 
-  if has complete; then
-$(find_dirs_to_source "${RC_ETC_COMPLETION}" 1 | echo_rc_source_dir "  ")
-  fi
-
   rc_source_dir "${RC_CUSTOM_RC_D}"
 fi
 
