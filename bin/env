@@ -65,7 +65,6 @@ create_dirs_and_files() {
             ;;
           *)
             mkdir -p "${_gen_env_dir_etc_absolute}"
-            [ "${_gen_env_dir_etc##*/}" != hooks.d ] || continue
             touch "${_gen_env_dir_etc_absolute}/.gitkeep"
             ;;
         esac
