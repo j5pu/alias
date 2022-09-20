@@ -95,7 +95,7 @@ write_rc() {
 if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && [ "\${ENV_SOURCED}" -eq 0 ]; then
   ENV_SOURCED=1
   unalias cp egrep fgrep grep l l. la ll lld ls mv rm xzegrep xzfgrep xzgrep zegrep zfgrep zgrep 2>/dev/null
-$(echo_files_to_source "${ENV_GENERATED_RC_D}" | grep "/dirs.sh$")
+$(echo_files_to_source "${ENV_GENERATED_RC_D}")
 fi
 
 export ENV="${_ENV_FILE}"
