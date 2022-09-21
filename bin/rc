@@ -150,8 +150,9 @@ gnu_completions() {
   while read -r cmd; do
     if test -f "${cmd}"; then
       ! test -L "${cmd}" || continue
-      rm -f "g${cmd}"
-      ln -s "${cmd}" "g${cmd}"
+      grep "    complete " "${cmd}"
+      # rm -f "g${cmd}"
+      # ln -s "${cmd}" "g${cmd}"
     else
       value="$(complete -p ${cmd} 2>/dev/null | sed "s| ${cmd}$| g${cmd}|g")"
       [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
