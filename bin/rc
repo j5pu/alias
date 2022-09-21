@@ -145,13 +145,16 @@ gnu_completions() {
   dest="$(brew --prefix bash-completion@2)/share/bash-completion/completions"
 
   cd "${dest}"
-  bash -li -c "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\" > g\$i; \
-    done < <(echo \"${cmds}\" | tr ' ' '\n')"
 
   for cmd in ${cmds}; do
-    { test -f "${cmd}" && ! test -L "${cmd}"; } || continue
-    rm -f "g${cmd}"
-    ln -s "${cmd}" "g${cmd}"
+    if test -f "${cmd}"; then
+      ! test -L "${cmd}" || continue
+      rm -f "g${cmd}"
+      ln -s "${cmd}" "g${cmd}"
+    else
+      value="$(bash -li -c "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; done")"
+      [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
+    fi
   done
 }
 
