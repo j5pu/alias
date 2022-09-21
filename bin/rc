@@ -214,7 +214,7 @@ done)
   else
     PATH="/home/linuxbrew/.linuxbrew/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
   fi
-  ! has brew || brew shellenv
+  ! has brew || eval "\$(brew shellenv)"
   export PATH="${RC_TOP}/bin:\${PATH}"
 
   : "\${HOSTNAME=\$(hostname)}"; export HOSTNAME
