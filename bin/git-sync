@@ -20,7 +20,7 @@ elif git status | grep -q "Your branch is behind"; then
   exit 0
 elif test -n "$(git status --porcelain)"; then
   git add -A
-  git commit --quiet -a -m "${0##*/}: ${*:-$(git status -z --short)}"
+  git commit --quiet -a -m "${0##*/}: ${*:-$(git status --short | tr '\n' ' ')}"
 fi
 
 ! git status | grep -q "Your branch is ahead" || git push --quiet --tags
