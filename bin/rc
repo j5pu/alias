@@ -156,16 +156,21 @@ gnu_completions() {
 #      [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
 #    fi
 #  done
+#  bash -li -c "{
+#  while read -r cmd ${cmds}; do
+#    if test -f \${cmd}; then
+#      ! test -L \${cmd} || continue
+#      rm -f g\${cmd}
+#      ln -s \${cmd} g\${cmd}
+#    else
+#      value=\"\$(complete -p \${cmd} 2>/dev/null | sed 's| \${cmd}$| g\${cmd}|g')\"
+#      [ ! \"\${value-}\" ] || echo \"\${value}\" > g\${cmd}
+#    fi
+#  done < <(echo \"${cmds}\" | tr ' ' '\n')
+#  }"
   bash -li -c "{
   while read -r cmd ${cmds}; do
-    if test -f \${cmd}; then
-      ! test -L \${cmd} || continue
-      rm -f g\${cmd}
-      ln -s \${cmd} g\${cmd}
-    else
-      value=\"\$(complete -p \${cmd} 2>/dev/null | sed 's| \${cmd}$| g\${cmd}|g')\"
-      [ ! \"\${value-}\" ] || echo \"\${value}\" > g\${cmd}
-    fi
+    echo \$cmd
   done < <(echo \"${cmds}\" | tr ' ' '\n')
   }"
 }
