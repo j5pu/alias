@@ -157,7 +157,7 @@ gnu_completions() {
 #    fi
 #  done
   bash -li -c "{
-  for cmd in ${cmds}; do
+  while read -r cmd ${cmds}; do
     if test -f \${cmd}; then
       ! test -L \${cmd} || continue
       rm -f g\${cmd}
@@ -166,7 +166,7 @@ gnu_completions() {
       value=\"\$(complete -p \${cmd} 2>/dev/null | sed 's| \${cmd}$| g\${cmd}|g')\"
       [ ! \"\${value-}\" ] || echo \"\${value}\" > g\${cmd}
     fi
-  done
+  done < <(echo \"${cmds}\" | tr ' ' '\n')
   }"
 }
 
