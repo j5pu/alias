@@ -171,7 +171,7 @@ gnu_completions() {
   bash -li -c "
   while read -r cmd ${cmds}; do
     echo \$cmd
-  done < <(echo \"${cmds}\" | tr ' ' '\n')
+  done <<<${cmds}
   "
 }
 
