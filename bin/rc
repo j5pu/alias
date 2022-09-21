@@ -93,7 +93,8 @@ clean() {
 
 create_dirs_and_files() {
   for _gen_rc_dir in ${RC_SUPPORTED}; do
-    find "${RC_GENERATED}" -mindepth 1 -maxdepth 1 -type d | while read -r _gen_rc_dir_generated; do
+    find "${RC_GENERATED}" -mindepth 1 -maxdepth 1 -type d -not -path "${RC_GENERATED_HOSTS_D}" |
+    while read -r _gen_rc_dir_generated; do
       _gen_rc_dir_generated_absolute="${_gen_rc_dir_generated}/${_gen_rc_dir}"
         case "${_gen_rc_dir}" in
           rhel|rhel_fedora)
