@@ -253,6 +253,8 @@ $(hooks_no "${RC_ETC_RC_D}")
 
 $(hooks "${RC_ETC_RC_D}")
 
+$(echo_files_to_source "${RC_ETC_ALIASES}")
+
 $(echo_files_to_source "${RC_GENERATED_RC_D}" | grep "/dirs.sh\"$")
 
   if [ "\${SUDO-}" ]; then
@@ -293,6 +295,7 @@ set_vars() {
   RC_CUSTOM_PROFILE_D="${RC_CUSTOM}/profile.d" && add_var RC_CUSTOM_PROFILE_D
   RC_CUSTOM_RC_D="${RC_CUSTOM}/rc.d" && add_var RC_CUSTOM_RC_D
   RC_ETC="${RC_TOP}/etc" && add_var RC_ETC
+  RC_ETC_ALIASES="${RC_ETC}/aliases.d" && add_var RC_ETC_ALIASES
   RC_ETC_FUNCTIONS="${RC_ETC}/functions.d" && add_var RC_ETC_FUNCTIONS
   RC_ETC_PROFILE_D="${RC_ETC}/profile.d" && add_var RC_ETC_PROFILE_D
   RC_ETC_RC_D="${RC_ETC}/rc.d" && add_var RC_ETC_RC_D
