@@ -419,7 +419,7 @@ set_vars() {
   UNAME="$(uname -s)" && add_var UNAME
 
   HOSTNAME_UPPER="$(echo "${HOSTNAME}" | tr '[:lower:]' '[:upper:]')"
-
+echo "$HOSTNAME_UPPER"
   VGA=1 && add_var VGA
   if $MACOS; then
     CLT="/Library/Developer/CommandLineTools" && add_var CLT
