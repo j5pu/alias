@@ -17,6 +17,7 @@ cd "$(dirname "$0")/.."
 # TODO: Faltaría el SH y las variables de system.sh y probarlo un poco y los comandos de alias
 
 add() {
+  shift
   if test -d "${1:-.}"; then
     arguments="$(realpath -e "${1:-.}")"
     alias=".${arguments##*/}"
@@ -56,7 +57,7 @@ add() {
     fi
   fi
   tmp="$(mktemp)"
-  line="${prefix}${alias}=\"${value}\""
+  line="alias ${prefix}${alias}=\"${value}\""
   { cat "${dest}"; echo "${line}"; } | sort -u > "${tmp}"
   mv "${tmp}" "${dest}"
   >&2 echo "${line}: added to ${dest}"
