@@ -424,6 +424,7 @@ set_vars() {
     eval "${HOSTNAME}_IP=\$(ipconfig getifaddr en0 || ipconfig getifaddr en2)" && add_var "${HOSTNAME}_IP"
   else
     upper="$(echo "${HOSTNAME}" | tr '[:lower:]' '[:upper:]')"
+    echo "${upper}"
     eval "${upper}_IP=\$(hostname -I | awk '{ print \$1 }')" && add_var "${upper}_IP"
     lspci 2>/dev/null | grep -q VGA || VGA=""
   fi
