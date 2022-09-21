@@ -418,14 +418,14 @@ set_vars() {
   SUDO="$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)" && add_var SUDO
   UNAME="$(uname -s)" && add_var UNAME
 
+  HOSTNAME_UPPER="$(echo "${HOSTNAME}" | tr '[:lower:]' '[:upper:]')"
+
   VGA=1 && add_var VGA
   if $MACOS; then
     CLT="/Library/Developer/CommandLineTools" && add_var CLT
-    eval "${HOSTNAME}_IP=\$(ipconfig getifaddr en0 || ipconfig getifaddr en2)" && add_var "${HOSTNAME}_IP"
+    eval "${HOSTNAME_UPPER}_IP=\$(ipconfig getifaddr en0 || ipconfig getifaddr en2)" && add_var "${HOSTNAME_UPPER}_IP"
   else
-    upper="$(echo "${HOSTNAME}" | tr '[:lower:]' '[:upper:]')"
-    echo "${upper}"
-    eval "${upper}_IP=\$(hostname -I | awk '{ print \$1 }')" && add_var "${upper}_IP"
+    eval "${HOSTNAME_UPPER}_IP=\$(hostname -I | awk '{ print \$1 }')" && add_var "${HOSTNAME_UPPER}_IP"
     lspci 2>/dev/null | grep -q VGA || VGA=""
   fi
   [ ! "${GITHUB_RUN_ID-}" ] || VGA=""
