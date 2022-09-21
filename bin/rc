@@ -18,17 +18,17 @@ cd "$(dirname "$0")/.."
 
 add() {
   if test -d "${1:-.}"; then
-    arguments="$(realpath -e "${1:-.}" | sed "s|${HOME}|~|")"
+    arguments="$(realpath -e "${1:-.}")"
     alias="${arguments##*/}"
     command="cd"
-    file="sudo.sh"
+    file="dirs.sh"
     prefix="."
     supported="${2:-${HOSTNAME}}"
   else
     arguments="$1"
     alias="$1"
     command="sudo"
-    file="dirs.sh"
+    file="sudo.sh"
     prefix=""
     supported="${2:-${UNAME}}"
   fi

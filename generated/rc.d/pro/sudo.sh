@@ -1,1 +1,0 @@
-alias .env="cd ~/env"
