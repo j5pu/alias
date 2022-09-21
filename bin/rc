@@ -152,7 +152,7 @@ gnu_completions() {
       rm -f "g${cmd}"
       ln -s "${cmd}" "g${cmd}"
     else
-      value="$(bash -li -c "while read -r i; do complete -p \$i 2>/dev/null | sed \"s| \$i$| g\$i|g\"; done")"
+      value="$(bash -li -c "complete -p ${cmd} 2>/dev/null | sed 's| ${cmd}$| g${cmd}|g'; done")"
       [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
     fi
   done
