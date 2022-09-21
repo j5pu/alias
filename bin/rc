@@ -169,7 +169,7 @@ gnu_completions() {
 #  done < <(echo \"${cmds}\" | tr ' ' '\n')
 #  }"
   bash -li -c "
-  while read -r cmd ${cmds}; do
+  while read -r cmd; do
     echo \$cmd
   done <<<${cmds}
   "
