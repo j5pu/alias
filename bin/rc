@@ -83,10 +83,18 @@ create_dirs_and_files() {
     fi
 
     cd "${RC_COMPLETIONS}"
-    find "../../bash_completion.d" -type f -name "*.bash" | while read -r completion; do
+    find "../../bash_completion.d" -mindepth 1 -maxdepth 1 -type f -name "*.bash" | while read -r completion; do
       rm -f "${completion##*/}"
       ln -s "${completion}" "${completion##*/}"
     done
+    
+    dir="../../bash_completion.d/${UNAME}"
+    if test -d "${dir}"; then
+      find "${dir}" -mindepth 1 -maxdepth 1 -type f -name "*.bash" | while read -r completion; do
+        rm -f "${completion##*/}"
+        ln -s "${completion}" "${completion##*/}"
+      done
+    fi
   done
 }
 
