@@ -353,6 +353,7 @@ main() {
     write_compats
     write_rc
 
+
     mv "${_RC_TMP}" "${_RC_FILE}"
     sync "$@"
 
