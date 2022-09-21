@@ -312,7 +312,7 @@ sync() {
     git pull --tags
     exit 0
   elif test -n "$(git status --porcelain)"; then
-    git add .
+    git add -A
     git commit -a -m "${0##*/}${1:+: ${1}}"
   fi
 

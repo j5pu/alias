@@ -1,5 +1,7 @@
 .rc.sh
 custom/*/[A-Z,a-z,0-9]*
+.DS_Store
+.localized
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
