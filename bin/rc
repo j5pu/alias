@@ -150,13 +150,11 @@ gnu_completions() {
   while read -r cmd; do
     if test -f "${cmd}"; then
       ! test -L "${cmd}" || continue
-      awk "!/#/ && /complete/ {\$1=\$1;print}" "${cmd}"
-      # rm -f "g${cmd}"
-      # ln -s "${cmd}" "g${cmd}"
+      value="$(awk "!/#/ && /complete/ {\$1=\$1;print}" "${cmd}")"
     else
-      value="$(complete -p ${cmd} 2>/dev/null | sed "s| ${cmd}$| g${cmd}|g")"
-      [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
+      value="$(complete -p ${cmd} 2>/dev/null)"
     fi
+    [ ! "${value-}" ] || echo "${value}" | sed "s| ${cmd}$| g${cmd}|g" > "g${cmd}"
   done < <(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" \
     | sed -e "s|.*/bin/g||g" | grep -v "\[")
   '
