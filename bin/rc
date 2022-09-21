@@ -150,7 +150,7 @@ gnu_completions() {
   while read -r cmd; do
     if test -f "${cmd}"; then
       ! test -L "${cmd}" || continue
-      grep "complete " "${cmd}"
+      awk "!/#/ && /complete/ {\$1=\$1;print}" "${cmd}"
       # rm -f "g${cmd}"
       # ln -s "${cmd}" "g${cmd}"
     else
