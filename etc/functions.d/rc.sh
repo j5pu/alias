@@ -20,4 +20,5 @@ resh() {
   unset -f resh
   unset BASH_COMPLETION_VERSINFO HOMEBREW_PROFILE_D_SOURCED RC_PROFILE_D_SOURCED RC_RC_D_SOURCED
   . "${ENV?}"
+  rc_source_dir "${RC_COMPLETIONS}"
 }

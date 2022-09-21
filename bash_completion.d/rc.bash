@@ -15,9 +15,10 @@ _rc() {
   test "${cword}" -lt 4 || return 0
   [[ ! "${words[1]}" =~ -h|--help|help|hook|sync ]] || return 0
   case "$cword" in
-    1) mapfile -t COMPREPLY < <(compgen -o nospace -W "-h --help help add clean del hook sync" -- "${cur}") ;;
+    1) mapfile -t COMPREPLY < <(compgen -o nospace -W "-h --help --force help add clean del hook sync" -- "${cur}") ;;
     2)
       case "${words[1]}" in
+        --force) mapfile -t COMPREPLY < <(compgen -o nospace -W "hook" -- "${cur}") ;;
         add)
           mapfile -t COMPREPLY < <(compgen -A command -- "${cur}")
           _filedir -d
@@ -26,7 +27,7 @@ _rc() {
       esac
       ;;
     3)
-      if [ "${cword[2]}" != "del" ]; then
+      if [ "${cword[2]}" = "add" ]; then
         mapfile -t COMPREPLY < <(compgen -o nospace -W "${RC_SUPPORTED}" -- "${cur}")
       fi
       ;;

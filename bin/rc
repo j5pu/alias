@@ -347,8 +347,10 @@ main() {
     { >&2 echo "${0##*/}: --force can not be used with ${function}"; exit 1; }
 
   if ! test -f "${ENV:-${_RC_FILE}}" || [ "${RC_FORCE}" -eq 1 ]; then
+    [ "${_RC_FILE-}" ] || set_vars
     # shellcheck disable=SC2010
-    ls -la "${_RC_FILE}" | grep -q " ${USER} " || >&2 echo "${0##*/}: ${_RC_FILE} is not owned by: ${USER}"
+    ls -la "${_RC_FILE}" | \
+      grep -q " ${USER} " || >&2 echo "${0##*/}: ${_RC_FILE} is not owned by: ${USER}"
 
     create_dirs_and_files
 
