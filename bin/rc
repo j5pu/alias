@@ -146,16 +146,28 @@ gnu_completions() {
 
   cd "${dest}"
 
+#  for cmd in ${cmds}; do
+#    if test -f "${cmd}"; then
+#      ! test -L "${cmd}" || continue
+#      rm -f "g${cmd}"
+#      ln -s "${cmd}" "g${cmd}"
+#    else
+#      value="$(bash -li -c "complete -p ${cmd} 2>/dev/null | sed 's| ${cmd}$| g${cmd}|g'")"
+#      [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
+#    fi
+#  done
+  bash -li -c "{
   for cmd in ${cmds}; do
-    if test -f "${cmd}"; then
-      ! test -L "${cmd}" || continue
-      rm -f "g${cmd}"
-      ln -s "${cmd}" "g${cmd}"
+    if test -f \${cmd}; then
+      ! test -L \${cmd} || continue
+      rm -f g\${cmd}
+      ln -s \${cmd} g\${cmd}
     else
-      value="$(bash -li -c "complete -p ${cmd} 2>/dev/null | sed 's| ${cmd}$| g${cmd}|g'")"
-      [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
+      value=\"\$(complete -p \${cmd} 2>/dev/null | sed 's| \${cmd}$| g\${cmd}|g')\"
+      [ ! \"\${value-}\" ] || echo \"\${value}\" > g\${cmd}
     fi
   done
+  }"
 }
 
 hooks() { find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_rc_source_dir ""; }
