@@ -87,7 +87,7 @@ create_dirs_and_files() {
       rm -f "${completion##*/}"
       ln -s "${completion}" "${completion##*/}"
     done
-    
+
     dir="../../bash_completion.d/${UNAME}"
     if test -d "${dir}"; then
       find "${dir}" -mindepth 1 -maxdepth 1 -type f -name "*.bash" | while read -r completion; do
@@ -150,8 +150,8 @@ gnu_completions() {
 
   for cmd in ${cmds}; do
     { test -f "${cmd}" && ! test -L "${cmd}"; } || continue
-    echo rm -f "g${cmd}"
-    echo ln -s "${cmd}" "g${cmd}"
+    rm -f "g${cmd}"
+    ln -s "${cmd}" "g${cmd}"
   done
 }
 
@@ -210,7 +210,7 @@ done)
   unset INFOPATH MANPATH
   if \$MACOS; then
     eval "\$(/usr/libexec/path_helper -s)"
-    PATH="\$(/usr/libexec/path_helper -s):\${CLT}/usr/bin"
+    PATH="\${PATH}:\${CLT}/usr/bin"
   else
     PATH="/home/linuxbrew/.linuxbrew/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
   fi
