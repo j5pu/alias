@@ -151,10 +151,12 @@ gnu_completions() {
     if test -f "${cmd}"; then
       ! test -L "${cmd}" || continue
       value="$(awk "!/#/ && /complete/ {\$1=\$1;print}" "${cmd}")"
+      new_value="$(echo "${value}" | sed "s| ${cmd}$| g${cmd}|g" > "g${cmd}")"
+      sed "s|${value}|${new_value}|" "${cmd}" > "g${cmd}"
     else
-      value="$(complete -p ${cmd} 2>/dev/null)"
+      value="$(complete -p ${cmd} 2>/dev/null | sed "s| ${cmd}$| g${cmd}|g")"
+      [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
     fi
-    [ ! "${value-}" ] || echo "${value}" | sed "s| ${cmd}$| g${cmd}|g" > "g${cmd}"
   done < <(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" \
     | sed -e "s|.*/bin/g||g" | grep -v "\[")
   '
