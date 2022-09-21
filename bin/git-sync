@@ -7,7 +7,9 @@ set -eu
 
 [ ! "${1-}" ] || cd "$1"
 
-if git status  | grep -q "have diverged"; then
+git fetch --tags --quiet
+
+if git status | grep -q "have diverged"; then
   >&2 echo "${0##*/}: Diverged"
   exit 1
 elif git status | grep -q "Your branch is behind" && test -n "$(git status --porcelain)"; then
@@ -18,7 +20,7 @@ elif git status | grep -q "Your branch is behind"; then
   exit 0
 elif test -n "$(git status --porcelain)"; then
   git add -A
-  git commit --quiet -a -m "${0##*/}${1:+: ${*}}"
+  git commit --quiet -a -m "${0##*/}: ${*:-$(git status -z --short)}"
 fi
 
 ! git status | grep -q "Your branch is ahead" || git push --quiet --tags

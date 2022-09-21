@@ -9,6 +9,7 @@
   </component>
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$JETBRAINS$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../bbin" vcs="Git" />
   </component>
 </project>

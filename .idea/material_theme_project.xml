@@ -5,6 +5,8 @@
     <option name="isActive" value="true" />
     <option name="isHighlightColorEnabled" value="true" />
     <option name="useProjectFrame" value="true" />
+    <option name="highlightColor" value="ff1ad2" />
+    <option name="projectFrameColor" value="ff1ad2" />
     <option name="tabHighlightPosition" value="Full" />
   </component>
 </project>

@@ -6,6 +6,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="Archive" />
     <orderEntry type="module" module-name="bbin" />
+    <orderEntry type="module" module-name="JetBrains" />
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="pyproject.toml" />
