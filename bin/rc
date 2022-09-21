@@ -171,7 +171,7 @@ gnu_completions() {
   cmds="hola adios"
   bash -li -c '
   while read -r cmd; do
-    echo \$cmd
+    echo $cmd
   done < <(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" \
     | sed -e "s|.*/bin/g||g" | grep -v "\[")
   '
