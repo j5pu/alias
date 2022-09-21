@@ -10,3 +10,4 @@ alias l="ls"
 alias la="ls -la"
 alias ll="ls -l"
 alias lld="ls -ld"
+alias caca=caca

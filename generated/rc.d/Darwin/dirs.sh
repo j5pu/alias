@@ -1,1 +1,0 @@
-add="sudo add"
