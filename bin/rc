@@ -40,7 +40,7 @@ add() {
   if aliases | grep -q "^${prefix}${alias}="; then
     existing="$(aliases | grep "^${prefix}${alias}=" | awk -F= '{ print $2 }')"
     if [ "'${value}'" = "${existing}" ]; then
-      >&2 echo "Already exists: ${prefix}${alias}=\"${value}\""
+      >&2 echo "Already exists: $(grep -R "alias ${prefix}${alias}=" "${RC_GENERATED_RC_D}" "${RC_ETC_ALIASES}")"
       exit 1
     else
       echo "Alias ${alias} already exists with value: ${existing}"
