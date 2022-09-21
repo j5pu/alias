@@ -423,7 +423,8 @@ set_vars() {
     CLT="/Library/Developer/CommandLineTools" && add_var CLT
     eval "${HOSTNAME}_IP=\$(ipconfig getifaddr en0 || ipconfig getifaddr en2)" && add_var "${HOSTNAME}_IP"
   else
-    eval "${HOSTNAME}_IP=\$(hostname -I | awk '{ print \$1 }')" && add_var "${HOSTNAME}_IP"
+    upper="$(echo "${HOSTNAME}" | tr '[:lower:]' '[:upper:]')"
+    eval "${upper}_IP=\$(hostname -I | awk '{ print \$1 }')" && add_var "${upper}_IP"
     lspci 2>/dev/null | grep -q VGA || VGA=""
   fi
   [ ! "${GITHUB_RUN_ID-}" ] || VGA=""
