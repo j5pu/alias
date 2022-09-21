@@ -151,7 +151,7 @@ gnu_completions() {
     if test -f "${cmd}"; then
       ! test -L "${cmd}" || continue
       value="$(awk "!/#/ && /complete/ {\$1=\$1;print}" "${cmd}")"
-      new_value="$(echo "${value}" | sed "s| ${cmd}$| g${cmd}|g" > "g${cmd}")"
+      new_value="$(echo "${value}" | sed "s| ${cmd}$| g${cmd}|g")"
       sed "s|${value}|${new_value}|" "${cmd}" > "g${cmd}"
     else
       value="$(complete -p ${cmd} 2>/dev/null | sed "s| ${cmd}$| g${cmd}|g")"
