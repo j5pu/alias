@@ -1,0 +1,7 @@
+#!/bin/sh
+
+#
+# dir has files in any level
+
+test -n "$(find "${1:-.}" \( -type f -o -type l \) -print -quit)"
+

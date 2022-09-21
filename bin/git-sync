@@ -1,0 +1,24 @@
+#!/bin/sh
+
+#
+# Syncs a repository
+
+set -eu
+
+[ ! "${1-}" ] || cd "$1"
+
+if git status  | grep -q "have diverged"; then
+  >&2 echo "${0##*/}: Diverged"
+  exit 1
+elif git status | grep -q "Your branch is behind" && test -n "$(git status --porcelain)"; then
+  >&2 echo "${0##*/}: Behind remote & directory is not clean"
+  exit 1
+elif git status | grep -q "Your branch is behind"; then
+  git pull --quiet --tags
+  exit 0
+elif test -n "$(git status --porcelain)"; then
+  git add -A
+  git commit --quiet -a -m "${0##*/}${1:+: ${*}}"
+fi
+
+! git status | grep -q "Your branch is ahead" || git push --quiet --tags

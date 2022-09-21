@@ -15,6 +15,9 @@ cd "$(dirname "$0")/.."
 
 
 # TODO: Faltaría el SH y las variables de system.sh y probarlo un poco y los comandos de alias
+# TODO: install
+# TODO: simplificar
+# TODO: test
 
 add() {
   if test -d "${1:-.}"; then
@@ -43,11 +46,11 @@ add() {
       >&2 echo "Already exists: $(grep -R "alias ${prefix}${alias}=" "${RC_GENERATED_RC_D}" "${RC_ETC_ALIASES}")"
       exit 1
     else
-      echo "Alias ${alias} already exists with value: ${existing}"
-      printf "%s" "Do you want to use a different alias name or delete? [y/N/D] "
+      >&2 echo "Alias ${alias} already exists with value: ${existing}"
+      >&2 printf "%s" "Do you want to use a different alias name or delete? [y/N/D] "
       read -r yes
       if [ "${yes}" = "y" ]; then
-        printf "%s" "New alias name: "
+        >&2 printf "%s" "New alias name: "
         read -r alias
       elif [ "${yes}" = "D" ]; then
         del "${prefix}${alias}"
@@ -73,7 +76,6 @@ alias_exists() { grep -R -l "alias ${1}" "${RC_GENERATED_RC_D}"; }
 
 clean() {
   tmp="$(mktemp)"
-  id_like="${RC_GENERATED_RC_D}/${ID_LIKE}/dirs.sh"
   set --
   for supported in 00-common "${HOSTNAME}" "${ID_LIKE}" "${UNAME}"; do
     file="${RC_GENERATED_RC_D}/${supported}/dirs.sh"
@@ -81,26 +83,12 @@ clean() {
     set -- "${file}" "$@"
   done
 
-  find "$@" -type f -name dirs.sh -exec grep -E "alias .*=" "{}" \;
-#  echo "${HOSTNAME}"
-#  found="$(grep -ER "alias .*=" \
-#             "${RC_GENERATED_RC_D}/00-common/dirs.sh" \
-#             "${RC_GENERATED_RC_D}/${HOSTNAME}/dirs.sh" \
-#             "${RC_GENERATED_RC_D}/${ID_LIKE}/dirs.sh" \
-#             "${RC_GENERATED_RC_D}/${UNAME}/dirs.sh" \
-#               | while IFS=:= read -r file alias value; do
-#    [ "${line-}" ] || continue
-#    echo "${file}|${alias}|${value}"
-#    grep -v "${line}" "${file}" > "${tmp}" 2>/dev/null || true
-#    mv -v "${tmp}" "${file}"
-#  done)"
-#  if [ ! "${found-}" ]; then
-#    if aliases | grep -q "^${1}="; then
-#      add="; however alias that can not be deleted found in: $(grep -R -l "alias ${1}=" "${RC_ETC}")"
-#    fi
-#    >&2 echo "${1}: Alias not found in: ${RC_GENERATED_RC_D}${add-}"
-#    return 1
-#  fi
+  find "$@" -type f -name dirs.sh -exec grep -EH "alias .*=" "{}" \; | sed 's|alias ||g; s|"cd ||g; s|"$||g' |
+    while IFS=":=" read -r file alias value; do
+      ! test -d "${value}" || continue
+      del "${alias}"
+    done
+  sync clean
 }
 
 create_dirs_and_files() {
@@ -190,14 +178,16 @@ del() {
     grep -v "${line}" "${file}" > "${tmp}" 2>/dev/null || true
     mv -v "${tmp}" "${file}"
   done)"
-  if [ ! "${found-}" ]; then
+  if [ "${found-}" ]; then
+    >&2 echo "${1}: Alias deleted from: $(echo "${found}" | awk '{ print $3 }')"
+  else
     if aliases | grep -q "^${1}="; then
       add="; however alias that can not be deleted found in: $(grep -R -l "alias ${1}=" "${RC_ETC}")"
     fi
     >&2 echo "${1}: Alias not found in: ${RC_GENERATED_RC_D}${add-}"
     return 1
   fi
-
+  sync "del: $1"
  }
 
 echo_rc_source_dir() { while read -r i; do echo "  ${1-}rc_source_dir \"${i}\""; done; }
@@ -449,6 +439,7 @@ set_vars() {
   RC_GENERATED="${RC_TOP}/generated" && add_var RC_GENERATED
   RC_GENERATED_PROFILE_D="${RC_GENERATED}/profile.d" && add_var RC_GENERATED_PROFILE_D
   RC_GENERATED_RC_D="${RC_GENERATED}/rc.d" && add_var RC_GENERATED_RC_D
+  RC_SEARCH="00-common ${HOSTNAME}${ID_LIKE:+ ${ID_LIKE}} ${UNAME}"; add_var RC_SEARCH
   RC_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}" && add_var RC_SUPPORTED
 
   # Adds dinamically completions with __load_completion()/_completion_loader

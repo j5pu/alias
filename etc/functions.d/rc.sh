@@ -3,6 +3,8 @@
 #
 # Functions used by env.
 
+has() { command -v "$1" >/dev/null; }
+
 rc_source_dir() {
   test -n "$(find "$1" \( -type f -or -type l \) -not -name ".*")" || return 0
   for _rc_source in "$1"/*; do
@@ -14,8 +16,6 @@ rc_source_dir() {
 
   unset _rc_source
 }
-
-has() { command -v "$1" >/dev/null; }
 
 resh() {
   unset -f resh

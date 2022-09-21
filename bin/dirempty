@@ -1,0 +1,6 @@
+#!/bin/sh
+
+#
+# dir does not have either files or directories
+
+test -z "$(find "${1:-.}" -mindepth 1 -maxdepth 1 -print -quit)"
