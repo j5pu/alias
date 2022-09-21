@@ -323,10 +323,10 @@ sync() {
     exit 0
   elif test -n "$(git status --porcelain)"; then
     git add -A
-    git commit -a -m "${0##*/}${1:+: ${1}}"
+    git commit --quiet -a -m "${0##*/}${1:+: ${1}}"
   fi
 
-  ! git status | grep -q "Your branch is ahead" || git push
+  ! git status | grep -q "Your branch is ahead" || git push --quiet
 }
 
 main() {
