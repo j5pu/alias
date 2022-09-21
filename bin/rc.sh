@@ -475,6 +475,7 @@ supported() {
 }
 
 main() {
+  set -x
   [ "${ENV-}" ] || set_vars
 
   action=false; hook=false; supported=false
