@@ -92,11 +92,6 @@ clean() {
 }
 
 create_dirs_and_files() {
-  for host in $(HOSTS); do
-    mkdir -p "${RC_GENERATED_RC_D}/${host}"
-    touch "${RC_GENERATED_RC_D}/${host}/dirs.sh"
-    touch "${RC_GENERATED_RC_D}/${host}/sudo.sh"
-  done
   for _gen_rc_dir in ${RC_SUPPORTED}; do
     find "${RC_GENERATED}" -mindepth 1 -maxdepth 1 -type d | while read -r _gen_rc_dir_generated; do
       _gen_rc_dir_generated_absolute="${_gen_rc_dir_generated}/${_gen_rc_dir}"
@@ -427,7 +422,7 @@ set_vars() {
   VGA=1 && add_var VGA
   if $MACOS; then
     CLT="/Library/Developer/CommandLineTools" && add_var CLT
-    eval "${HOSTNAME_UPPER}_IP=\$(ipconfig getifaddr en0 || ipconfig getifaddr en2)" && add_var "${HOSTNAME_UPPER}_IP"
+    eval "${HOSTNAME_UPPER}_IP=\$(ipconfig getifaddr en0 || ipconfig getifaddr en2)"
   else
     eval "${HOSTNAME_UPPER}_IP=\$(hostname -I | awk '{ print \$1 }')"
     lspci 2>/dev/null | grep -q VGA || VGA=""
