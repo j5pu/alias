@@ -16,7 +16,11 @@ cd "$(dirname "$0")/.."
 
 # TODO: Faltaría el SH y las variables de system.sh y probarlo un poco y los comandos de alias
 
+add() { :; }
+
 add_var() { RC_VARS="${RC_VARS:+${RC_VARS} }$1"; }
+
+clean() { :; }
 
 create_dirs_and_files() {
   for _gen_rc_dir in ${RC_SUPPORTED}; do
@@ -98,6 +102,8 @@ create_dirs_and_files() {
   done
 }
 
+del() { :; }
+
 echo_rc_source_dir() { while read -r i; do echo "  ${1-}rc_source_dir \"${i}\""; done; }
 
 echo_files_to_source() {
@@ -129,13 +135,6 @@ find_dirs_to_source() {
     \) | sort -n
 }
 
-commands() {
-    brew_bin="$(brew --prefix)/bin"
-  cd "$(brew --prefix bash-completion@2)/share/bash-completion/completions"
-  find "${brew_bin}" \( -type f -or -type l \) -name 'g*' | sed "s|${brew_bin}/g||g"
-}
-
-
 gnu_completions() {
   $MACOS || return 0
 
@@ -162,9 +161,59 @@ gnu_completions() {
   '
 }
 
+#######################################
+# show usage
+# Arguments:
+#   1
+#######################################
+help() {
+  >&2 cat <<EOF
+usage: ${0##*/}
+   or: ${0##*/} [--force] [add|clean|del|hook|install|supported|sync] [option]
+   or: ${0##*/} [-h|--help|help]
+   or: ${0##*/} --force
+   or: ${0##*/} add [directory|command] [<supported directories/OS/host]
+   or: ${0##*/} add .
+   or: ${0##*/} add 00-common
+   or: ${0##*/} clean
+   or: ${0##*/} del <alias_name>
+   or: ${0##*/} hook
+   or: ${0##*/} hook --force
+   or: ${0##*/} --force hook
+   or: ${0##*/} install
+   or: ${0##*/} install --force
+   or: ${0##*/} --force install
+   or: ${0##*/} sync
+   or: ${0##*/} sync <message>
+
+generates \$ENV file and manages rc repository, with no options creates the static \$ENV file ".${0}.sh"
+
+Commands:
+   -h, --help, help   display this help and exit.
+   --force            force updating static \$ENV file ".${0}.sh" (valid with not commands, hook, install or supported)
+   add                to add a new alias to generated dir,
+                      if argument is a directory will be added to dirs.sh (Default: hostname directory)
+                      it is added to sudo.sh if it is not a directory.
+   clean              to clean directory aliases which directory does not exist
+   del                deletes an alias
+   hook               shows the path to \$ENV file ".${0}.sh"
+   list               show list of commands available and exit
+   install            to install hooks into /etc/profile, ~/.profile, ~/.bashrc, ~/.bash_profile for user and root
+   supported          show list of supported directories to add aliases "${RC_SUPPORTED}"
+   sync               will push or pull repository based on status
+
+Globals:
+   RC_FORCE           to force updating static \$ENV file ".${0}.sh", similar to --force
+
+EOF
+  exit "${1:-1}"
+}
+
 hooks() { find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_rc_source_dir ""; }
 
 hooks_no() { find_dirs_to_source "$1" 2 | grep -v "/hooks.d/" | echo_rc_source_dir; }
+
+install() { :; }
 
 write_compats() {
   cat >> "${_RC_TMP}" <<EOF
@@ -308,7 +357,6 @@ set_vars() {
   # /completions is added by __load_completions(
   BASH_COMPLETION_USER_DIR="${RC_CUSTOM}" && add_var BASH_COMPLETION_USER_DIR
   RC_COMPLETIONS="${RC_CUSTOM}/completions" && add_var RC_COMPLETIONS
-
 }
 
 sync() {
@@ -319,7 +367,7 @@ sync() {
     >&2 echo "${0##*/}: Behind remote & directory is not clean"
     exit 1
   elif git status | grep -q "Your branch is behind"; then
-    git pull --tags
+    git pull --quiet --tags
     exit 0
   elif test -n "$(git status --porcelain)"; then
     git add -A
@@ -332,18 +380,24 @@ sync() {
 main() {
   [ "${ENV-}" ] || set_vars
 
-  hook=false
+  hook=false; supported=false
   for arg; do
     case "${arg}" in
-      -h|--help|help) : ;;
+      -h|--help|help) help 0;;
       --force) RC_FORCE=1  ;;
-      add|clean|del|gnu|sync|gnu_completions) function="${arg}" ;;
+      add|clean|del|install|sync) function="${arg}" ;;
+      list) printf "%s\n" add clean del hook install "${arg}" supported sync ;;
+      supported) supported=true ;;
       hook) hook=true ;;
-      *) >&2 echo "${0##*/}: Unknown argument: ${arg}" ;;
+      *)
+        >&2 echo "${0##*/}: Unknown argument: ${arg}"
+        >&2 echo
+        >&2 help
+        ;;
     esac
   done
 
-  [ "${RC_FORCE}" -eq 0 ] || [ ! "${function-}" ] || \
+  [ "${RC_FORCE}" -eq 0 ] || [ "${function-}" != "install" ] || [ "${function-}" ]|| \
     { >&2 echo "${0##*/}: --force can not be used with ${function}"; exit 1; }
 
   if ! test -f "${ENV:-${_RC_FILE}}" || [ "${RC_FORCE}" -eq 1 ]; then
@@ -368,6 +422,8 @@ main() {
 
   if $hook; then
     echo "${_RC_FILE}"
+  elif $supported; then
+    echo "${RC_SUPPORTED}"
   elif [ "${function-}" ]; then
     "${function}" "$@"
   fi
