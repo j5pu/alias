@@ -16,9 +16,57 @@ cd "$(dirname "$0")/.."
 
 # TODO: Faltaría el SH y las variables de system.sh y probarlo un poco y los comandos de alias
 
-add() { :; }
+add() {
+  if test -d "${1:-.}"; then
+    arguments="$(realpath -e "${1:-.}")"
+    alias=".${arguments##*/}"
+    command="cd"
+    file="sudo.sh"
+    prefix="."
+    supported="${2:-${HOSTNAME}}"
+  else
+    arguments="$1"
+    alias="$1"
+    command="sudo"
+    file="dirs.sh"
+    prefix=""
+    supported="${2:-${UNAME}}"
+  fi
+
+  supported "${supported}"
+  dest="${RC_GENERATED_RC_D}/${supported}/${file}"
+
+  value="${command} ${arguments}"
+  if aliases | grep -q "^${prefix}${alias}="; then
+    existing="$(aliases | grep "^${prefix}${alias}=" | awk -F= '{ print $2 }')"
+    if [ "'${value}'" = "${existing}" ]; then
+      >&2 echo "Already exists: ${prefix}${alias}=\"${value}\""
+      exit 1
+    else
+      echo "Alias ${alias} already exists with value: $(aliases | grep "^${prefix}${alias}=" | awk -F= '{ print $2 }')"
+      printf "%s" "Do you want to use a different alias name? [y/N] "
+      read -r yes
+      if [ "${yes}" = "y" ]; then
+        printf "%s" "New alias name: "
+        read -r alias
+      else
+        return 0
+      fi
+
+    fi
+  fi
+  tmp="$(mktemp)"
+  line="${prefix}${alias}=\"${value}\""
+  { cat "${dest}"; echo "${line}"; } | sort -u > "${tmp}"
+  mv "${tmp}" "${dest}"
+  sync "$*"
+}
 
 add_var() { RC_VARS="${RC_VARS:+${RC_VARS} }$1"; }
+
+aliases() { env -i ENV="${_RC_FILE}" sh -li -c alias 2>/dev/null | sort -u; }
+
+alias_exists() { grep -R -l "alias ${1}=" "${RC_GENERATED_RC_D}"; }
 
 clean() { :; }
 
@@ -191,9 +239,10 @@ generates \$ENV file and manages rc repository, with no options creates the stat
 Commands:
    -h, --help, help   display this help and exit.
    --force            force updating static \$ENV file ".${0}.sh" (valid with not commands, hook, install or supported)
-   add                to add a new alias to generated dir,
-                      if argument is a directory will be added to dirs.sh (Default: hostname directory)
-                      it is added to sudo.sh if it is not a directory.
+   add                to add a new alias to rc generated directory:
+                      - if argument is a directory ".basename" (default: cwd) will be
+                        added to dirs.sh (default: "${HOSTNAME}" directory)
+                      - it is added to sudo.sh if it is not a directory (default: "${UNAME}" directory).
    clean              to clean directory aliases which directory does not exist
    del                deletes an alias
    hook               shows the path to \$ENV file ".${0}.sh"
@@ -371,10 +420,14 @@ sync() {
     exit 0
   elif test -n "$(git status --porcelain)"; then
     git add -A
-    git commit --quiet -a -m "${0##*/}${1:+: ${1}}"
+    git commit --quiet -a -m "${0##*/}${1:+: ${*}}"
   fi
 
   ! git status | grep -q "Your branch is ahead" || git push --quiet
+}
+
+supported() { 
+  echo "${RC_SUPPORTED}" | tr " " "\n" | grep -q "^${1}\$" || { >&2 echo "${0##*/}: Unsupported: ${1}"; exit 1; }
 }
 
 main() {
@@ -385,7 +438,7 @@ main() {
     case "${arg}" in
       -h|--help|help) help 0;;
       --force) RC_FORCE=1  ;;
-      add|clean|del|install|sync) function="${arg}" ;;
+      add|aliases|clean|del|install|sync) function="${arg}" ;;
       list) printf "%s\n" add clean del hook install "${arg}" supported sync ;;
       supported) supported=true ;;
       hook) hook=true ;;

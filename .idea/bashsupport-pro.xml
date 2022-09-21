@@ -11,5 +11,9 @@
         </targets>
       </library>
     </scriptLibraries>
+    <globalVariables>
+      <var name="cword" />
+      <var name="cur" />
+    </globalVariables>
   </component>
 </project>
