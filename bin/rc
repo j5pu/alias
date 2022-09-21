@@ -169,11 +169,12 @@ gnu_completions() {
 #  done < <(echo \"${cmds}\" | tr ' ' '\n')
 #  }"
   cmds="hola adios"
-  bash -li -c "
+  bash -li -c '
   while read -r cmd; do
     echo \$cmd
-  done <<<${cmds}
-  "
+  done < <(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" \
+    | sed -e "s|.*/bin/g||g" | grep -v "\[")
+  '
 }
 
 hooks() { find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_rc_source_dir ""; }
