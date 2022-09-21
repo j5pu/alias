@@ -19,7 +19,7 @@ cd "$(dirname "$0")/.."
 add() {
   shift
   if test -d "${1:-.}"; then
-    arguments="$(realpath -e "${1:-.}")"
+    arguments="$(realpath -e "${1:-.}" | sed "s|${HOME}|~|")"
     alias="${arguments##*/}"
     command="cd"
     file="sudo.sh"
