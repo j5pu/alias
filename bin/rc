@@ -146,16 +146,16 @@ gnu_completions() {
 
   cd "${dest}"
 
-  for cmd in ${cmds}; do
-    if test -f "${cmd}"; then
-      ! test -L "${cmd}" || continue
-      rm -f "g${cmd}"
-      ln -s "${cmd}" "g${cmd}"
-    else
-      value="$(bash -li -c "complete -p ${cmd} 2>/dev/null | sed 's| ${cmd}$| g${cmd}|g'")"
-      [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
-    fi
-  done
+#  for cmd in ${cmds}; do
+#    if test -f "${cmd}"; then
+#      ! test -L "${cmd}" || continue
+#      rm -f "g${cmd}"
+#      ln -s "${cmd}" "g${cmd}"
+#    else
+#      value="$(bash -li -c "complete -p ${cmd} 2>/dev/null | sed 's| ${cmd}$| g${cmd}|g'")"
+#      [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
+#    fi
+#  done
 #  bash -li -c "{
 #  while read -r cmd ${cmds}; do
 #    if test -f \${cmd}; then
@@ -181,7 +181,6 @@ gnu_completions() {
       continue
       [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
     fi
-    echo $cmd
   done < <(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" \
     | sed -e "s|.*/bin/g||g" | grep -v "\[")
   '
