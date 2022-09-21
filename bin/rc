@@ -421,7 +421,7 @@ main() {
   fi
 
   if $hook; then
-    echo "${_RC_FILE}"
+    echo "${ENV:-${_RC_FILE}}"
   elif $supported; then
     echo "${RC_SUPPORTED}"
   elif [ "${function-}" ]; then
