@@ -444,8 +444,8 @@ set_vars() {
   RC_ETC_RC_D="${RC_ETC}/rc.d" && add_var RC_ETC_RC_D
   RC_GENERATED="${RC_TOP}/generated" && add_var RC_GENERATED
   RC_GENERATED_HOSTS_D="${RC_GENERATED}/hosts.d" && add_var RC_GENERATED_HOSTS_D && mkdir -p "${RC_GENERATED_HOSTS_D}"
-  echo "export ${HOSTNAME_UPPER}_IP=\"$(eval echo "\$${HOSTNAME_UPPER}_IP")\"" > "${RC_GENERATED_HOSTS_D}/${HOSTNAME}.sh"
-  RC_GENERATED_PROFILE_D="${RC_GENERATED}/profile.d" && add_var RC_GENERATED_PROFILE_D
+  echo "export ${HOSTNAME_UPPER}_IP=\"$(eval echo "\$${HOSTNAME_UPPER}_IP")\"" > \
+    "${RC_GENERATED_HOSTS_D}/${HOSTNAME}.sh"
   RC_GENERATED_RC_D="${RC_GENERATED}/rc.d" && add_var RC_GENERATED_RC_D
   RC_SEARCH="00-common ${HOSTNAME}${ID_LIKE:+ ${ID_LIKE}} ${UNAME}"; add_var RC_SEARCH
   RC_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}" && add_var RC_SUPPORTED
@@ -478,6 +478,42 @@ supported() {
   echo "${RC_SUPPORTED}" | tr " " "\n" | grep -q "^${1}\$" || { >&2 echo "${0##*/}: Unsupported: ${1}"; exit 1; }
 }
 
+f() {
+  # Any file under  "*/${supported}/*" and any file "*/${supported}.*" inside "${type}"
+  # Darwin/Linux.sh pasaría, o sea, absurdo si pongo un Linux.sh debajo de un Darwin...
+  #
+  type="$1"; shift
+  SH="$2"; shift
+#  SH=""
+  set -- find "${RC_CUSTOM}" "${RC_ETC}" "${RC_GENERATED}" \( -type f -or -type l \) -path "*/${type}/*" \(
+
+  or=""
+  for supported in 00-common "${HOSTNAME}" "${ID_LIKE}" "${UNAME}"; do
+    [ "${supported-}" ] || continue
+    # shellcheck disable=SC2086
+    set -- "$@" ${or} -path "*/${supported}/*" -or -path "*/${supported}.*"
+    or="-or"
+  done
+
+  set -- "$@" \) -not \( -name ".*"
+
+  case "${SH}" in
+    bash) set -- "$@" -or -path "*/zsh/*" -or -path "*/bash-4/*" ;;
+    bash-4) set -- "$@" -or -path "*/zsh/*" ;;
+    zsh) set -- "$@" -or -path "*/bash*/*" ;;
+    *) set -- "$@" -or -path "*/zsh/*" -or -path "*/bash*/*" ;;
+  esac
+
+  set -- "$@" \)
+  echo "$@"
+  "$@"
+}
+
+# TODO: mover el aliases debajo del rc.d
+# cambiar todo para que se creen los ficheros en el generador de alias.
+# crear solo los tres que hay en el find
+
+
 main() {
   [ "${ENV-}" ] || set_vars
 
@@ -486,7 +522,7 @@ main() {
     case "${arg}" in
       -h|--help|help) help 0;;
       --force) RC_FORCE=1; shift  ;;
-      add|aliases|clean|del|install|sync)
+      f|add|aliases|clean|del|install|sync)
         if ! $action; then
           function="${arg}"; action=true; shift
         fi

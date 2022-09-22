@@ -93,7 +93,8 @@ clean() {
 
 create_dirs_and_files() {
   for _gen_rc_dir in ${RC_SUPPORTED}; do
-    find "${RC_GENERATED}" -mindepth 1 -maxdepth 1 -type d | while read -r _gen_rc_dir_generated; do
+    find "${RC_GENERATED}" -mindepth 1 -maxdepth 1 -type d -not -path "${RC_GENERATED_HOSTS_D}" |
+    while read -r _gen_rc_dir_generated; do
       _gen_rc_dir_generated_absolute="${_gen_rc_dir_generated}/${_gen_rc_dir}"
         case "${_gen_rc_dir}" in
           rhel|rhel_fedora)
@@ -412,24 +413,25 @@ set_vars() {
   PATH="${RC_TOP}/bin:${PATH}"
 
   HOSTNAME="${HOSTNAME=$(hostname)}"
+  HOSTNAME_UPPER="$(echo "${HOSTNAME}" | tr '[:lower:]' '[:upper:]')"
   ID_LIKE="$(! test -f /etc/os-release || grep "^ID_LIKE=" /etc/os-release \
       || grep "^ID=" /etc/os-release | cut -d= -f2 | tr ' ' '_')" && add_var ID_LIKE
   MACOS="$(if test "$(uname -s)" = "Darwin"; then echo true; else echo false; fi)" && add_var MACOS
   SUDO="$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)" && add_var SUDO
   UNAME="$(uname -s)" && add_var UNAME
 
-  HOSTNAME_UPPER="$(echo "${HOSTNAME}" | tr '[:lower:]' '[:upper:]')"
-echo "$HOSTNAME_UPPER"
   VGA=1 && add_var VGA
   if $MACOS; then
     CLT="/Library/Developer/CommandLineTools" && add_var CLT
-    eval "${HOSTNAME_UPPER}_IP=\$(ipconfig getifaddr en0 || ipconfig getifaddr en2)" && add_var "${HOSTNAME_UPPER}_IP"
+    eval "${HOSTNAME_UPPER}_IP=\$(ipconfig getifaddr en0 || ipconfig getifaddr en2)"
   else
-    eval "${HOSTNAME_UPPER}_IP=\$(hostname -I | awk '{ print \$1 }')" && add_var "${HOSTNAME_UPPER}_IP"
+    eval "${HOSTNAME_UPPER}_IP=\$(hostname -I | awk '{ print \$1 }')"
     lspci 2>/dev/null | grep -q VGA || VGA=""
   fi
   [ ! "${GITHUB_RUN_ID-}" ] || VGA=""
+
   HOSTS="book imac mini1 mini512 msi pro"
+
   _RC_FILE="${RC_TOP}/.${0##*/}.sh"
   _RC_TMP="$(mktemp)"
   RC_CUSTOM="${RC_TOP}/custom" && add_var RC_CUSTOM
@@ -441,7 +443,8 @@ echo "$HOSTNAME_UPPER"
   RC_ETC_PROFILE_D="${RC_ETC}/profile.d" && add_var RC_ETC_PROFILE_D
   RC_ETC_RC_D="${RC_ETC}/rc.d" && add_var RC_ETC_RC_D
   RC_GENERATED="${RC_TOP}/generated" && add_var RC_GENERATED
-  RC_GENERATED_PROFILE_D="${RC_GENERATED}/profile.d" && add_var RC_GENERATED_PROFILE_D
+  RC_GENERATED_HOSTS_D="${RC_GENERATED}/hosts.d" && add_var RC_GENERATED_HOSTS_D && mkdir -p "${RC_GENERATED_HOSTS_D}"
+  echo "export ${HOSTNAME_UPPER}_IP=\"$(eval echo "\$${HOSTNAME_UPPER}_IP")\"" > "${RC_GENERATED_HOSTS_D}/${HOSTNAME}.sh"
   RC_GENERATED_RC_D="${RC_GENERATED}/rc.d" && add_var RC_GENERATED_RC_D
   RC_SEARCH="00-common ${HOSTNAME}${ID_LIKE:+ ${ID_LIKE}} ${UNAME}"; add_var RC_SEARCH
   RC_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}" && add_var RC_SUPPORTED
@@ -470,12 +473,11 @@ sync() {
   ! git status | grep -q "Your branch is ahead" || git push --quiet
 }
 
-supported() { 
+supported() {
   echo "${RC_SUPPORTED}" | tr " " "\n" | grep -q "^${1}\$" || { >&2 echo "${0##*/}: Unsupported: ${1}"; exit 1; }
 }
 
 main() {
-  set -x
   [ "${ENV-}" ] || set_vars
 
   action=false; hook=false; supported=false
