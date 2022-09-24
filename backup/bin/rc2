@@ -305,8 +305,6 @@ _system() {
   _strip() { echo "${value}" | sed 's/^"//;s/"$//'; }
 
   if [ "${UNAME}" = "Darwin" ]; then
-    BASH_SILENCE_DEPRECATION_WARNING=1
-    CLT="/Library/Developer/CommandLineTools"
     DIST_ID="$(command -p sw_vers -ProductName)"
     DIST_VERSION="$(command -p sw_vers -ProductVersion)"
     case "$(echo "${DIST_VERSION}" | command awk -F. '{ print $1 $2 }')" in
