@@ -1,0 +1,10 @@
+#!/bin/sh
+
+#
+# Syncs a repository and submodules
+
+set -eu
+
+[ ! "${1-}" ] || cd "$1"
+
+git submodule foreach "git sync" && git sync
