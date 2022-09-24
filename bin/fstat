@@ -1,0 +1,124 @@
+#!/bin/sh
+
+#
+# stat print for Darwin and Linux (default --id)
+
+Darwin() {
+  case "${OPTION}" in
+    --access) FMT="Sa"; set -- -t "%F %T %z" "$@" ;;
+    --access@) FMT="a" ;;
+    --birth) FMT="B"; "${UNAME}_${OPTION##--}" "$@" ;;
+    --birth@) FMT="B" ;;
+    --bits) FMT="SA" ;;
+    --change) FMT="Sc"; set -- -t "%F %T %z" "$@" ;;
+    --change@) FMT="c" ;;
+    --gid) FMT="g" ;;
+    --group) FMT="Sg" ;;
+    --human) FMT="z"; "${OPTION##--}" "$@" ;;
+    --id) FMT="u" ;;
+    --links) FMT="l" ;;
+    --modification) FMT="Sm"; set -- -t "%F %T %z" "$@" ;;
+    --modification@) FMT="m" ;;
+    --octal) FMT="A" ;;
+    --owner) FMT="Su" ;;
+    --real) FMT="R" ;;
+    --size) FMT="z" ;;
+    --type) FMT="HT"; "${OPTION##--}" "$@" ;;
+    --*) help 1 ;;
+  esac
+  "${UNAME}_stat" "$@"
+}
+
+Darwin_birth() { date -j -r "$("${UNAME}_stat" "$@")" +"%F %T %z"; exit; }
+
+Darwin_stat() { stat -f "%${FMT}" "$@"; }
+
+help() {
+  [ ! "${1-}" ] || >&2 echo "${0##*/}: Invalid option: ${OPTION}" && echo
+
+  >&2 cat <<EOF
+usage: ${0##*/}
+   or: ${0##*/} [option] file...
+   or: ${0##*/} <file>
+   or: ${0##*/} -id <file1> <file2>
+
+stat print parser for Linux an Darwin (default: --owner)
+
+Commands:
+   -h, --help         display this help and exit.
+   --list             show all available options and exit.
+
+Options:
+   --access           time of last access, human-readable (i.e.: 2022-09-20 21:11:03 +0200)
+   --access@          time of last access, seconds since Epoch [st_atime]
+   --birth            time of file birth, human-readable (i.e.: 2022-09-20 21:11:03 +0200)
+   --birth@           time of file birth, seconds since Epoch [st_birthtime]
+   --bits             permission bits in human-readable (i.e.: -rw-r--r--)
+   --change           time of last status change (inode last changed), human-readable (i.e.: 2022-09-20 21:11:03 +0200)
+   --change@          time of last status change (inode last changed), seconds since Epoch [st_ctime]
+   --gid              group ID [st_gid] (i.e.: 20)
+   --group            group name (i.e.: staff)
+   --human            size in human-readable (i.e.: 1.2K)
+   --id               user ID [st_uid] (i.e.: 501)
+   --links            number of hard links  [st_nlink]
+   --modification     time of last data modification, human-readable (i.e.: 2022-09-20 21:11:03 +0200)
+   --modification@    time of last data modification, seconds since Epoch [st_mtime]
+   --octal            permission bits in octal (i.e.: 644)
+   --owner            user name (default)
+   --real             absolute resolved path, equivalent to 'realpath -e'
+   --size             size in bytes [st_size]
+   --type             file type in human-readable (i.e: Block Device/block special file, Directory/directory,
+                      Regular File/regular file, Symbolic Link/symbolic link) will be converted to:
+                      block, directory, regular and symbolic
+EOF
+  exit "${1:-0}"
+}
+
+human() { numfmt --to=iec "$("${UNAME}_stat" "$@")"; exit; }
+
+Linux() {
+  case "${OPTION}" in
+    --access) FMT="x"; "${UNAME}_seconds" "$@" ;;
+    --access@) FMT="X" ;;
+    --birth) FMT="w"; "${UNAME}_seconds" "$@" ;;
+    --birth@) FMT="W" ;;
+    --bits) FMT="A" ;;
+    --change) FMT="z"; "${UNAME}_seconds" "$@" ;;
+    --change@) FMT="Z" ;;
+    --gid) FMT="g" ;;
+    --group) FMT="G" ;;
+    --human) FMT="s"; "${OPTION##--}" "$@" ;;
+    --id) FMT="u" ;;
+    --links) FMT="h" ;;
+    --modification) FMT="y"; "${UNAME}_seconds" "$@" ;;
+    --modification@) FMT="Y" ;;
+    --octal) FMT="a" ;;
+    --owner) FMT="U" ;;
+    --real) realpath "$@"; exit ;;
+    --size) FMT="s" ;;
+    --type) FMT="F"; "${OPTION##--}" "$@" ;;
+    --*) help 1 ;;
+  esac
+  "${UNAME}_stat" "$@"
+}
+
+Linux_seconds() { "${UNAME}_stat" "$@" | sed 's/\..* / /g'; exit; }
+
+Linux_stat() { "${TEST-}"stat --printf "%${FMT}\n" "$@"; }
+
+type() { "${UNAME}_stat" "$@" | awk '{ print tolower($1) }'; exit; }
+
+main() {
+  [ "${UNAME-}" ] || UNAME="$(uname -s)"
+
+  case "$1" in
+    -h|--help) help ;;
+    --list) grep -o -- " --[a-z].*) " "$0" | awk -F ')' '{ print $1 }' | sort -u; exit ;;
+    --*) OPTION="$1"; shift ;;
+    *) OPTION="--owner"
+  esac
+
+  "${UNAME}" "$@"
+}
+
+main "$@"

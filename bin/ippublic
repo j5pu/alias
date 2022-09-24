@@ -1,0 +1,6 @@
+#!/bin/sh
+
+#
+# My public IP address
+
+iget ifconfig.me

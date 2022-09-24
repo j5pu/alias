@@ -4,6 +4,14 @@
       <settings>
         <option name="imageTag" value="ubuntu:latest" />
         <option name="containerName" value="ubuntu" />
+        <option name="volumeBindings">
+          <list>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/rc" />
+              <option name="hostPath" value="$PROJECT_DIR$" />
+            </DockerVolumeBindingImpl>
+          </list>
+        </option>
       </settings>
     </deployment>
     <method v="2" />

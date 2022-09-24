@@ -1,0 +1,14 @@
+#!/bin/sh
+
+#
+# Local IP address and interface name
+
+if has ifconfig; then
+  ifconfig | awk \
+    '/BROADCAST/ && ! /docker/ {
+      sub(":",""); iname=$1; while ($1!="inet" && $1!="status:" && $1!="TX") getline; if ($1=="inet") print iname, $2;
+    }'
+else
+   printf '%s ' "$(awk '{ print $2; exit }' /proc/net/dev_mcast)" && \
+    awk '/^Local/{exit}; /32 host/ { if ( f != "127.0.0.1" && f != "172.17.0.1" ) print f; } {f=$2}' /proc/net/fib_trie
+fi

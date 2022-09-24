@@ -1,0 +1,15 @@
+#!/bin/sh
+
+#
+# Touch making directory
+
+set -eu
+
+for arg; do
+  case "${arg}" in
+    -*) : ;;
+    *) mkdir -p "$(dirname "${arg}")" ;;
+  esac
+done
+
+touch "$@"

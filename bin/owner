@@ -1,0 +1,12 @@
+#!/bin/sh
+
+#
+# Owner Name
+
+set -eu
+
+if stat --version 2>/dev/null | grep -q GNU; then
+    stat --printf "%U" "$1"
+else
+    id -F "$(stat -f "%u" "$1")"
+fi

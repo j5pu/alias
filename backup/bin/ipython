@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# https://ipython.readthedocs.io/en/stable/config/intro.html
+# TODO: ver si opio en ipython_config.py a /etc/ipython o '/usr/local/etc/ipython', ya que
+#      el que esta debajo del IPYTHONDIR no lo usa, usa el de profile_*
+#      comprobar con ipython --debug -c 'exit()'
+#      y ver si al final hago un ipython_config.py o un pystartup que vaya ese el sitecustomize.py
+#     ipython_config.py o está en /etc/ipython o en /usr/local/etc/ipython o en profile_*
+set -eu
+
+: "${IPYTHONDIR=${RC_CONFIG}/ipython}"
+
+if [ "${IPYTHONDIR-}" ]; then
+  profile="${IPYTHONDIR}/profile_${USER}"
+  exec ipython --profile="${IPYTHONDIR}/profile_${USER}" "$@"
+else
+  exec ipython "$@"
+fi

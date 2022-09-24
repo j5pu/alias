@@ -1,0 +1,13 @@
+#!/bin/sh
+
+#
+# Silent Curl o wget to stdout
+
+if has curl; then
+  curl -s "$@"
+elif has wget; then
+  wget -q -O - "$@"
+else
+    echo "No curl or wget found" >&2
+    exit 1
+fi

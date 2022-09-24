@@ -1,252 +1,527 @@
 #!/bin/sh
 
 #
-# Generates .env.sh
+# Generates system-wide .env.sh profile
 
 set -eu
 
-cd "$(dirname "$0")/.."
-
+# Hosts supported
 #
-# Force creation of .env.sh
+HOSTS="book imac mini1 mini512 msi pro"
+
+# RC supported variables to search for applicable files to source, can be used in directories or file stem.
+# Search is done for: 00-common, \$DIST_ID, \$DIST_ID_LIKE, \$HOST, \$SH and \$UNAME
+# \$DIST_ID is appended to \$RC_SUPPORTED in _system() function.
+# File stem with the supported value takes preference over directory which is not in the variable
+# i.e: Darwin/Linux.sh will be sourced.
+# Note: \$HOST is added by _generated_rc_sh()
+RC_SUPPORTED="00-common arch bash bash-4 busybox centos Darwin debian fedora kali Linux macOS rhel rhel_fedora ubuntu zsh"
+
+# Force creation of .env.sh (can be set with --force) [Variable Not added to file]
+# Use when:
+#   hostname changes,
+#   brew is installed,
 : "${RC_FORCE=0}"
 
+# RC trace [Value not added to file]
+#
 : "${RC_TRACE=0}"; [ "${RC_TRACE}" -eq 0 ] || set -x
 
+TMP="$(mktemp)"
 
-# TODO: Faltaría el SH y las variables de system.sh y probarlo un poco y los comandos de alias
-# TODO: install
-# TODO: simplificar
-# TODO: test
+die() { >&2 echo "$*"; exit 1; }
 
-add() {
-  if test -d "${1:-.}"; then
-    arguments="$(realpath -e "${1:-.}")"
-    alias="${arguments##*/}"
-    command="cd"
-    file="dirs.sh"
-    prefix="."
-    supported="${2:-${HOSTNAME}}"
-  else
-    arguments="$1"
-    alias="$1"
-    command="sudo"
-    file="sudo.sh"
-    prefix=""
-    supported="${2:-${UNAME}}"
-  fi
-
-  supported "${supported}"
-  dest="${RC_GENERATED_RC_D}/${supported}/${file}"
-
-  value="${command} ${arguments}"
-  if aliases | grep -q "^${prefix}${alias}="; then
-    existing="$(aliases | grep "^${prefix}${alias}=" | awk -F= '{ print $2 }')"
-    if [ "'${value}'" = "${existing}" ]; then
-      >&2 echo "Already exists: $(grep -R "alias ${prefix}${alias}=" "${RC_GENERATED_RC_D}" "${RC_ETC_ALIASES}")"
-      exit 1
+_cmp() {
+  if [ "$(cat "${TMP}")" != "$(cat "$1" 2>/dev/null)" ]; then
+    cp -v "${TMP}" "$1"
+    if [ "${2-}" ]; then
+      chmod +x "$1"
     else
-      >&2 echo "Alias ${alias} already exists with value: ${existing}"
-      >&2 printf "%s" "Do you want to use a different alias name or delete? [y/N/D] "
-      read -r yes
-      if [ "${yes}" = "y" ]; then
-        >&2 printf "%s" "New alias name: "
-        read -r alias
-      elif [ "${yes}" = "D" ]; then
-        del "${prefix}${alias}"
-      else
-        return 0
-      fi
-
+      . "$1"
     fi
   fi
-  tmp="$(mktemp)"
-  line="alias ${prefix}${alias}=\"${value}\""
-  { cat "${dest}"; echo "${line}"; } | sort -u > "${tmp}"
-  mv "${tmp}" "${dest}"
-  >&2 echo "${line} => ${dest}"
-  sync "$*"
 }
 
-add_var() { RC_VARS="${RC_VARS:+${RC_VARS} }$1"; }
+_generated_vars() {
+  # generated/profile.d/brew.sh
+  #
+  HOMEBREW_CACHE="${HOME}/Library/Caches/Homebrew"
+  HOMEBREW_LINUX=""
+  HOMEBREW_LOGS="${HOME}/Library/Logs/Homebrew"
+  HOMEBREW_MACOS="1"
+  HOMEBREW_PREFIX="/usr/local"
+  HOMEBREW_REPOSITORY="${HOMEBREW_PREFIX}/Homebrew"
+  HOMEBREW_TEMP="/private/tmp"
+  # TODO: moverlas a cuando ya este el el prefix para todos los OS.
+  #  Deberia mirar si el find da primero los de generated, luego etc y luego custom o
+  #  o hacer 3 find porque asi se puede sobreescribir en custom y con 00- y me falta un sort numeric en find
+  #  GITHUB_ACTION en generated y cambiar a que las variables sean un puto fichero solo las que son de uno solo,
+  #  00-common.sh y meter el USER
+  #  mirar como se hacia el PATH de RUBY.
+  #  meter las LC_ALL etc de brew.sh
+  HOMEBREW_CELLAR="${HOMEBREW_REPOSITORY}/Cellar"
+  HOMEBREW_LIBRARY="${HOMEBREW_REPOSITORY}/Library"
+  HOMEBREW_TAPS="${HOMEBREW_LIBRARY}/Taps"
+  HOMEBREW_CORE="${HOMEBREW_TAPS}/homebrew/homebrew-core"
+  HOMEBREW_CORE_REPOSITORY="${HOMEBREW_LIBRARY}/Taps/homebrew/homebrew-core"
+# Used in --version.sh
+# shellcheck disable=SC2034
+  HOMEBREW_CASK_REPOSITORY="${HOMEBREW_LIBRARY}/Taps/homebrew/homebrew-cask"
+      export SSL_CERT_FILE="${HOMEBREW_PREFIX}/etc/ca-certificates/cert.pem"
+    export GIT_SSL_CAINFO="${HOMEBREW_PREFIX}/etc/ca-certificates/cert.pem"
+    export GIT_SSL_CAPATH="${HOMEBREW_PREFIX}/etc/ca-certificates"
+  # generated/profile.d/host.sh
+  #
+  HOST="$(hostname -s 2>/dev/null || cut -d "." -f 1 /etc/hostname)"
+  # generated/profile.d/rc.sh
+  #
+  RC_BIN="${RC}/bin"
+  RC_CONFIG="${RC}/config"
+  RC_CUSTOM="${RC}/custom"
+  RC_ETC="${RC}/etc"
+  RC_GENERATED="${RC}/generated"
+  RC_GENERATED_BIN="${RC_GENERATED}/bin"
+  RC_GENERATED_PROFILE_D="${RC_GENERATED}/profile.d"; mkdir -p "${RC_GENERATED_PROFILE_D}"
+  RC_GENERATED_PROFILE_D_HOSTS_D="${RC_GENERATED_PROFILE_D}/hosts.d"; mkdir -p "${RC_GENERATED_PROFILE_D_HOSTS_D}"
+  RC_GENERATED_RC_D="${RC_GENERATED}/rc.d"
+  # generated/profile.d/sudo.sh
+  #
+  SUDO="/usr/bin/sudo"; test -x "${SUDO}" || SUDO=""
+  # generated/profile.d/system.sh
+  #
+  MACOS=true
+  UNAME="$(uname -s)"
+  UNAME_MACHINE="$(uname -m)"
 
-aliases() { env -i ENV="${_RC_FILE}" sh -li -c alias 2>/dev/null | sort -u; }
+  # .rc.sh
+  PATH="${RC_BIN}:${RC_GENERATED_BIN}:${PATH}"
 
-alias_exists() { grep -R -l "alias ${1}" "${RC_GENERATED_RC_D}"; }
-
-clean() {
-  tmp="$(mktemp)"
-  set --
-  for supported in 00-common "${HOSTNAME}" "${ID_LIKE}" "${UNAME}"; do
-    file="${RC_GENERATED_RC_D}/${supported}/dirs.sh"
-    test -f "${file}" || continue
-    set -- "${file}" "$@"
-  done
-
-  find "$@" -type f -name dirs.sh -exec grep -EH "alias .*=" "{}" \; | sed 's|alias ||g; s|"cd ||g; s|"$||g' |
-    while IFS=":=" read -r file alias value; do
-      ! test -d "${value}" || continue
-      del "${alias}"
-    done
-  sync clean
 }
 
-create_dirs_and_files() {
-  for _gen_rc_dir in ${RC_SUPPORTED}; do
-    find "${RC_GENERATED}" -mindepth 1 -maxdepth 1 -type d -not -path "${RC_GENERATED_HOSTS_D}" |
-    while read -r _gen_rc_dir_generated; do
-      _gen_rc_dir_generated_absolute="${_gen_rc_dir_generated}/${_gen_rc_dir}"
-        case "${_gen_rc_dir}" in
-          rhel|rhel_fedora)
-            cd "${_gen_rc_dir_generated}"
-            if [ "${_gen_rc_dir_generated##*/}" = rc.d ]; then
-             ! test -e "${_gen_rc_dir}" || rm -r "${_gen_rc_dir}"
-             ln -s fedora "${_gen_rc_dir}"
-            else
-             ! test -e "${_gen_rc_dir}.sh" || rm -r "${_gen_rc_dir}.sh"
-             ln -s fedora.sh "${_gen_rc_dir}.sh"
-            fi
-            ;;
-          *)
-            if [ "${_gen_rc_dir_generated##*/}" = rc.d ]; then
-              mkdir -p "${_gen_rc_dir_generated_absolute}"
-              touch "${_gen_rc_dir_generated_absolute}/dirs.sh"
-              touch "${_gen_rc_dir_generated_absolute}/sudo.sh"
-            else
-              touch "${_gen_rc_dir_generated_absolute}.sh"
-            fi
-            ;;
-        esac
+_generated__rc_find() {
+  # Any file under  "*/${supported}/*" and any file "*/${supported}.*" inside "${type}"
+  # Darwin/Linux.sh pasaría, o sea, absurdo si pongo un Linux.sh debajo de un Darwin...
+  #
+  for sh in bash bash-4 zsh ""; do
+    set -- find "${RC_GENERATED}" "${RC_ETC}" "${RC_CUSTOM}"  \( -type f -or -type l \) -path "*/\${1}/*" \(
+
+    or=""
+    for supported in 00-common "${HOST}" "${DIST_ID}" "${DIST_ID_LIKE}" "${UNAME}" "${SUDO##*/}"; do
+      [ "${supported-}" ] || continue
+      # shellcheck disable=SC2086
+      set -- "$@" ${or} -path "*/${supported}/*" -or -path "*/${supported}.*"
+      or="-or"
     done
 
-    { find "${RC_ETC}" -mindepth 2 -maxdepth 2 -type d -not -path "${RC_ETC_FUNCTIONS}/*";
-      echo "${RC_ETC_FUNCTIONS}"; } | while read -r _gen_rc_dir_etc; do
-        _gen_rc_dir_etc_absolute="${_gen_rc_dir_etc}/${_gen_rc_dir}"
-        case "${_gen_rc_dir}" in
-          rhel|rhel_fedora)
-            cd "${_gen_rc_dir_etc}"
-            ! test -e "${_gen_rc_dir}" || rm -r "${_gen_rc_dir}"
-            ln -s fedora "${_gen_rc_dir}"
-            ;;
-          *)
-            mkdir -p "${_gen_rc_dir_etc_absolute}"
-            if [ "${_gen_rc_dir_etc##*/}" = hooks.d ]; then
-              for _gen_rc_dir_etc_shell in sh bash bash-4 zsh; do
-                _gen_rc_dir_etc_absolute="${_gen_rc_dir_etc}/${_gen_rc_dir}/${_gen_rc_dir_etc_shell}"
-                case "${_gen_rc_dir}" in
-                  rhel|rhel_fedora) : ;;
-                  *)
-                    mkdir -p "${_gen_rc_dir_etc_absolute}"
-                    touch "${_gen_rc_dir_etc_absolute}/.gitkeep"
-                    ;;
-                esac
-              done
-            else
-              touch "${_gen_rc_dir_etc_absolute}/.gitkeep"
-            fi
-            ;;
-        esac
-    done
-  done
+    set -- "$@" \) -not \( -name ".*"
 
-  for _gen_rc_dir_home in completions profile.d rc.d; do
-    _gen_rc_dir_home_absolute="${RC_CUSTOM}/${_gen_rc_dir_home}"
-    if ! test -f "${_gen_rc_dir_home_absolute}/.gitkeep"; then
-      mkdir -p "${_gen_rc_dir_home_absolute}"
-      touch "${_gen_rc_dir_home_absolute}/.gitkeep"
-    fi
+    case "${sh-}" in
+      bash) set -- "$@" -or -path "*/zsh/*" -or -path "*/bash-4/*" ;;
+      bash-4) set -- "$@" -or -path "*/zsh/*" ;;
+      zsh) set -- "$@" -or -path "*/bash*/*" ;;
+      *) set -- "$@" -or -path "*/zsh/*" -or -path "*/bash*/*" ;;
+    esac
 
-    cd "${RC_COMPLETIONS}"
-    find "../../bash_completion.d" -mindepth 1 -maxdepth 1 -type f -name "*.bash" | while read -r completion; do
-      rm -f "${completion##*/}"
-      ln -s "${completion}" "${completion##*/}"
-    done
+    set -- "$@" \)
 
-    dir="../../bash_completion.d/${UNAME}"
-    if test -d "${dir}"; then
-      find "${dir}" -mindepth 1 -maxdepth 1 -type f -name "*.bash" | while read -r completion; do
-        rm -f "${completion##*/}"
-        ln -s "${completion}" "${completion##*/}"
-      done
-    fi
+    cat "${TMP}" <<EOF
+#!/bin/sh
+
+#
+# find "${sh:-posix}" files to be sourced by "${RC_FILE}"
+#
+# Search is done for: 00-common, \$DIST_ID, \$DIST_ID_LIKE, \$HOST, \$SH and \$UNAME
+# File stem with the supported value takes preference over directory which is not in the variable
+# i.e: Darwin/Linux.sh will be sourced.
+#
+# Arguments:
+#   compat    functions.d, profile.d or rc.d
+#   exclude   exclude name: i.e: sudo.sh
+#
+# Generated by: "$0", on: "$(date)"
+
+set -eu
+
+$@
+EOF
+    _cmp "${RC_GENERATED_BIN}/_rc_find${sh:+_${sh}}" executable
   done
 }
 
-del() {
-  tmp="$(mktemp)"
-  found="$(grep -R "alias ${1}" "${RC_GENERATED_RC_D}" | while IFS=: read -r file line; do
-    [ "${line-}" ] || continue
-    grep -v "${line}" "${file}" > "${tmp}" 2>/dev/null || true
-    mv -v "${tmp}" "${file}"
-  done)"
-  if [ "${found-}" ]; then
-    >&2 echo "${1}: Alias deleted from: $(echo "${found}" | awk '{ print $3 }')"
-  else
-    if aliases | grep -q "^${1}="; then
-      add="; however alias that can not be deleted found in: $(grep -R -l "alias ${1}=" "${RC_ETC}")"
-    fi
-    >&2 echo "${1}: Alias not found in: ${RC_GENERATED_RC_D}${add-}"
-    return 1
-  fi
-  sync "del: $1"
- }
+_generated_bash_sh() {
+  cat > "${TMP}" <<EOF
+# shellcheck shell=sh
 
-echo_rc_source_dir() { while read -r i; do echo "  ${1-}rc_source_dir \"${i}\""; done; }
+#
+# Bash variables
+#
+# Generated by: "$0", on: "$(date)"
 
-echo_files_to_source() {
-  find "$1" -type f \
-    \( \
-      -path "*/00-common/*" \
-      -or -path "*/${HOSTNAME}/*" \
-      -or -path "*/${ID_LIKE}/*" \
-      -or -path "*/${UNAME}/*" \
-      -or -name "00-common.*" \
-      -or -name "${HOSTNAME}.*" \
-      -or -name "${ID_LIKE}.*" \
-      -or -name "${UNAME}.*" \
-    \) \
-    -exec echo "  ${2-}. \"{}\"" \; | sort -n
+# \$BASH_COMPLETION_USER_DIR equal to \$RC_CUSTOM
+# RC "custom" directory .gitignore to install custom files under profile.d and rc.d, to be sourced.
+# \$BASH_COMPLETION_USER_DIR adding "/completions" is used by __load_completion()/_completion_loader() functions
+# to dinamically load completions.
+export BASH_COMPLETION_USER_DIR="${RC_CUSTOM}"
+EOF
+  _cmp "${RC_GENERATED_PROFILE_D}/bash.sh"
 }
 
-find_dirs_to_source() {
-  find "$1" -mindepth "$2" -maxdepth "$2" -type d \
-    \( \
-      -path "*/00-common/*" \
-      -or -path "*/${HOSTNAME}/*" \
-      -or -path "*/${ID_LIKE}/*" \
-      -or -path "*/${UNAME}/*" \
-      -or -name "00-common" \
-      -or -name "${HOSTNAME}" \
-      -or -name "${ID_LIKE}" \
-      -or -name "${UNAME}" \
-    \) | sort -n
+_generated_brew_sh() {
+  cat > "${TMP}" <<EOF
+# shellcheck shell=sh
+
+#
+# Homebrew configuration variables from:
+#   - https://raw.githubusercontent.com/Homebrew/install/master/install.sh
+#   - https://raw.githubusercontent.com/Homebrew/brew/master/bin/brew
+#   - https://raw.githubusercontent.com/Homebrew/brew/master/Library/Homebrew/brew.sh
+#
+# Generated by: "$0", on: "$(date)"
+
+# Homebrew cache directory
+#
+export HOMEBREW_CACHE="${HOMEBREW_CACHE}"
+
+# Homebrew Cellar where built products are store
+#
+export HOMEBREW_CELLAR="${HOMEBREW_CELLAR}"
+
+# Homebrew core repository path
+#
+export HOMEBREW_CORE="${HOMEBREW_CORE}"
+
+# Homebrew Library where Taps (i.e.: homebrew/homebrew-core) are stored and Homebrew's internal ruby code is located
+#
+export HOMEBREW_LIBRARY="${HOMEBREW_LIBRARY}"
+
+# Homebrew install in \$UNAME Linux.
+#
+export HOMEBREW_LINUX="${HOMEBREW_LINUX}"
+
+# Homebrew logs
+#
+export HOMEBREW_LOGS="${HOMEBREW_LOGS}"
+
+# Homebrew install in \$UNAME Darwin.
+#
+export HOMEBREW_MACOS="${HOMEBREW_MACOS}"
+
+# <html><h2>Homebrew Physical Processor equal to \$UNAME_MACHINE</h2>
+# <p><strong><code>\$HOMEBREW_PHYSICAL_PROCESSOR</code></strong> (always exported).</p>
+# <ul>
+# <li><code>x86_64</code></li>
+# <li><code>arm (for new mac)</code></li>
+# <li><code>aarch64 (not supported by Homebrew)</code></li>
+# </ul>
+# </html>
+export HOMEBREW_PHYSICAL_PROCESSOR="${UNAME_MACHINE}"
+
+# Homebrew prefix, directory subdirectories (etc, Caskroom, Cellar, ...) are created
+# if \$HOMEBREW_PREFIX != \$HOMEBREW_REPOSITORY (https://github.com/Homebrew/brew). Contents below subdirectories are
+# symlinked to Cellar, etc (in this case brew executable is symlinked) when brew "install.sh" script is used.
+# \$HOMEBREW_REPOSITORY is usually clone as Homebrew under \$HOMEBREW_PREFIX
+# (except macOS arm).
+#
+export HOMEBREW_PREFIX="${HOMEBREW_PREFIX}"
+
+# <html><h2>Homebrew Processor equal to \$UNAME_MACHINE</h2>
+# <p><strong><code>\$HOMEBREW_PROCESSOR</code></strong> (always exported).</p>
+# <ul>
+# <li><code>x86_64</code></li>
+# <li><code>arm (for new mac)</code></li>
+# <li><code>aarch64 (not supported by Homebrew)</code></li>
+# </ul>
+# </html>
+export HOMEBREW_PROCESSOR="${UNAME_MACHINE}"
+
+# Homebrew Repository Path where is cloned https://github.com/Homebrew/brew (usually as Homebrew) under
+# \$HOMEBREW_PREFIX (except macOS arm) is brew "install.sh" script is used.
+export HOMEBREW_REPOSITORY="${HOMEBREW_REPOSITORY}"
+
+# <html><h2>Homebrew System equal to \$UNAME</h2>
+# <p><strong><code>\$HOMEBREW_SYSTEM</code></strong> (always exported).</p>
+# <ul>
+# <li><code>Darwin</code></li>
+# <li><code>Linux</code></li>
+# </ul>
+# </html>
+export HOMEBREW_SYSTEM="${UNAME}"
+
+# Homebrew Taps (i.e.: homebrew/homebrew-core) are stored
+#
+export HOMEBREW_TAPS="${HOMEBREW_TAPS}"
+
+# Homebrew tmp
+#
+export HOMEBREW_TEMP="${HOMEBREW_TEMP}"
+EOF
+  _cmp "${RC_GENERATED_PROFILE_D}/brew.sh"
 }
 
-gnu_completions() {
-  $MACOS || return 0
+_generated_hosts_d() {
+  cat > "${TMP}" <<EOF
+# shellcheck shell=sh
 
-  brew_bin="$(brew --prefix)/bin"
-  cmds="$(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" \
-    | sed -e 's|.*/bin/g||g' | grep -v "\[")"
-  dest="$(brew --prefix bash-completion@2)/share/bash-completion/completions"
+#
+# ${HOSTNAME_UPPER} variables
+#
+# Generated by: "$0", on: "$(date)"
 
-  cd "${dest}"
-
-  bash -li -c '
-  while read -r cmd; do
-    if test -f "${cmd}"; then
-      ! test -L "${cmd}" || continue
-      value="$(awk "!/#/ && /complete/ {\$1=\$1;print}" "${cmd}")"
-      new_value="$(echo "${value}" | sed "s| ${cmd}$| g${cmd}|g")"
-      sed "s|${value}|${new_value}|" "${cmd}" > "g${cmd}"
-    else
-      value="$(complete -p ${cmd} 2>/dev/null | sed "s| ${cmd}$| g${cmd}|g")"
-      [ ! "${value-}" ] || echo "${value}" > "g${cmd}"
-    fi
-  done < <(find "$(brew --prefix coreutils)/bin" "$(brew --prefix findutils)/bin" -type f -name "g*" \
-    | sed -e "s|.*/bin/g||g" | grep -v "\[")
-  '
+$(iplocal | while IFS=" " read -r iname ip; do
+printf "%s\n" "# ${HOSTNAME_UPPER} IP" "#" "export IP_${HOST}_${iname}=\"${ip}\""
+done
+)
+EOF
+  _cmp "${RC_GENERATED_PROFILE_D_HOSTS_D}/${HOST}.sh"
 }
+
+_generated_hosts_sh() {
+  cat > "${TMP}" <<EOF
+# shellcheck shell=sh
+
+#
+# Supported hosts variables
+#
+# Generated by: "$0", on: "$(date)"
+
+# Hosts supported
+#
+export HOSTS="${HOSTS}"
+EOF
+  _cmp "${RC_GENERATED_PROFILE_D}/hosts.sh"
+}
+
+_generated_rc_sh() {
+  cat > "${TMP}" <<EOF
+# shellcheck shell=sh
+
+#
+# RC configuration variables
+#
+# Generated by: "$0", on: "$(date)"
+
+# RC Top Repository Path
+#
+export RC="${RC}"
+
+# RC "bin" directory
+#
+export RC_BIN="${RC_BIN}"
+
+# RC "config" directory for applications configuration that can be configured with a variable
+#
+export RC_CONFIG="${RC_CONFIG}"
+# RC "config" "git" directory
+#
+export RC_CONFIG_GIT="${RC_CONFIG}/git"
+
+# RC "custom" directory .gitignore to install custom files under profile.d and rc.d, to be sourced.
+# \$BASH_COMPLETION_USER_DIR adding "/completions" is used by __load_completion()/_completion_loader() functions
+# to dinamically load completions.
+export RC_CUSTOM="${RC_CUSTOM}"
+# RC "custom" "completions" (dinamically loaded by __load_completion()/_completion_loader() functions using
+# \$BASH_COMPLETION_USER_DIR, they add "completions" to \$BASH_COMPLETION_USER_DIR.
+# rc/src/completions are symlinked to \$RC_CUSTOM_COMPLETIONS
+export RC_CUSTOM_COMPLETIONS="${RC_CUSTOM}/completions"
+# RC "custom" "profile.d" directory .gitignore to install exported data
+#
+export RC_CUSTOM_PROFILE_D="${RC_CUSTOM}/profile.d"
+# RC "custom" "rc.d" directory .gitignore to install custom interactive shell data
+#
+export RC_CUSTOM_RC_D="${RC_CUSTOM}/rc.d"
+
+# RC "etc" directory to install functions (exported based on BASH4), global data under profile.d
+# and interactive shell under rc.d, to be sourced.
+export RC_ETC="${RC_ETC}/etc"
+# RC "etc" "functions.d" to install functions (exported based on BASH4)
+#
+export RC_ETC_FUNCTIONS_D="${RC_ETC}/functions.d"
+# RC "etc" "profile.d" directory to install exported data
+#
+export RC_ETC_PROFILE_D="${RC_ETC}/profile.d"
+# RC "custom" "rc.d" directory to install custom interactive shell data
+#
+export RC_ETC_RC_D="${RC_ETC}/rc.d"
+
+# RC system-wide profile and \$ENV file
+#
+export RC_FILE="${RC_FILE}"
+
+# RC "generated" directory for data generated by this and other scripts (i.e.: colors)
+# to install executables under bin, global data under profile.d (i.e.: colors) and
+# and interactive shell under rc.d (i.e.: root and cd aliases), to be sourced.
+export RC_GENERATED="${RC_GENERATED}"
+# RC "generated" "bin" for generated scripts (i.e.: colors)
+#
+export RC_GENERATED_BIN="${RC_GENERATED_BIN}"
+# RC "generated" "profile.d" directory to install generated exported data (i.e.: colors.sh and hosts.d)
+#
+export RC_GENERATED_PROFILE_D="${RC_GENERATED_PROFILE_D}"
+# RC "generated" "profile.d" "hosts.d" directory to install generated exported data for each host
+#
+export RC_GENERATED_PROFILE_D_HOSTS_D="${RC_GENERATED_PROFILE_D_HOSTS_D}"
+# RC "generated" "rc.d" directory to install generated interactive shell data (i.e.: aliases.d)
+#
+export RC_GENERATED_RC_D="${RC_GENERATED_RC_D}"
+# RC "generated" "rc.d" "aliases.d" directory to install generated interactive shell aliases generated by this script
+#
+export RC_GENERATED_RC_D_ALIASES_D="${RC_GENERATED_RC_D}/aliases.d"
+
+# RC supported variables to search for applicable files to source, can be used in directories or file stem.
+# Search is done for: 00-common, \$DIST_ID, \$DIST_ID_LIKE, \$HOST, \$SH and \$UNAME
+# \$DIST_ID is appended to \$RC_SUPPORTED in _system() function.
+# File stem with the supported value takes preference over directory which is not in the variable
+# i.e: Darwin/Linux.sh will be sourced.
+export RC_SUPPORTED="${RC_SUPPORTED} ${HOST}"
+EOF
+  _cmp "${RC_GENERATED_PROFILE_D}/rc.sh"
+}
+
+_generated_sudo_sh() {
+  cat > "${TMP}" <<EOF
+# shellcheck shell=sh
+
+#
+# SUDO command variable
+#
+# Generated by: "$0", on: "$(date)"
+
+# SUDO command path
+# https://linuxhandbook.com/run-alias-as-sudo/
+#
+export SUDO="${SUDO}"
+EOF
+  _cmp "${RC_GENERATED_PROFILE_D}/sudo.sh"
+}
+
+_generated_system_sh() {
+  cat > "${TMP}" <<EOF
+# shellcheck shell=sh
+
+#
+# System/OS variables
+#
+# Generated by: "$0", on: "$(date)"
+
+# <html><h2>First part of \$HOSTNAME withouth domain</h2>
+# <p><strong><code>\$HOST</code></strong> (always exported).</p>
+# <ul>
+# <li><code>foo.com</code>: foo</li>
+# <li><code>example.foo.com</code>: example</li>
+# </ul>
+# </html>
+export HOST="${HOST}"
+
+# \$HOST upper (first part of \$HOSTNAME withouth domain) used to generate hosts.d
+#
+HOST_UPPER="$(echo "${HOST}" | tr '[:lower:]' '[:upper:]')"; export HOST_UPPER
+
+# \$HOSTNAME including domain
+#
+HOSTNAME="$(hostname 2>/dev/null || cat /etc/hostname)"; export HOSTNAME
+
+# \$HOSTNAME domain only
+#
+HOSTNAME_DOMAIN="$(hostname -d 2>/dev/null || cut -d "." -f 2- /etc/hostname)"; export HOSTNAME_DOMAIN
+
+# <html><h2>Operating System Name</h2>
+# <p><strong><code>\$UNAME</code></strong> (always exported).</p>
+# <ul>
+# <li><code>Darwin</code></li>
+# <li><code>Linux</code></li>
+# </ul>
+# </html>
+export UNAME="${UNAME}"
+
+# <html><h2>Machine name</h2>
+# <p><strong><code>\$UNAME_MACHINE</code></strong> (always exported).</p>
+# <ul>
+# <li><code>x86_64</code></li>
+# <li><code>arm (for new mac)</code></li>
+# <li><code>aarch64 (not supported by Homebrew)</code></li>
+# </ul>
+# </html>
+export UNAME_MACHINE="${UNAME_MACHINE}"
+EOF
+  _cmp "${RC_GENERATED_PROFILE_D}/system.sh"
+}
+
+_rc_file_functions_d() {
+  cat >> "${TMP}" <<EOF
+# shellcheck shell=sh
+
+#
+# RC system-wide posix profile
+#
+# Generated by: "$0", on: "$(date)"
+
+unset ENV
+
+# RC trace
+#
+: "\${RC_TRACE=0}"; [ "\${RC_TRACE}" -eq 0 ] || set -x
+
+# shell.sh
+#
+
+. "${RC_BIN}/shell.sh"
+
+
+# functions.d
+#
+
+if ! command -v resh >/dev/null; then
+  . "${RC_BIN}/${0##*/}.sh"
+
+  rc_source_dir "${RC_GENERATED_BIN}/${_RC_FIND}" functions.d
+fi
+EOF
+  . "${TMP}"
+}
+
+_rc_file_profile_d() {
+  cat >> "${TMP}" <<EOF
+
+
+# profile.d
+#
+
+#
+# RC: profile.d for interactive shells has been sourced already
+: "\${_RC_PROFILE_D_SOURCED=0}"; export _RC_PROFILE_D_SOURCED
+
+if [ "\${_RC_PROFILE_D_SOURCED}" -eq 0 ]; then
+  _RC_PROFILE_D_SOURCED=1
+
+  rc_source_dir "${RC_GENERATED_BIN}/${_RC_FIND}" profile.d
+fi
+EOF
+  . "${TMP}"
+}
+
+_rc_file_rc_d() {
+  cat >> "${TMP}" <<EOF
+
+
+# rc.d
+#
+
+#
+# RC: rc.d for interactive shells has been sourced already
+: "\${_RC_RC_D_SOURCED=0}"
+
+if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && [ "\${_RC_RC_D_SOURCED}" -eq 0 ]; then
+  _RC_RC_D_SOURCED=1
+
+  unalias cp egrep fgrep grep l l. la ll lld ls mv rm xzegrep xzfgrep xzgrep zegrep zfgrep zgrep 2>/dev/null
+
+  rc_source_dir "${RC_GENERATED_BIN}/${_RC_FIND}" rc.d
+fi
+EOF
+ _cmp "${RC_FILE}"
+}
+
+# TODO: añadir que filtre por el sudo para rc.d también o poner un grep -v
 
 #######################################
 # show usage
@@ -254,6 +529,8 @@ gnu_completions() {
 #   1
 #######################################
 help() {
+  [ ! "${1-}" ] || >&2 echo "${0##*/}: Invalid option: ${arg}" && echo
+
   >&2 cat <<EOF
 usage: ${0##*/}
    or: ${0##*/} [--force] [add|clean|del|hook|install|supported|sync] [option]
@@ -274,18 +551,18 @@ usage: ${0##*/}
    or: ${0##*/} sync
    or: ${0##*/} sync <message>
 
-generates \$ENV file and manages rc repository, with no options creates the static \$ENV file ".${0}.sh"
+generates \$ENV file and manages rc repository, with no options creates the static \$ENV file "${RC_FILE}"
 
 Commands:
    -h, --help, help   display this help and exit.
    --force            force updating static \$ENV file ".${0}.sh" (valid with not commands, hook, install or supported)
    add                to add a new alias to rc generated directory "${RC_GENERATED_RC_D}":
                       - if argument is a directory ".basename" (default: cwd) will be
-                        added to dirs.sh (default: "${HOSTNAME}" directory)
+                        added to dirs.sh (default: "${HOST}" directory)
                       - it is added to sudo.sh if it is not a directory (default: "${UNAME}" directory).
    clean              to clean directory aliases which directory does not exist
    del                deletes an alias from rc generated directory "${RC_GENERATED_RC_D}"
-   hook               shows the path to \$ENV file ".${0}.sh"
+   hook               shows the path to \$ENV file "${RC_FILE}"
    list               show list of commands available and exit
    install            to install hooks into /etc/profile, ~/.profile, ~/.bashrc, ~/.bash_profile for user and root
    supported          show list of supported directories to add aliases "${RC_SUPPORTED}"
@@ -295,229 +572,14 @@ Globals:
    RC_FORCE           to force updating static \$ENV file ".${0}.sh", similar to --force
 
 EOF
-  exit "${1:-1}"
+  exit "${1:-0}"
 }
-
-hooks() { find_dirs_to_source "${1}" 3 | grep -E "/sh$|/${SH:-bash}$" | echo_rc_source_dir ""; }
-
-hooks_no() { find_dirs_to_source "$1" 2 | grep -v "/hooks.d/" | echo_rc_source_dir; }
-
-install() { :; }
-
-write_compats() {
-  cat >> "${_RC_TMP}" <<EOF
-
-#
-# Homebrew profile.d has been sourced already
-: "\${HOMEBREW_PROFILE_D_SOURCED=0}"
-
-if test -d "\${HOMEBREW_PREFIX}/etc/profile.d" && [ "\${HOMEBREW_PROFILE_D_SOURCED}" -eq 0 ]; then
-  HOMEBREW_PROFILE_D_SOURCED=1
-  rc_source_dir "\${HOMEBREW_PREFIX}/etc/profile.d"
-fi
-EOF
-}
-
-write_functions() {
-  cat > "${_RC_TMP}" <<EOF
-# shellcheck shell=sh
-
-#
-# System-wide POSIX profile
-# Generated by $0
-
-unset ENV
-
-: "\${RC_TRACE=0}"; [ "\${RC_TRACE}" -eq 0 ] || set -x
-
-if ! command -v resh >/dev/null; then
-  . "${RC_ETC_FUNCTIONS}/${0##*/}.sh"
-
-$(find_dirs_to_source "${RC_ETC_FUNCTIONS}" 1 | echo_rc_source_dir)
-fi
-EOF
-}
-
-write_profile() {
-  cat >> "${_RC_TMP}" <<EOF
-
-#
-# RC: profile.d for interactive shells has been sourced already
-: "\${RC_PROFILE_D_SOURCED=0}"; export RC_PROFILE_D_SOURCED
-
-if [ "\${RC_PROFILE_D_SOURCED}" -eq 0 ]; then
-  RC_PROFILE_D_SOURCED=1
-
-$(for var in $(echo "${RC_VARS}" | tr ' ' '\n' | sort); do
-  echo "  export ${var}=\"$(eval echo "\$${var}")\""
-done)
-
-  unset INFOPATH MANPATH
-  if \$MACOS; then
-    eval "\$(/usr/libexec/path_helper -s)"
-    PATH="\${PATH}:\${CLT}/usr/bin"
-  else
-    PATH="/home/linuxbrew/.linuxbrew/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-  fi
-  ! has brew || eval "\$(brew shellenv)"
-  export PATH="${RC_TOP}/bin:\${PATH}"
-
-  : "\${HOSTNAME=\$(hostname)}"; export HOSTNAME
-
-$(hooks_no "${RC_ETC_PROFILE_D}")
-
-$(hooks "${RC_ETC_PROFILE_D}")
-
-$(echo_files_to_source "${RC_GENERATED_PROFILE_D}")
-
-  rc_source_dir "${RC_CUSTOM_PROFILE_D}"
-fi
-EOF
-}
-
-write_rc() {
-  cat >> "${_RC_TMP}" <<EOF
-
-#
-# RC: rc.d for interactive shells has been sourced already
-: "\${RC_RC_D_SOURCED=0}"
-
-if { [ "\${PS1-}" ] || echo "\$-" | grep -q i; } && [ "\${RC_RC_D_SOURCED}" -eq 0 ]; then
-  RC_RC_D_SOURCED=1
-
-  unalias cp egrep fgrep grep l l. la ll lld ls mv rm xzegrep xzfgrep xzgrep zegrep zfgrep zgrep 2>/dev/null
-
-$(hooks_no "${RC_ETC_RC_D}")
-
-$(hooks "${RC_ETC_RC_D}")
-
-$(echo_files_to_source "${RC_ETC_ALIASES}")
-
-$(echo_files_to_source "${RC_GENERATED_RC_D}" | grep "/dirs.sh\"$")
-
-  if [ "\${SUDO-}" ]; then
-$(echo_files_to_source "${RC_GENERATED_RC_D}" "  " | grep "/sudo.sh\"$")
-  fi
-
-  rc_source_dir "${RC_CUSTOM_RC_D}"
-fi
-
-export ENV="${_RC_FILE}"
-
-[ "\${RC_TRACE}" -eq 0 ] || set +x
-EOF
-}
-
-set_vars() {
-  RC_TOP="$(pwd -P)" && add_var RC_TOP
-  PATH="${RC_TOP}/bin:${PATH}"
-
-  HOSTNAME="${HOSTNAME=$(hostname)}"
-  HOSTNAME_UPPER="$(echo "${HOSTNAME}" | tr '[:lower:]' '[:upper:]')"
-  ID_LIKE="$(! test -f /etc/os-release || grep "^ID_LIKE=" /etc/os-release \
-      || grep "^ID=" /etc/os-release | cut -d= -f2 | tr ' ' '_')" && add_var ID_LIKE
-  MACOS="$(if test "$(uname -s)" = "Darwin"; then echo true; else echo false; fi)" && add_var MACOS
-  SUDO="$(if test -x /usr/bin/sudo; then echo /usr/bin/sudo; else echo ""; fi)" && add_var SUDO
-  UNAME="$(uname -s)" && add_var UNAME
-
-  VGA=1 && add_var VGA
-  if $MACOS; then
-    CLT="/Library/Developer/CommandLineTools" && add_var CLT
-    eval "${HOSTNAME_UPPER}_IP=\$(ipconfig getifaddr en0 || ipconfig getifaddr en2)"
-  else
-    eval "${HOSTNAME_UPPER}_IP=\$(hostname -I | awk '{ print \$1 }')"
-    lspci 2>/dev/null | grep -q VGA || VGA=""
-  fi
-  [ ! "${GITHUB_RUN_ID-}" ] || VGA=""
-
-  HOSTS="book imac mini1 mini512 msi pro"
-
-  _RC_FILE="${RC_TOP}/.${0##*/}.sh"
-  _RC_TMP="$(mktemp)"
-  RC_CUSTOM="${RC_TOP}/custom" && add_var RC_CUSTOM
-  RC_CUSTOM_PROFILE_D="${RC_CUSTOM}/profile.d" && add_var RC_CUSTOM_PROFILE_D
-  RC_CUSTOM_RC_D="${RC_CUSTOM}/rc.d" && add_var RC_CUSTOM_RC_D
-  RC_ETC="${RC_TOP}/etc" && add_var RC_ETC
-  RC_ETC_ALIASES="${RC_ETC}/aliases.d" && add_var RC_ETC_ALIASES
-  RC_ETC_FUNCTIONS="${RC_ETC}/functions.d" && add_var RC_ETC_FUNCTIONS
-  RC_ETC_PROFILE_D="${RC_ETC}/profile.d" && add_var RC_ETC_PROFILE_D
-  RC_ETC_RC_D="${RC_ETC}/rc.d" && add_var RC_ETC_RC_D
-  RC_GENERATED="${RC_TOP}/generated" && add_var RC_GENERATED
-  RC_GENERATED_HOSTS_D="${RC_GENERATED}/hosts.d" && add_var RC_GENERATED_HOSTS_D && mkdir -p "${RC_GENERATED_HOSTS_D}"
-  echo "export ${HOSTNAME_UPPER}_IP=\"$(eval echo "\$${HOSTNAME_UPPER}_IP")\"" > \
-    "${RC_GENERATED_HOSTS_D}/${HOSTNAME}.sh"
-  RC_GENERATED_RC_D="${RC_GENERATED}/rc.d" && add_var RC_GENERATED_RC_D
-  RC_SEARCH="00-common ${HOSTNAME}${ID_LIKE:+ ${ID_LIKE}} ${UNAME}"; add_var RC_SEARCH
-  RC_SUPPORTED="00-common arch Darwin debian fedora Linux rhel rhel_fedora ${HOSTNAME}" && add_var RC_SUPPORTED
-
-  # Adds dinamically completions with __load_completion()/_completion_loader
-  # /completions is added by __load_completions(
-  BASH_COMPLETION_USER_DIR="${RC_CUSTOM}" && add_var BASH_COMPLETION_USER_DIR
-  RC_COMPLETIONS="${RC_CUSTOM}/completions" && add_var RC_COMPLETIONS
-}
-
-sync() {
-  if git status  | grep -q "have diverged"; then
-    >&2 echo "${0##*/}: Diverged"
-    exit 1
-  elif git status | grep -q "Your branch is behind" && test -n "$(git status --porcelain)"; then
-    >&2 echo "${0##*/}: Behind remote & directory is not clean"
-    exit 1
-  elif git status | grep -q "Your branch is behind"; then
-    git pull --quiet --tags
-    exit 0
-  elif test -n "$(git status --porcelain)"; then
-    git add -A
-    git commit --quiet -a -m "${0##*/}${1:+: ${*}}"
-  fi
-
-  ! git status | grep -q "Your branch is ahead" || git push --quiet
-}
-
-supported() { 
-  echo "${RC_SUPPORTED}" | tr " " "\n" | grep -q "^${1}\$" || { >&2 echo "${0##*/}: Unsupported: ${1}"; exit 1; }
-}
-
-f() {
-  # Any file under  "*/${supported}/*" and any file "*/${supported}.*" inside "${type}"
-  # Darwin/Linux.sh pasaría, o sea, absurdo si pongo un Linux.sh debajo de un Darwin...
-  #
-  type="$1"; shift
-  SH="$2"; shift
-#  SH=""
-  set -- find "${RC_CUSTOM}" "${RC_ETC}" "${RC_GENERATED}" \( -type f -or -type l \) -path "*/${type}/*" \(
-
-  or=""
-  for supported in 00-common "${HOSTNAME}" "${ID_LIKE}" "${UNAME}"; do
-    [ "${supported-}" ] || continue
-    # shellcheck disable=SC2086
-    set -- "$@" ${or} -path "*/${supported}/*" -or -path "*/${supported}.*"
-    or="-or"
-  done
-
-  set -- "$@" \) -not \( -name ".*"
-
-  case "${SH}" in
-    bash) set -- "$@" -or -path "*/zsh/*" -or -path "*/bash-4/*" ;;
-    bash-4) set -- "$@" -or -path "*/zsh/*" ;;
-    zsh) set -- "$@" -or -path "*/bash*/*" ;;
-    *) set -- "$@" -or -path "*/zsh/*" -or -path "*/bash*/*" ;;
-  esac
-
-  set -- "$@" \)
-  echo "$@"
-  "$@"
-}
-
-# TODO: mover el aliases debajo del rc.d
-# cambiar todo para que se creen los ficheros en el generador de alias.
-# crear solo los tres que hay en el find
-
 
 main() {
-  [ "${ENV-}" ] || set_vars
+  _rc="$(cd "$(dirname "$0")/.."; pwd -P)"
+  _rc_file="${_rc}/.${0##*/}.sh"
 
-  action=false; hook=false; supported=false
+  action=false; supported=false
   for arg; do
     case "${arg}" in
       -h|--help|help) help 0;;
@@ -529,46 +591,37 @@ main() {
         ;;
       list) printf "%s\n" add clean del hook install "${arg}" supported sync; exit ;;
       supported) supported=true; shift ;;
-      hook) hook=true; shift ;;
-      -*)
-        >&2 echo "${0##*/}: Unknown argument: ${arg}"
-        >&2 echo
-        >&2 help
-        ;;
+      hook) echo "${_rc_file}"; exit ;;
+      -*) help 1 ;;
     esac
   done
 
-  [ "${RC_FORCE}" -eq 0 ] || [ "${function-}" != "install" ] || [ "${function-}" ]|| \
-    { >&2 echo "${0##*/}: --force can not be used with ${function}"; exit 1; }
+  { [ "${RC-}" = "${_rc}" ] && [ "${RC_FILE-}" = "${_rc_file}" ]; } || \
+    { RC="${_rc}"; RC_FILE="${_rc_file}"; RC_FORCE=1; }
 
-  if ! test -f "${ENV:-${_RC_FILE}}" || [ "${RC_FORCE}" -eq 1 ]; then
-    [ "${_RC_FILE-}" ] || set_vars
-    # shellcheck disable=SC2010
-    ls -la "${_RC_FILE}" | \
-      grep -q " ${USER} " || >&2 echo "${0##*/}: ${_RC_FILE} is not owned by: ${USER}"
+  _generated_vars
 
-    create_dirs_and_files
+  if ! test -f "${RC_FILE}" || [ "${RC_FORCE}" -eq 1 ]; then
+    ! test -f  "${RC_FILE}" || [ "$(fstat "${RC_FILE}")" = "${USER}" ] || die "${RC_FILE}: is not owned by: ${USER}"
+    _generated__rc_find
+    _generated_bash_sh
+    _generated_brew_sh
+    _generated_hosts_d
+    _generated_hosts_sh
+    _generated_rc_sh
+    _generated_sudo_sh
+    _generated_system_sh
 
-    write_functions
-    write_profile
-    write_compats
-    write_rc
-
-
-    mv "${_RC_TMP}" "${_RC_FILE}"
-    sync "$@"
-
-    gnu_completions
+    _rc_file_functions_d
+    _rc_file_profile_d
+    _rc_file_rc_d
   fi
-
-  if $hook; then
-    echo "${ENV:-${_RC_FILE}}"
-  elif $supported; then
-    echo "${RC_SUPPORTED}"
-  elif [ "${function-}" ]; then
-    "${function}" "$@"
-  fi
-
 }
-
+homebrew() {
+  HOMEBREW_PREFIX="/usr/local"
+  cp "${HOMEBREW_PREFIX}/bin/brew" "${TMP}"
+  rv="$(rc.awk /usr/local/Homebrew/Library/Homebrew/brew.sh "${TMP}" 2>&1 | \
+    grep -v 'HOMEBREW_NO_ENV_FILTERING was deprecated for over')"
+  [ ! "${rv}" ] || die "${rv}"
+}
 main "$@"
