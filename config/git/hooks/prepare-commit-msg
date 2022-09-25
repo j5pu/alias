@@ -1,0 +1,9 @@
+#!/bin/sh
+# shellcheck disable=SC2016
+
+#
+# Adds commit message if not present (needs --no-edit option in git commit)
+
+set -eu
+
+[ "${2-}" ] || git diff --cached --name-status -r | sed -n 'H;${x;s/\n/, /g;s/^,//;p;}' | sed 's/\t/ /g; s/^ //' > "$1"

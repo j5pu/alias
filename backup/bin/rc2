@@ -1,24 +1,5 @@
 #!/bin/sh
 
-#
-# Generates system-wide .env.sh profile
-
-set -eu
-
-# Hosts supported
-#
-HOSTS="book imac mini1 mini512 msi pro"
-
-# Force creation of .env.sh (can be set with --force) [Variable Not added to file]
-# Use when:
-#   hostname changes,
-#   brew is installed,
-: "${RC_FORCE=0}"
-
-# PATH [Value not added to file]
-#
-PATH="${RC_PATH_ADD}:${PATH}"
-
 # 'true' if 'DIST_ID' is 'alpine' and not: nix or busybox
 #
 : "${ALPINE=false}"
@@ -34,9 +15,6 @@ PATH="${RC_PATH_ADD}:${PATH}"
 # 'true' if 'DIST_ID' is 'centos'.
 #
 : "${CENTOS=false}"
-# 'true' if running in docker container.
-#
-: "${CONTAINER=false}"
 # 'true' if 'DIST_ID' is 'debian'.
 #
 : "${DEBIAN=false}"
@@ -54,33 +32,10 @@ PATH="${RC_PATH_ADD}:${PATH}"
 # </ul>
 # </html>
 : "${DIST_CODENAME=Monterey}"
-# <html><h2>Distribution ID</h2>
-# <p><strong><code>$DIST_ID</code></strong> (always exported).</p>
-# <ul>
-# <li><code>alpine</code></li>
-# <li><code>centos</code></li>
-# <li><code>debian</code></li>
-# <li><code>kali</code></li>
-# <li><code>macOS</code></li>
-# <li><code>ubuntu</code></li>
-# </ul>
-# </html>
-: "${DIST_ID=macOS}"
 # <alpine|debian|rhel fedora>.
-#
-: "${DIST_ID_LIKE=}"
 # 'true' if 'DIST_ID' is unknown.
 #
 : "${DIST_UNKNOWN=false}"
-# <html><h2>Distribution Version</h2>
-# <p><strong><code>$DIST_ID</code></strong> (always exported).</p>
-# <ul>
-# <li><code>macOS</code>: 10.15.1, 10.16 ...</li>
-# <li><code>kali</code>: 2021.2, ...</li>
-# <li><code>ubuntu</code> 20.04, ...</li>
-# </ul>
-# </html>
-: "${DIST_VERSION=}"
 # 'true' if 'DIST_ID' is 'fedora'.
 #  # Any file under  "*/${supported}/*" and any file "*/${supported}.*" inside "${type}"
 #  # Darwin/Linux.sh pasaría, o sea, absurdo si pongo un Linux.sh debajo de un Darwin...
@@ -114,23 +69,6 @@ PATH="${RC_PATH_ADD}:${PATH}"
 # 'true' if 'DIST_ID' is 'fedora' or 'fedora' in 'DIST_ID_LIKE'.
 #
 : "${FEDORA_LIKE=false}"
-
-
-: "${HOMEBREW_LOGS=${HOME}/Library/Logs/Homebrew}"
-# Homebrew install in $UNAME Darwin.
-#
-: "${HOMEBREW_MACOS=1}"
-
-# Homebrew tmp
-#
-: "${HOMEBREW_TEMP=/private/tmp}"
-# GIT System Config
-#
-#
-: "${GIT_CONFIG_SYSTEM=${RC_CONFIG_GIT}/gitconfig}"
-# GIT Init Template Directory
-#
-: "${GIT_TEMPLATE_DIR=${RC_CONFIG_GIT}/template}"
 # IPython directory for user data (looks for profile_*),
 # ipython_config.py should be in  /etc/ipython, /usr/local/etc/ipython or profile_*, not in
 # $IPYTHON_DIR/ipython_config.py
@@ -138,15 +76,6 @@ PATH="${RC_PATH_ADD}:${PATH}"
 # 'true' if 'DIST_ID' is 'kali'.
 #
 : "${KALI=false}"
-# <html><h2>Is MACOS?</h2>
-# <p><strong><code>$MACOS</code></strong> (always exported).</p>
-# <p><strong><code>Boolean</code></strong></p>
-# <ul>
-# <li><code>1</code>: $UNAME is darwin</li>
-# <li><code>0</code>: $UNAME is linux</li>
-# </ul>
-# </html>
-: "${MACOS=true}"
 # 'true' if 'DIST_ID' is 'alpine' and '/etc/nix'.
 #
 : "${NIXOS=false}"
@@ -185,9 +114,6 @@ PATH="${RC_PATH_ADD}:${PATH}"
 # </ul>
 # </html>
 : "${PM_UPGRADE=${PM} upgrade}"
-# Python Interactive Startup File
-#
-: "${PYTHONSTARTUP=${RC_BIN}/pythonstartup}"
 # 'true' if 'DIST_ID' is 'rhel'.
 #
 #
@@ -196,43 +122,11 @@ PATH="${RC_PATH_ADD}:${PATH}"
 #
 #
 : "${RHEL_LIKE=false}"
-# Path with sudo command
-# https://linuxhandbook.com/run-alias-as-sudo/
-#
-: "${SUDOC=/usr/bin/sudo}"
 # 'true' if 'DIST_ID' is 'ubuntu'.
 #
 #
 : "${UBUNTU=false}"
-# <html><h2>Operating System Name</h2>
-# <p><strong><code>$UNAME</code></strong> (always exported).</p>
-# <ul>
-# <li><code>Darwin</code></li>
-# <li><code>Linux</code></li>
-# </ul>
-# </html>
-: "${UNAME=${HOMEBREW_SYSTEM}}"
-# <html><h2>Machine name</h2>
-# <p><strong><code>$UNAME</code></strong> (always exported).</p>
-# <ul>
-# <li><code>x86_64</code></li>
-# <li><code>arm (for new mac)</code></li>
-# </ul>
-# </html>
-: "${UNAME_MACHINE=${HOMEBREW_PROCESSOR}}"
-# Username if not defined  [Variable Not added to file]
-# idea from brew install.sh
-: "${USER=$(chomp "$(id -un)")}"
-# <html><h2>Have an VGA card</h2>
-# <p><strong><code>$VGA</code></strong> 'true' if has an VGA card.</p>
-# </html>
-: "${VGA=true}"
 
-# TODO: Aqui lo dejo
-die() {
-  echo >&2 "$*"
-  exit 1
-}
 
 #######################################
 # system main

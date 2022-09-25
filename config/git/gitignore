@@ -1,0 +1,106 @@
+### Ansible template
+*.retry
+
+### Backup template
+*.bak
+*.gho
+*.ori
+*.orig
+*.tmp
+
+### Binaries for programs and plugins
+*.dll
+*.dylib
+*.exe
+*.exe~
+*.so
+*.test
+
+### Dropbox template
+.dropbox
+.dropbox.attr
+.dropbox.cache
+
+### JetBrains
+.idea/caches/build_file_checksums.ser
+
+### JS
+/.pnp
+node_modules
+
+### Linux template
+.directory
+.fuse_hidden*
+.nfs*
+.Trash-*
+
+### macOS template
+._*
+.apdisk
+.AppleDB
+.AppleDesktop
+.AppleDouble
+.com.apple.timemachine.donotpresent
+.DocumentRevisions-V100
+.DS_Store
+.fseventsd
+.LSOverride
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+Network Trash Folder
+Temporary Items
+
+### Next/Vercel template
+.vercel
+/.next/
+/out/
+
+### Python template
+*$py.class
+*.cover
+*.egg
+*.egg-info/
+*.py,cover
+*.py[cod]
+.cache
+.coverage
+.coverage.*
+.eggs/
+.hypothesis/
+.installed.cfg
+.mypy_cache/
+.nox/
+.pybuilder/
+.pyre/
+.pytest_cache/
+.Python
+.pytype/
+.tox/
+.webassets-cache
+__pycache__/
+__pypackages__/
+build/
+cover/
+coverage.xml
+cython_debug/
+develop-eggs/
+dist/
+docs/_build/
+eggs/
+htmlcov/
+lib64/
+nosetests.xml
+parts/
+sdist/
+share/python-wheels/
+venv/
+wheels/
+
+### Ruby template
+*.gem
+*.rbc
+.byebug_history
+/coverage/
+/InstalledFiles

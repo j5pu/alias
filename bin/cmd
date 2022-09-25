@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#
+# has command
+
+set -eu
+
+command -v "$@" >/dev/null
