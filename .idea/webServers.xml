@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="58e5da09-0a7b-4d51-bc39-81d5561dd23e" name="msi">
+        <fileTransfer rootFolder="/home/j5pu" accessType="SFTP" host="msi" port="22" sshConfigId="b27bdc41-3899-465f-ba37-d61d30b47d4a" sshConfig="j5pu@msi:22 agent" authAgent="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" isUseRsync="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

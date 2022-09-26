@@ -1,0 +1,6 @@
+#!/bin/sh
+
+#
+# Wrapper for system.awk since env -S does not work on busybox
+
+awk -f "$0".awk "$@"

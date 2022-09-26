@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps
+
+url="https://github.com/login/device/code"
+
+#oauth  https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps
+client_id="02691583098d424c22e0"
+curl -d "client_id=${client_id}&scope=" -X POST "${url}"
+curl -d '{"key1":"value1", "key2":"value2"}' -H "Content-Type: application/json" -X POST "${url}"
+
+# data.txt
+# param1=value1&param2=value2
+curl -d "@data.txt"
+
+# data.json
+# {
+#  "key1":"value1",
+#  "key2":"value2"
+#}
+curl -d "@data.json" -X POST

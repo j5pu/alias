@@ -1,0 +1,43 @@
+#!/bin/sh
+
+#
+# OS/Release UNAME
+
+set -eu
+
+VARS="$(cat <<EOF
+CI
+DIST_ID
+DIST_ID_LIKE
+DIST_NAME
+DIST_PRETTY_NAME
+DIST_VERSION
+DIST_VERSION_CODENAME
+DIST_VERSION_ID
+DOCKER_CONTAINER
+MACHINE_HW
+MACHINE_PROCESSOR_ARCH
+NODENAME
+OS_NAME
+OS_RELEASE
+OS_VERSION
+RUNNER
+EOF
+)"
+tmp="$(mktemp)"
+MACHINE_HW="$(uname -m)"
+MACHINE_PROCESSOR_ARCH="$(uname -p)"
+NODENAME="$(uname -n)"
+OS_NAME="$(uname -s)"
+OS_RELEASE="$(uname -r)"
+OS_VERSION="$(uname -v)"
+UNAME="$(uname)"
+MACHINE="$(uname -m)"
+if test -x /usr/bin/sw_vers; then
+
+else
+fi
+
+for i in ${VARS}; do
+  echo "export ${i}=\"$(eval echo \${${i}})\""
+done

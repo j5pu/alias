@@ -54,16 +54,20 @@ RC_SUPPORTED="${RC_COMMON} arch bash bash-4 busybox centos Darwin debian fedora 
 #   - Contents below subdirectories are symlinked to Cellar, etc"
 #   - brew executable is symlinked from $HOMEBREW_REPOSITORY to $HOMEBREW_PREFIX."
 : "${BREW_PREFIX=/usr/local}"
-if [ "${UNAME}" = "Darwin" ] && [ "${MACHINE}" = "arm64" ]; then
-  BREW_ADD="1"
-  : "${BREW_PREFIX=/opt/homebrew}"
-  : "${BREW_SH=${BREW_PREFIX}/Library/Homebrew/brew.sh}"
-elif [ "${UNAME}" = "Linux" ]; then
-  BREW_ADD="1"
-  : "${BREW_PREFIX=/home/linuxbrew/.linuxbrew}"
-  unset CLT
-  : "${MACOS=false}"
-  lspci 2>/dev/null | grep -q VGA || VGA=false
+if [ ! "${DIST_ID-}" ]; then
+  if [ "${UNAME}" = "Darwin" ]; then
+    if [ "${MACHINE}" = "arm64" ]; then
+      BREW_ADD="1"
+      : "${BREW_PREFIX=/opt/homebrew}"
+      : "${BREW_SH=${BREW_PREFIX}/Library/Homebrew/brew.sh}"
+    fi
+  else
+    BREW_ADD="1"
+    : "${BREW_PREFIX=/home/linuxbrew/.linuxbrew}"
+    unset CLT
+    : "${MACOS=false}"
+    lspci 2>/dev/null | grep -q VGA || VGA=false
+  fi
 fi
 # Homebrew Library "brew.sh" to be sourced by rc.awk via _generated_brew_sh()
 #
@@ -81,7 +85,7 @@ fi
 HOST="$(echo "${RC_SUPPORTED}" | awk '{ print $NF-1 }' )"
 # \$HOST upper (first part of \$HOSTNAME withouth domain)
 #
-HOST_UPPER="$(echo "${HOST}" | tr '[:lower:]' '[:upper:]')"
+HOST_UPPER="$(upper "${HOST}")"
 # <html><h2>Machine name</h2>
 # <p><strong><code>\$MACHINE</code></strong> (always exported).</p>
 # <ul>
@@ -353,7 +357,17 @@ _generated_brew_sh() {
 # generates generated/profile.d/Darwin.sh
 #######################################
 _generated_Darwin_sh() {
-  cat > "${TMP}" <<EOF
+  : "${DIST_VERSION=$(sw_vers -ProductVersion)}"
+  case "$(echo "${DIST_VERSION}" | command awk -F. '{ print $1 $2 }')" in
+    1013) DIST_CODENAME='High Sierra' ;;
+    1014) DIST_CODENAME='Mojave' ;;
+    1015) DIST_CODENAME='Catalina' ;;
+    11*) DIST_CODENAME='Big Sur' ;;
+    12*) DIST_CODENAME='Monterey' ;;
+    13*) DIST_CODENAME='Ventura' ;;
+    *) DIST_CODENAME='Other' ;;
+  esac
+  cat >"${TMP}" <<EOF
 # shellcheck shell=sh
 
 #
@@ -364,6 +378,18 @@ ${GENERATED_BY}
 # \$BASH_SILENCE_DEPRECATION_WARNING for BASH version 3
 #
 export BASH_SILENCE_DEPRECATION_WARNING="1"
+
+# <html><h2>Distribution Codename</h2>
+# <p><strong><code>\$DIST_CODENAME</code></strong> (always exported).</p>
+# <ul>
+# <li><code>Catalina</code></li>
+# <li><code>Big Sur</code></li>
+# <li><code>kali-rolling</code></li>
+# <li><code>focal</code></li>
+# <li><code>etc.</code></li>
+# </ul>
+# </html>
+export DIST_CODENAME="${DIST_CODENAME}"
 
 # <html><h2>Distribution ID</h2>
 # <p><strong><code>\$DIST_ID</code></strong> (always exported).</p>
@@ -386,12 +412,45 @@ DIST_ID="$(sw_vers -ProductName)"; export DIST_ID
 # <li><code>ubuntu</code> 20.04, ...</li>
 # </ul>
 # </html>
-DIST_VERSION="$(sw_vers -ProductVersion)"; export DIST_VERSION
+export DIST_VERSION="${DIST_VERSION}"
 
-# <html><h2>Have an VGA card</h2>
-# <p><strong><code>\$VGA</code></strong> 'true' if has an VGA card.</p>
+# <html><h2>Default Package Manager</h2>
+# <p><strong><code>\$PM</code></strong> (always exported).</p>
+# <ul>
+# <li><code>apk</code></li>
+# <li><code>apt</code></li>
+# <li><code>brew</code></li>
+# <li><code>nix</code></li>
+# <li><code>yum</code></li>
+# </ul>
 # </html>
+export PM="brew"
 
+# <html><h2>Default Package Manager Command with Install Options</h2>
+# <p><strong><code>\$PM_INSTALL</code></strong> (always exported).</p>
+# <p><strong><code>Quiet and no cache (for containers)</code></strong>.</p>
+# <ul>
+# <li><code>apk</code></li>
+# <li><code>apt</code></li>
+# <li><code>brew</code></li>
+# <li><code>nix</code></li>
+# <li><code>yum</code></li>
+# </ul>
+# </html>
+export PM_INSTALL="brew install"
+
+# <html><h2>Default Package Manager Command with Upgrade and Cleanup</h2>
+# <p><strong><code>\$PM_UPGRADE</code></strong> (always exported).</p>
+# <p><strong><code>Quiet and no cache (for containers)</code></strong>.</p>
+# <ul>
+# <li><code>apk</code></li>
+# <li><code>apt</code></li>
+# <li><code>brew</code></li>
+# <li><code>nix</code></li>
+# <li><code>yum</code></li>
+# </ul>
+# </html>
+export PM_UPGRADE="brew upgrade"
 EOF
   _cp "${RC_GENERATED_PROFILE_D}/${UNAME}.sh"
 }
@@ -433,20 +492,20 @@ _generated_git_template() {
   config="${GIT_TEMPLATE_DIR}/config"
   info="${GIT_TEMPLATE_DIR}/info"; mkdir -p "${info}"
   exclude="${info}/exclude"
-  refs="refs/heads/${GIT_DEFAULT_BRANCH}"
-
+  refs="$(git config --system branch."${GIT_DEFAULT_BRANCH}".merge)"
   if ! test -f "${exclude}" || [ "$(fstat --real "${exclude}")" != "${RC_CONFIG_GIT_EXCLUDES}" ]; then
     rm -f "${exclude}"
     ln -s  "${RC_CONFIG_GIT_EXCLUDES}" "${exclude}"
   fi
 
   git config --file "${TMP}" branch."${GIT_DEFAULT_BRANCH}".remote origin
-  git config --file "${TMP}" branch."${GIT_DEFAULT_BRANCH}".merge "${refs}"
 
   for key in $(git config --system --name-only --get-regexp "^core.*") \
-    diff.submodule push.recurseSubmodules status.submoduleSummary submodule.recurse; do
+    branch."${GIT_DEFAULT_BRANCH}".merge checkout.defaultRemote diff.submodule push.recurseSubmodules \
+    remote.pushDefault status.submoduleSummary submodule.recurse; do
     git config --file "${TMP}" "${key}" "$(git config --system "${key}")"
   done
+
   git config --file "${TMP}" submodule.active .
 
   _cp "${config}" pass
@@ -480,6 +539,83 @@ EOF
 # generates generated/profile.d/Linux.sh
 #######################################
 _generated_Linux_sh() {
+
+  #######################################
+  # distribution ID
+  #######################################
+  _dist_id() {
+    DIST_ID_LIKE="${DIST_ID}"
+    case "${DIST_ID}" in
+      alpine)
+        DIST_ID_LIKE="${DIST_ID}"; PM="apk"
+        if [ -r "/etc/nix" ]; then
+          DIST_ID_LIKE="nix"
+          PM="nix-env"
+        else
+          PM="apk"
+        fi
+        ;;
+      arch)
+        ARCH=true
+        PM="pacman"
+        ;;
+      centos)
+        CENTOS=true
+        PM="yum"
+        ;;
+      debian)
+        DEBIAN=true
+        DEBIAN_LIKE=true
+        DIST_ID_LIKE="${DIST_ID}"
+        ;;
+      fedora)
+        FEDORA=true
+        FEDORA_LIKE=true
+        PM="dnf"
+        ;;
+      kali) KALI=true ;;
+      rhel)
+        RHEL=true
+        RHEL_LIKE=true
+        PM="yum"
+        ;;
+      ubuntu) UBUNTU=true ;;
+      *) DIST_UNKNOWN=true ;;
+    esac
+  }
+
+  #######################################
+  # distribution ID like
+  #######################################
+  _dist_id_like() {
+    case "${DIST_ID_LIKE}" in
+      debian)
+        DEBIAN_LIKE=true
+        PM="apt"
+        ;;
+      *fedora*) FEDORA_LIKE=true ;;
+      *rhel*) RHEL_LIKE=true ;;
+    esac
+  }
+
+  #######################################
+  # strip quotes
+  #######################################
+  _strip() { echo "${value}" | sed -E 's/(^"|"$)//;s/ /_/'; }
+
+  DIST_ID="busybox"
+  if [ -f '/etc/os-release' ]; then
+    while IFS='=' read -r name value; do
+      case "${name}" in
+        ID) DIST_ID="$(_strip)"; _dist_id ;;
+        ID_LIKE) 
+          id_like="$(_strip)"
+          [ ! "${id_like-}" ] || DIST_ID_LIKE="${id_like}"; _dist_id_like ;;
+        VERSION_ID) DIST_VERSION="$(_strip)" ;;
+        VERSION_CODENAME) DIST_CODENAME="$(_strip)" ;;
+      esac
+    done < '/etc/os-release'
+  fi
   cat > "${TMP}" <<EOF
 # shellcheck shell=sh
 
@@ -488,6 +624,90 @@ _generated_Linux_sh() {
 #
 ${GENERATED_BY}
 
+# "1" if \$DIST_ID_LIKE is "${DIST_ID_LIKE}"
+#
+export ${DIST_ID_LIKE}_LIKE="1"
+
+# "1" if \$DIST_ID is "${DIST_ID}"
+#
+export $(upper "${DIST_ID}")="1"
+
+# <html><h2>Distribution Codename</h2>
+# <p><strong><code>\$DIST_CODENAME</code></strong> (always exported).</p>
+# <ul>
+# <li><code>Catalina</code></li>
+# <li><code>Big Sur</code></li>
+# <li><code>kali-rolling</code></li>
+# <li><code>focal</code></li>
+# <li><code>etc.</code></li>
+# </ul>
+# </html>
+export DIST_CODENAME="${DIST_CODENAME}"
+
+# <html><h2>Distribution ID</h2>
+# <p><strong><code>\$DIST_ID</code></strong> (always exported).</p>
+# <ul>
+# <li><code>alpine</code></li>
+# <li><code>centos</code></li>
+# <li><code>debian</code></li>
+# <li><code>kali</code></li>
+# <li><code>macOS</code></li>
+# <li><code>ubuntu</code></li>
+# </ul>
+# </html>
+export DIST_ID="${DIST_ID}"
+
+# <alpine|debian|rhel_fedora>.
+#
+export DIST_ID_LIKE="${DIST_ID_LIKE}"
+
+# <html><h2>Distribution Version</h2>
+# <p><strong><code>\$DIST_VERSION</code></strong> (always exported).</p>
+# <ul>
+# <li><code>macOS</code>: 10.15.1, 10.16 ...</li>
+# <li><code>kali</code>: 2021.2, ...</li>
+# <li><code>ubuntu</code> 20.04, ...</li>
+# </ul>
+# </html>
+export DIST_VERSION="${DIST_VERSION}"
+
+# <html><h2>Default Package Manager</h2>
+# <p><strong><code>\$PM</code></strong> (always exported).</p>
+# <ul>
+# <li><code>apk</code></li>
+# <li><code>apt</code></li>
+# <li><code>brew</code></li>
+# <li><code>nix</code></li>
+# <li><code>yum</code></li>
+# </ul>
+# </html>
+export PM="${PM}"
+
+# <html><h2>Default Package Manager Command with Install Options</h2>
+# <p><strong><code>\$PM_INSTALL</code></strong> (always exported).</p>
+# <p><strong><code>Quiet and no cache (for containers)</code></strong>.</p>
+# <ul>
+# <li><code>apk</code></li>
+# <li><code>apt</code></li>
+# <li><code>brew</code></li>
+# <li><code>nix</code></li>
+# <li><code>yum</code></li>
+# </ul>
+# </html>
+export PM_INSTALL="${PM_INSTALL}"
+
+# <html><h2>Default Package Manager Command with Upgrade and Cleanup</h2>
+# <p><strong><code>\$PM_UPGRADE</code></strong> (always exported).</p>
+# <p><strong><code>Quiet and no cache (for containers)</code></strong>.</p>
+# <ul>
+# <li><code>apk</code></li>
+# <li><code>apt</code></li>
+# <li><code>brew</code></li>
+# <li><code>nix</code></li>
+# <li><code>yum</code></li>
+# </ul>
+# </html>
+export PM_UPGRADE="${PM_UPGRADE}"
 EOF
   _cp "${RC_GENERATED_PROFILE_D}/${UNAME}.sh"
 }

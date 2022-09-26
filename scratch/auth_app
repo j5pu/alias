@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# https://docs.github.com/en/developers/apps/building-oauth-apps/authorizing-oauth-apps
+
+url="https://github.com/login/device/code"
+#url="https://github.com/login/oauth/authorize"
+# app  https://docs.github.com/en/developers/apps/building-github-apps/identifying-and-authorizing-users-for-github-apps
+client_id="Iv1.7bafcceb3f25cce5"
+cookie="$(mktemp)"
+export CURLOPT_COOKIEJAR="cookie.txt"
+touch "${CURLOPT_COOKIEJAR}"
+#curl --cookie -d "client_id=${client_id}" -X POST "${url}"
+#curl -c "${cookie}" -v -d "{\"client_id\":\"${client_id}\"}" -H "Content-Type: application/json" "${url}"
+curl -b "${CURLOPT_COOKIEJAR}" -sL -d "{\"client_id\":\"${client_id}\"}" -H "Accept: application/json" -H "Content-Type: application/json" "${url}"
+#http --session-read-only hola "${url}" client_id="${client_id}"
+#http -j -q --session-read-only hola "${url}"   client_id="${client_id}"
+# data.txt
+# param1=value1&param2=value2
+#curl -d "@data.txt"
+
+# data.json
+# {
+#  "key1":"value1",
+#  "key2":"value2"
+#}
+#curl -d "@data.json" -X POST

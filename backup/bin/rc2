@@ -79,41 +79,6 @@
 # 'true' if 'DIST_ID' is 'alpine' and '/etc/nix'.
 #
 : "${NIXOS=false}"
-# <html><h2>Default Package Manager</h2>
-# <p><strong><code>$PM</code></strong> (always exported).</p>
-# <ul>
-# <li><code>apk</code></li>
-# <li><code>apt</code></li>
-# <li><code>brew</code></li>
-# <li><code>nix</code></li>
-# <li><code>yum</code></li>
-# </ul>
-# </html>
-: "${PM=brew}"
-# <html><h2>Default Package Manager Command with Install Options</h2>
-# <p><strong><code>$PM_INSTALL</code></strong> (always exported).</p>
-# <p><strong><code>Quiet and no cache (for containers)</code></strong>.</p>
-# <ul>
-# <li><code>apk</code></li>
-# <li><code>apt</code></li>
-# <li><code>brew</code></li>
-# <li><code>nix</code></li>
-# <li><code>yum</code></li>
-# </ul>
-# </html>
-: "${PM_INSTALL=${PM} install}"
-# <html><h2>Default Package Manager Command with Upgrade and Cleanup</h2>
-# <p><strong><code>$PM_UPGRADE</code></strong> (always exported).</p>
-# <p><strong><code>Quiet and no cache (for containers)</code></strong>.</p>
-# <ul>
-# <li><code>apk</code></li>
-# <li><code>apt</code></li>
-# <li><code>brew</code></li>
-# <li><code>nix</code></li>
-# <li><code>yum</code></li>
-# </ul>
-# </html>
-: "${PM_UPGRADE=${PM} upgrade}"
 # 'true' if 'DIST_ID' is 'rhel'.
 #
 #

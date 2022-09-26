@@ -14,6 +14,7 @@
     <globalVariables>
       <var name="cword" />
       <var name="cur" />
+      <var name="base_images" />
     </globalVariables>
   </component>
 </project>

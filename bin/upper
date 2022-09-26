@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#
+# POSIX upper
+
+set -eu
+
+echo "$@" | tr '[:lower:]' '[:upper:]'

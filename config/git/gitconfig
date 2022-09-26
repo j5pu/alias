@@ -9,6 +9,11 @@
   toplevel = rev-parse --show-toplevel
 [blame]
   coloring = repeatedLines
+[branch "main"]
+  merge = refs/heads/main
+[checkout]
+  defaultRemote = origin
+  workers = -1
 [color]
   blue = blue bold
   branch = auto
@@ -57,7 +62,10 @@
 [diff]
   colorMoved = zebra
   submodule = log
+[feature]
+ manyFiles = true
 [fetch]
+  parallel = 0
   prune = true
 [filter "lfs"]
   clean = git-lfs clean -- %f
@@ -68,16 +76,22 @@
   default-branch = main
 [help]
   autocorrect = 0
+  emptyAuth = true
 [http]
   postBuffer = 157286400
+[index]
+  version = 4
 [init]
   defaultBranch = main
+[pack]
+  threads = 0
 [pager]
   branch = false
   tag = false
 [pull]
   rebase = false
 [push]
+  autoSetupRemote = current
   default = current
   recurseSubmodules = on-demand
 [receive]
@@ -85,13 +99,19 @@
   fsckObjects = true
 [remote]
   pushDefault = origin
+[stash]
+  showIncludeUntracked = true
 [status]
-  submodulesummary = 1
+  showStash = true
+  submoduleSummary = 1
 [submodule]
+  fetchJobs = 0
+  propagateBranches = true
   recurse = true
 [tag]
   sort = creatordate
 [user]
   name = root
   email = root@example.com
+  useConfigOnly = true
   username = root

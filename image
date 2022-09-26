@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+set -eu
+trap 'echo $image' ERR
+cd "$(dirname "$0")"
+
+. bin/base-images.bash
+
+# image sh -c "lower HOLA"
+# image "lower HOLA"
+WITH_NAME=false
+for arg; do
+  case "$arg" in
+    --with-name) WITH_NAME=true; shift; break;;
+  esac
+done
+
+while read -r image; do
+  ! $WITH_NAME || >&2 echo "=$(tput setaf 1)> $(tput setaf 4)${image}$(tput sgr0)"
+  
+  docker run --rm \
+  -v "$PWD":/rc \
+  -e "PATH=/rc/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
+  "${image}" "$@"
+done < <(printf "%s\n" "${BBIN_IMAGES[@]}" | sort)
