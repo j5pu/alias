@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="generated" pattern="file[rc]:tests/data/system.sh||file[rc]:tests/data//*||file[rc]:generated//*" />
+</component>

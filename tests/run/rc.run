@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# shellcheck disable=SC2029
+
+#
+# run a command in a host/image or all
+#   rc.run echo HOLA [runs in all hosts and images]
+#   rc.run sh -c "echo HOLA" [runs in all hosts and images]
+#
+#   rc.run pro system.awk [runs system.awk in pro]
+#   rc.run system.awk [runs system.awk in all hosts and images]
+#   rc.run pro system.awk desc [runs "system.awk desc" in pro]
+#   rc.run system.awk desc [runs "system.awk desc" in all hosts and images]
+#
+#   rc.run alpine sh -c "lower HOLA"
+#   rc.run alpine lower HOLA
+
+set -eu
+trap 'echo "${HOST:-${IMAGE}}"' ERR
+
+. "$(dirname "$0")/.sh"
+
+#######################################
+# image sh -c "lower HOLA"
+# image "lower HOLA"
+# Globals:
+#   IMAGE
+#   PWD
+# Arguments:
+#  None
+#######################################
+image() {
+  case "${IMAGE-}" in
+    busybox) set -- sh -c "/rc/install.d/hooks/busybox/usr-bin.sh && $*" ;;
+    nixos/nix) set -- sh -c  "/rc/install.d/hooks/nix/gawk.sh && $*" ;;
+  esac
+
+  docker run --rm \
+    -v "${PWD}":/rc \
+    -e "PATH=/rc/bin:/root/.nix-profile/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
+    "${IMAGE}" "$@"
+}
+
+#######################################
+# description
+# Globals:
+#   HOST
+# Arguments:
+#  None
+#######################################
+remote() {
+  upload
+  if [[ "$1" =~ sh$ ]] && [ "${2-}" = "-c" ] && [ "${3-}" ]; then
+    set -- "$1" "$2" "'${*:3}'"
+  fi
+  ssh "${HOST}" PATH="/tmp/rc/bin:\$PATH" "$@"; }
+
+#######################################
+# description
+# Arguments:
+#   1
+#######################################
+start() { echo >&2 "# =$(tput setaf 1)> $(tput setaf 4)${1}$(tput sgr0)"; }
+
+#######################################
+# description
+# Globals:
+#   PWD
+# Arguments:
+#   1
+#######################################
+upload() { rsync -a --delete-after --exclude "*/.idea/*" --exclude "*/.git/*" "${PWD}" "${HOST}:/tmp/"; }
+
+: "${1?command to run not provided (optional host/image)}"
+
+case "$1" in
+  book|imac|msi|pro) HOST="$1"; shift; ;;
+  *) for key in "${!BBIN_IMAGES[@]}"; do [ "$1" != "${key}" ] || { IMAGE="${BBIN_IMAGES[$1]}"; shift; }; done ;;
+esac
+
+: "${1?${0##*/}: command to run not provided}"
+
+if [ "${HOST-}" ]; then
+  remote "$@"
+elif [ "${IMAGE-}" ]; then
+  image "$@"
+else
+  for HOST in book imac msi pro; do
+    start "${HOST}"
+    remote "$@"
+  done
+
+  while read -r IMAGE; do
+    start "${IMAGE}"
+    image "$@"
+  done < <(printf "%s\n" "${BBIN_IMAGES[@]}" | sort)
+fi

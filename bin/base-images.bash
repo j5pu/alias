@@ -12,6 +12,7 @@ declare -Ag BBIN_IMAGES=(
   ["debian-slim"]=debian:bullseye-slim
   ["kali"]=kalilinux/kali-rolling
   ["kali-bleeding"]=kalilinux/kali-bleeding-edge
+  ["nix"]=nixos/nix
   ["zsh"]=zshusers/zsh
 )
 for _bbin_image in alpine archlinux bash busybox centos debian fedora ubuntu; do

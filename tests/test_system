@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+set -eu
+
+. "$(dirname "$0")/run/.sh"
+
+case "${1-}" in
+  save) system.awk.sh &> tests/data/system.sh; exit ;;
+esac
+
+. tests/data/system.sh
+diff "$(system.awk.sh)" tests/data/system.sh
