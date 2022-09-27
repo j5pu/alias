@@ -1,10 +1,19 @@
 #!/bin/sh
 
 #
-# Syncs a repository and submodules
+# Syncs a repository/repositories and submodules
 
 set -eu
 
-[ ! "${1-}" ] || cd "$1"
+main() {
+  [ $# -ge 1 ] || set -- .
+  for arg; do
+    case "$arg" in
+      -h|--help) help; exit ;;
+      *) cd "${arg}" && git submodule foreach "git sync" && git sync ;;
+    esac
+  done
+}
 
-git submodule foreach "git sync" && git sync
+main "$@"
+
