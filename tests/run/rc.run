@@ -29,10 +29,12 @@ trap 'echo "${HOST:-${IMAGE}}"' ERR
 #  None
 #######################################
 image() {
-  case "${IMAGE-}" in
-    busybox) set -- sh -c "/rc/install.d/hooks/busybox/usr-bin.sh && $*" ;;
-    nixos/nix) set -- sh -c  "/rc/install.d/hooks/nix/gawk.sh && $*" ;;
-  esac
+  if $AWK; then
+    case "${IMAGE-}" in
+      busybox) set -- sh -c "/rc/install.d/hooks/busybox/usr-bin.sh && $*" ;;
+      nixos/nix) set -- sh -c  "/rc/install.d/hooks/nix/gawk.sh && $*" ;;
+    esac
+  fi
 
   docker run --rm \
     -v "${PWD}":/rc \
@@ -78,6 +80,8 @@ case "$1" in
 esac
 
 : "${1?${0##*/}: command to run not provided}"
+
+AWK=true; grep -q "awk" "$(command -v "$1")" &>/dev/null || AWK=false
 
 if [ "${HOST-}" ]; then
   remote "$@"

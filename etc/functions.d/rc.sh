@@ -3,7 +3,7 @@
 #
 # Functions used by env.
 
-has() { command -v "$1" >/dev/null; }
+has() { type "$@" 1>/dev/null 2>&1; }
 
 rc_source_dir() {
   test -n "$(find "$1" \( -type f -or -type l \) -not -name ".*")" || return 0

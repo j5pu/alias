@@ -149,16 +149,16 @@ _generated_git_template() {
   config="${GIT_TEMPLATE_DIR}/config"
   info="${GIT_TEMPLATE_DIR}/info"; mkdir -p "${info}"
   exclude="${info}/exclude"
-  refs="$(git config --system branch."${GIT_DEFAULT_BRANCH}".merge)"
-  if ! test -f "${exclude}" || [ "$(fstat --real "${exclude}")" != "${RC_CONFIG_GIT_EXCLUDES}" ]; then
+  refs="$(git config --system branch."${RC_GIT_DEFAULT_BRANCH}".merge)"
+  if ! test -f "${exclude}" || [ "$(fstat --real "${exclude}")" != "${RC_GIT_CONFIG_EXCLUDES}" ]; then
     rm -f "${exclude}"
-    ln -s  "${RC_CONFIG_GIT_EXCLUDES}" "${exclude}"
+    ln -s  "${RC_GIT_CONFIG_EXCLUDES}" "${exclude}"
   fi
 
-  git config --file "${TMP}" branch."${GIT_DEFAULT_BRANCH}".remote origin
+  git config --file "${TMP}" branch."${RC_GIT_DEFAULT_BRANCH}".remote origin
 
   for key in $(git config --system --name-only --get-regexp "^core.*") \
-    branch."${GIT_DEFAULT_BRANCH}".merge checkout.defaultRemote diff.submodule push.recurseSubmodules \
+    branch."${RC_GIT_DEFAULT_BRANCH}".merge checkout.defaultRemote diff.submodule push.recurseSubmodules \
     remote.pushDefault status.submoduleSummary submodule.recurse; do
     git config --file "${TMP}" "${key}" "$(git config --system "${key}")"
   done

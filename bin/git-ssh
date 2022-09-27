@@ -1,0 +1,65 @@
+#!/bin/sh
+
+#
+#
+set -eu
+
+: "${RC_GITHUB_DEFAULT_USER?}"
+
+#######################################
+# checks connection
+# Arguments:
+#  [<user>]  remote name or url (default: $USER).
+#######################################
+check() {
+  ! ssh -T git@github.com 2>&1 | grep -q "Hi ${1}! You've successfully authenticated" || return 0
+  >&2 echo "${0##*/}: ${1}: SSH access to GitHub failed."
+  exit 1
+}
+
+#######################################
+# show value of url.ssh://git@github.com/.insteadOf based on connectivity check
+# Arguments:
+#  [<user>]  remote name or url (default: $USER).
+#######################################
+config() { ! check "$@" 2>&1 || echo https://github.com/; }
+
+####################
+# Show help and exit
+#######################################
+help() {
+  >&2 cat <<EOF
+usage: ${0##*/} [<user>|config]
+   or: ${0##*/} <user>
+   or: ${0##*/} config
+
+checks for ssh connectivity to github or shows url.ssh://git@github.com/.insteadOf based on connectivity check
+
+no option checks for connectivity for current user, except for root where \$RC_GITHUB_DEFAULT_USER is used
+
+Commands:
+   -h, --help   display this help and exit.
+  config        command used by git config dinamically to provide url.ssh://git@github.com/.insteadOf
+EOF
+}
+
+#######################################
+# git ssh access
+# Arguments:
+#  [<user>  remote name or url (default: $USER).
+#######################################
+main() {
+  for arg; do
+    case "$arg" in
+      -h|--help|help) help; exit ;;
+      config) function="${arg}"; break; ;;
+      *) user="${arg}"; break; ;;
+    esac
+  done
+
+  [ "$(id -u)" -ne 0 ] || user="${RC_GITHUB_DEFAULT_USER}"
+
+  "${function:-check}" "${user:-${USER}}"
+}
+
+main "$@"

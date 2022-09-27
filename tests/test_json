@@ -1,0 +1,30 @@
+#!/bin/sh
+
+set -eu
+
+trap 'rc=$?; [ $rc -eq 0 ] || printf "%s\n" "$0: Output ->" ${OUTPUT}' EXIT
+
+EXPECTED="$(cat <<EOF
+foo=1
+bar=2
+foo=1
+bar=2
+foo=1
+bar=2
+foo=1
+bar=2
+{"foo":"1","bar":"2"}
+{"foo":"1","bar":"2"}
+EOF
+)"
+
+OUTPUT="$(
+  echo "\"{\"foo\":\"1\",\"bar\":\"2\"}\"" | json; \
+  json "\"{\"foo\":\"1\",\"bar\":\"2\"}\""; \
+  echo "{\"foo\":\"1\",\"bar\":\"2\"}" | json; \
+  json "{\"foo\":\"1\",\"bar\":\"2\"}"; \
+  printf "%s\n" foo 1 bar 2 | json; \
+  json foo 1 bar 2
+)"
+
+[ "${EXPECTED}" = "${OUTPUT}" ]
