@@ -1,123 +1,19 @@
 #!/bin/sh
 
+# TODO: Aqui lo dejo, meter esto en generated y el system. Poner la variable de Git Actions.
+# Homebrew Cellar where built products are store`
+#
+: "${HOMEBREW_CELLAR="${HOMEBREW_REPOSITORY}/Cellar"}"
+# Homebrew Library where Taps (i.e.: homebrew/homebrew-core) are stored and Homebrew's internal ruby code is located
+#
+: "${HOMEBREW_LIBRARY="${HOMEBREW_REPOSITORY}/Library"}"
+# Homebrew Taps (i.e.: homebrew/homebrew-core) are stored
+#
+: "${HOMEBREW_TAPS="${HOMEBREW_LIBRARY}/Taps"}"
+# Homebrew core repository path
+#
+: "${HOMEBREW_CORE="${HOMEBREW_TAPS}/homebrew/homebrew-core"}"
 
-#######################################
-# system main
-#######################################
-_system() {
+[ ! "${GITHUB_RUN_ID-}" ] || VGA=false
 
 
-  fi
-
-  # TODO: Aqui lo dejo, meter esto en generated y el system. Poner la variable de Git Actions.
-  # Homebrew Cellar where built products are store`
-  #
-  : "${HOMEBREW_CELLAR="${HOMEBREW_REPOSITORY}/Cellar"}"
-  # Homebrew Library where Taps (i.e.: homebrew/homebrew-core) are stored and Homebrew's internal ruby code is located
-  #
-  : "${HOMEBREW_LIBRARY="${HOMEBREW_REPOSITORY}/Library"}"
-  # Homebrew Taps (i.e.: homebrew/homebrew-core) are stored
-  #
-  : "${HOMEBREW_TAPS="${HOMEBREW_LIBRARY}/Taps"}"
-  # Homebrew core repository path
-  #
-  : "${HOMEBREW_CORE="${HOMEBREW_TAPS}/homebrew/homebrew-core"}"
-
-  [ ! "${GITHUB_RUN_ID-}" ] || VGA=false
-
-  if [ "${PM-}" ]; then
-    case "${PM}" in
-      # pacman -Sy (like apt update)
-      apk)
-        PM_INSTALL="sudo ${PM} ${PM} add -q --no-progress"
-        NO_CACHE="--no-cache"
-        ;;
-      apt)
-        PM_INSTALL="sudo ${PM} -qq update -y && ${PM} -qq install -y"
-        PM_UPGRADE="${PM} -qq full-upgrade -y && ${PM} -qq auto-remove -y && ${PM} -qq clean"
-        ;;
-      brew) PM_INSTALL="${PM} install --quiet" ;;
-      dnf) PM_INSTALL="sudo ${PM} install -y -q" ;;
-      nix) PM_INSTALL="sudo ${PM} --install -A" ;; # nixos -> nixos.curl, no nixos --> nixpkgs.curl
-      pacman) PM_INSTALL="sudo ${PM} -Sy && ${PM} -S --noconfirm" ;;
-      yum) PM_INSTALL="sudo ${PM} install -y -q" ;;
-      *) PM_INSTALL="" ;;
-    esac
-  fi
-}
-#######################################
-# Adds variable to RC_VARS to be stored in RC_FILE
-# Globals:
-#   RC_VARS
-# Arguments:
-#   1
-#   2
-#######################################
-_var() {
-  RC_VARS="${RC_VARS:+${RC_VARS} }${1}"
-  [ ! "${2-}" ] || mkdir -p "${2}"
-}
-
-#######################################
-# Adds all variables to RC_VARS to be stored in RC_FILE and make directories
-# Globals:
-#   RC_VARS
-# Arguments:
-#   1
-#   2
-#######################################
-_vars() {
-  for _var in \
-    HOST HOST_UPPER HOSTNAME HOSTNAME_DOMAIN HOSTS \
-    RC_FILE RC_SUPPORTED \
-    \
-    ALPINE ALPINE_LIKE ARCH \
-    BUSYBOX \
-    CENTOS \
-    CONTAINER \
-    DEBIAN DEBIAN_LIKE DIST_CODENAME DIST_ID DIST_ID_LIKE DIST_UNKNOWN DIST_VERSION \
-    FEDORA FEDORA_LIKE \
-    HOMEBREW_CACHE HOMEBREW_CORE HOMEBREW_LINUX HOMEBREW_LOGS \
-    HOMEBREW_MACOS HOMEBREW_PREFIX HOMEBREW_PHYSICAL_PROCESSOR \
-    HOMEBREW_PROCESSOR HOMEBREW_REPOSITORY HOMEBREW_SYSTEM \
-    GIT_CONFIG_SYSTEM \
-    KALI \
-    MACOS \
-    NIXOS \
-    PM PM_INSTALL PM_UPGRADE PYTHONSTARTUP \
-    RHEL RHEL_LIKE \
-    SUDOC \
-    UBUNTU UNAME UNAME_MACHINE \
-    VGA \
-    \
-    HOMEBREW_CELLAR HOMEBREW_LIBRARY HOMEBREW_TAPS HOMEBREW_CORE; do
-    _var "${_var}"
-  done
-
-  for _var in \
-    BASH_COMPLETION_USER_DIR \
-    GIT_TEMPLATE_DIR \
-    IPYTHONDIR \
-    RC \
-    RC_BIN \
-    RC_CONFIG RC_CONFIG_GIT \
-    RC_CUSTOM RC_CUSTOM_COMPLETIONS RC_CUSTOM_PROFILE_D RC_CUSTOM_RC_D \
-    RC_ETC RC_ETC_FUNCTIONS_D RC_ETC_PROFILE_D RC_ETC_RC_D \
-    RC_GENERATED \
-    RC_GENERATED_BIN RC_GENERATED_PROFILE_D RC_GENERATED_PROFILE_HOSTS_D RC_GENERATED_RC_D RC_GENERATED_RC_ALIASES_D; do
-    _var "${_var}" 1
-  done
-}
-
-main() {
-  _vars=false
-  [ "${ENV-}" = "${RC_FILE}" ] || {
-    _vars
-    _vars=true
-  }
-
-  if ! test -f "${RC_FILE}" || [ "${RC_FORCE}" -eq 1 ]; then
-    $_vars || _vars
-    ! test -f "${RC_FILE}" || [ "$(fstat "${RC_FILE}")" = "${USER}" ] || die "${RC_FILE} is not owned by ${USER}"
-  fi
-}

@@ -5,35 +5,6 @@
 
 set -eu
 
-_generated_vars() {
-
-  if [ "${UNAME}" = "Darwin" ]; then
-    :
-  else
-    if [ -f "/etc/os-release" ]; then
-      while IFS="=" read -r name value; do
-        case "${name}" in
-          ID)
-            DIST_ID="$(_strip)"
-            _dist_id
-            ;;
-          ID_LIKE)
-            DIST_ID_LIKE="$(_strip)"
-            _dist_id_like
-            ;;
-          VERSION_ID) DIST_VERSION="$(_strip)" ;;
-          VERSION_CODENAME) DIST_CODENAME="$(_strip)" ;;
-        esac
-      done <"/etc/os-release"
-    else
-      BUSYBOX=true
-      PM=""
-      DIST_ID="busybox"
-    fi
-  fi
-
-}
-
 _generated__rc_find() {
   # Any file under  "*/${supported}/*" and any file "*/${supported}.*" inside "${type}"
   # Darwin/Linux.sh pasaría, o sea, absurdo si pongo un Linux.sh debajo de un Darwin...
@@ -82,30 +53,6 @@ $@
 EOF
     _cmp "${RC_GENERATED_BIN}/_rc_find${sh:+_${sh}}" executable
   done
-}
-# TODO: variables de git config
-# TODO: git credential
-# TODO: prompt
-# TODO: el paths.d
-# TODO: el orden de source
-# TODO: pythonstartup y console/site_customize.py IPYTHONDIR
-# TODO: colors
-# TODO: helper que había cambiado en media
-# TODO: exportar funciones based on shell
-# TODO: USER en profile.d ?
-
-_generated_dist_sh() {
-  cat > "${TMP}" <<EOF
-# shellcheck shell=sh
-
-#
-# System/OS variables
-#
-${GENERATED_BY}
-
-
-EOF
-  _cmp "${RC_GENERATED_PROFILE_D}/dist.sh"
 }
 
 _rc_file_functions_d() {

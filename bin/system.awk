@@ -3,6 +3,18 @@
 # Can not be executed directly on busybox images since env does not support -S, and -S is required by debian to pass -f
 
 # TODO: las de GIT CONFIG de system.sh viejas (mirar el credentials), meter las de brew aqui añadir paths de RC.. Dockerfile
+# TODO: IPYTHONDIR
+# TODO: variables de git config
+# TODO: git credential
+# TODO: prompt
+# TODO: el paths.d
+# TODO: el orden de source
+# TODO: pythonstartup y console/site_customize.py IPYTHONDIR
+# TODO: colors
+# TODO: helper que había cambiado en media
+# TODO: exportar funciones based on shell
+# TODO: USER en profile.d ?
+
 
 BEGIN {
     SCRIPT = "system.awk"
