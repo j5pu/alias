@@ -8,7 +8,7 @@ set -eu
 sync() {
   cd "$1"
 
-  if test -d "$(git rev-parse --show-toplevel)/.gitmodules" && ! $skip; then
+  if test -f "$(git rev-parse --show-toplevel)/.gitmodules" && ! $skip; then
     git submodule foreach --recursive "$0 --skip-submodules"
   fi
 
