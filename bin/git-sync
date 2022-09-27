@@ -3,6 +3,7 @@
 #
 # Syncs a repository or repositories
 
+
 set -eu
 
 sync() {
