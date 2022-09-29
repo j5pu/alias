@@ -11,6 +11,8 @@
 #   json foo 1 bar 2
 
 help() {
+  rc=$?
+
   >&2 cat <<EOF
 usage: ${0##*/} <json|var value>
    or: <json|var value> | ${0##*/}
@@ -28,40 +30,29 @@ Examples:
   printf "%s\n" foo 1 bar 2 | ${0##*/}
   ${0##*/} foo 1 bar 2
 EOF
-  exit
+  exit $rc
 }
 
-json_to_env() {
-  sed -E 's/({|}|")//g' | tr "," "\n" | while IFS=: read -r var value; do
-    echo "${var}=${value}"
-  done
-}
-
-to_json() {
-  json="{"
-  odd=true
-  for arg; do
-    json="${json}\"${arg}\""
-    if $odd; then
-      json="${json}:"; odd=false
-    else
-      json="${json},"; odd=true
-    fi
-  done
-  echo "${json}" | sed 's/,$/}/'
-}
-set +x
 main() {
+  [ $# -ne 0 ] || help
+
   echo=false; json="{"; odd=true
+
   for arg; do
     case "$arg" in
-      '{'*|'"{'*)
-        echo "${arg}" | sed -E 's/": "/:/g; s/({|}|")//g' | tr "," "\n" | while IFS=: read -r var value; do
-          echo "${var}=${value}"
-        done
+      '^{'*|'"{'*|"{\""*)
+        echo "${arg}" | sed -E 's/","/"\x7"/g; s/":"/=/g; s/(^{|^"{|}$|}"$)//g' | tr "\7" "\n"
+#        | while IFS=: read -r var value; do
+#          echo "$(echo "${var}" | tr -d \" )=${value}"
+#        done
+#        echo "${arg}" | sed -E 's/(^{|^"{|}$|}"$)//g' | tr "," "\n" | while IFS=: read -r var value; do
+#          echo "$(echo "${var}" | tr -d \" )=${value}"
+#        done
         ;;
       --help|-h) help ;;
       *)
+        [ $(($#%2)) -eq 0 ] || { >&2 echo "${0##*/}: odd ($#) number of argument(s) given, but even number of\
+ arguments is needed to convert to json: ${arg}"; exit 1; }
         echo=true
         json="${json}\"${arg}\""
         if $odd; then

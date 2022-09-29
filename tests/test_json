@@ -5,16 +5,22 @@ set -eu
 trap 'rc=$?; [ $rc -eq 0 ] || printf "%s\n" "$0: Output ->" ${OUTPUT}' EXIT
 
 EXPECTED="$(cat <<EOF
-foo=1
-bar=2
-foo=1
-bar=2
-foo=1
-bar=2
-foo=1
-bar=2
+"foo=1"
+"bar=2"
+"foo=1"
+"bar=2"
+"foo=1"
+"bar=2"
+"foo=1"
+"bar=2"
 {"foo":"1","bar":"2"}
 {"foo":"1","bar":"2"}
+"access_token=hola"
+"token_type=bearer"
+"scope=admin:gpg_key,admin:org,admin:org_hook,admin:public_key,admin:repo_hook,delete:packages,delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages"
+"access_token=hola"
+"token_type=bearer"
+"scope=admin:gpg_key,admin:org,admin:org_hook,admin:public_key,admin:repo_hook,delete:packages,delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages"
 EOF
 )"
 
@@ -24,7 +30,13 @@ OUTPUT="$(
   echo "{\"foo\":\"1\",\"bar\":\"2\"}" | json; \
   json "{\"foo\":\"1\",\"bar\":\"2\"}"; \
   printf "%s\n" foo 1 bar 2 | json; \
-  json foo 1 bar 2
+  json foo 1 bar 2; \
+  echo "{\"access_token\":\"hola\",\
+\"token_type\":\"bearer\",\"scope\":\"admin:gpg_key,admin:org,admin:org_hook,admin:public_key,admin:repo_hook,delete:packages,\
+delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages\"}" | json; \
+  json "{\"access_token\":\"hola\",\
+\"token_type\":\"bearer\",\"scope\":\"admin:gpg_key,admin:org,admin:org_hook,admin:public_key,admin:repo_hook,delete:packages,\
+delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages\"}"
 )"
 
 [ "${EXPECTED}" = "${OUTPUT}" ]

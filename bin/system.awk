@@ -99,6 +99,7 @@ BEGIN {
     DESC["RC_GIT_CONFIG_HOOKS"] = "Git hooks directory used in gitconfig core.hookspath (use in: 'gitconfig')"
     DESC["RC_GIT_CONFIG_SYSTEM"] = DESC["GIT_CONFIG_SYSTEM"]" (Official GIT variable $GIT_CONFIG_SYSTEM)"
     DESC["RC_GIT_CREDENTIALS_APP_CLIENT_ID"] = "Client ID for git-credential-rc command and GitCredentialRC GitHub app (use in: 'git-credential-rc)' [https://github.com/settings/apps/GitCredentialRC]"
+    DESC["RC_GIT_CREDENTIALS_OAUTH_CLIENT_ID"] = "Client ID for git-credential-rc command and GitCredentialRC GitHub OAuth (use in: 'git-credential-rc)' [https://github.com/settings/apps/GitCredentialRC]"
     DESC["RC_GIT_DEFAULT_BRANCH"] = "Git default branch from git config to generate template, etc. (use in: rc)"
     DESC["RC_GIT_DEFAULT_USER"] = "Git Default User"
     DESC["RC_GIT_DOTFILES_CREDENTIALS"] = "Git Credential Store, (use in: 'git-credential-rc') [https://git-scm.com/docs/git-credential-store]"
@@ -330,6 +331,7 @@ function vars_git() {
     VALUES["RC_GIT_CONFIG_HOOKS"] = VALUES["RC_GIT_CONFIG"]"/hooks"  # Used in gitconfig
     VALUES["RC_GIT_CONFIG_SYSTEM"] = VALUES["RC_GIT_CONFIG"]"/gitconfig"  # Official GIT variable GIT_CONFIG_SYSTEM
     VALUES["RC_GIT_CREDENTIALS_APP_CLIENT_ID"] = "Iv1.7bafcceb3f25cce5"  # Used in git-credential-rc
+    VALUES["RC_GIT_CREDENTIALS_OAUTH_CLIENT_ID"] = "02691583098d424c22e0"  # Used in git-credential-rc
     VALUES["RC_GIT_DEFAULT_BRANCH"] = process("awk -F= '/defaultBranch/ { gsub(\" \", \"\"); print $2 }' "VALUES["RC_GIT_CONFIG_SYSTEM"])  # Used in rc
     VALUES["RC_GIT_DEFAULT_USER"] = "j5pu"
     VALUES["RC_GIT_DOTFILES_CREDENTIALS"] = VALUES["RC_GIT_DOTFILES"]"/.git-credentials"  # Used in git-credential-rc

@@ -5,6 +5,8 @@
 
 set -eu
 
+admin() { git config remote.origin.url | grep -qE "j5pu|bizeu|mnopi" ; }
+
 sync() {
   cd "$1"
 
@@ -28,12 +30,12 @@ sync() {
     git pull --quiet --tags
     return 0
   fi
-  if test -n "$(git status --porcelain)"; then
+  if test -n "$(git status --porcelain)" && admin; then
     git add -A
     git commit --quiet -a -m "${0##*/}: ${*:-$(git status --short | tr '\n' ' ')}"
   fi
 
-  git status | grep -q "Your branch is up to date" || { git push --quiet && git push --tags --quiet; }
+  git status | grep -q "Your branch is up to date" || { ! admin || { git push --quiet && git push --tags --quiet; }; }
 }
 
 main() {

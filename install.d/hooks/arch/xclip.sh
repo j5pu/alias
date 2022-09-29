@@ -3,4 +3,4 @@
 #
 # Like pbcopy
 
-sudo dnf install xclip
+sudo pacman xclip
