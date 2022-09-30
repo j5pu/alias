@@ -2,6 +2,7 @@
 
 #
 #
+
 set -eu
 
 #######################################
@@ -25,27 +26,16 @@ config() { ! check "$@" 2>&1 || echo https://github.com/; }
 ####################
 # Show help and exit
 #######################################
-spec() {
-  cat <<EOF
-${GIT_COMMAND}
-${COLOR_SCRIPT} [$(git magenta "<user>")]
-
-usage: ${0##*/} [<user>|config]
+help() {
+  >&2 cat <<EOF
+usage: ${0##*/} [-h|--help|help]
    or: ${0##*/} <user>
    or: ${0##*/} config
 
-${COLOR_SCRIPT} - Check SSH access to GitHub (default: $(git magenta "\$GIT")) using $(git green 'git user-default')
-
-  - "$(git magenta --config), checks the connectivity to dinamically show $(git blue https://github.com/) for
-    for $(git green "git config") url."ssh://git@github.com/".insteadOf.
-
-no option checks for connectivity for current user, except for root where \$RC_GITHUB_DEFAULT_USER is used
---
-h,help    Show help and exit.
+default git user, checking: remote URL, \$RC_GITHUB_DEFAULT_USER, \$SUDO_USER or \$USER
 
 Commands:
    -h, --help   display this help and exit.
-  config        command used by git config dinamically to provide url.ssh://git@github.com/.insteadOf
 EOF
 }
 
@@ -57,13 +47,17 @@ EOF
 main() {
   for arg; do
     case "$arg" in
-      -h|--help|help) . git-parse.sh; exit ;;
-      config) function="${arg}"; break; ;;
-      *) user="${arg}"; break; ;;
+      -h|--help|help) help; exit ;;
     esac
   done
 
-  "${function:-check}" "$(git user-default "${user-}")"
+  url="$(git config remote.origin.url 2>/dev/null || true)"
+  if [ "${url-}" ]; then
+    dirname="$(basename "${url%/*}")"
+    username="${dirname##*:}"
+    username="${username##*:}"
+  fi
+  echo "${1:-${username:-${RC_GITHUB_DEFAULT_USER:-${SUDO_USER:-${USER}}}}}"
 }
 
 main "$@"

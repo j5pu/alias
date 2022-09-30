@@ -1,0 +1,5 @@
+#!/bin/sh
+
+set -eu
+
+printf -- "%s" "$(git config --get-color "" "normal italic")$*$(git config --get-color "" reset)"

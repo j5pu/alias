@@ -2,5 +2,4 @@
 
 #
 # Like pbcopy
-
-sudo yum install xclip -y
+apk add expect

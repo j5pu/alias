@@ -1,4 +1,4 @@
-#!/bin/sh
+#!//usr/bin/env bash
 
 #
 # To vars if starts with '{' or to json
@@ -10,14 +10,23 @@
 #   printf "%s\n" foo 1 bar 2 | json
 #   json foo 1 bar 2
 
+#exec 19>/Users/j5pu/rc/.log
+#export BASH_XTRACEFD=19
+#set -x
 help() {
   rc=$?
 
   >&2 cat <<EOF
-usage: ${0##*/} <json|var value>
+usage: ${0##*/} <json|var value|file>
    or: <json|var value> | ${0##*/}
 
-to json or from json to variables
+to json or from json to variables, accepts one line json or multiline formatted json
+
+nested keys are shown as "key___key2"
+list lines are plain multiline echoed as values of the dict key
+long line dicts are considered a value
+dicts and lists must have the values in a new line: "key": {\n
+
 
 Commands:
    -h, --help   display this help and exit.
@@ -33,21 +42,72 @@ EOF
   exit $rc
 }
 
+line_DICT() {
+  rv="$(echo "${ARG}" | sed -E 's/(^"|",$|,$)//g; s/(": "|":"|": |":)/="/g; s/$/"/g; s/""$/"/g; s/="$/=""/g')"
+  key="${rv%%=*}"
+  value="${rv#*=}"
+
+  KEY="${PREVIOUS_KEY:+${PREVIOUS_KEY}___}${key}"
+  if $FIRST_KEY; then
+    PREVIOUS_KEY="${KEY-}"
+  fi
+  $FIRST_KEY || echo "${KEY}=${value}"
+  FIRST_KEY=false
+}
+
+line_LIST() {
+  if $FIRST_KEY; then
+    key="$(echo "${ARG%%:*}" | tr -d \" )"
+
+    KEY="${PREVIOUS_KEY:+${PREVIOUS_KEY}___}${key}"
+    PREVIOUS_KEY="${KEY-}"
+    ARG="${KEY}=\""
+  fi
+  echo "${ARG}"
+  FIRST_KEY=false
+
+}
+
+reset_PREVIOUS_KEY() {
+  case "${PREVIOUS_KEY}" in
+    *___*) PREVIOUS_KEY="${PREVIOUS_KEY%___*}" ;;
+    *) PREVIOUS_KEY="" ;;
+  esac
+}
+
 main() {
   [ $# -ne 0 ] || help
+
+  line=0
+  LEVEL=0
+  if [ "${1-}" = "{" ] && [ $# -gt 1 ]; then
+    # Multiline json
+    for ARG; do
+      FIRST_KEY=false
+      line="$((line + 1))"
+      case "${ARG}" in
+        "{") PREVIOUS_LEVEL=$LEVEL; LEVEL="$((LEVEL + 1))" ;;
+        "}") PREVIOUS_LEVEL=$LEVEL; LEVEL="$((LEVEL - 1))"; reset_PREVIOUS_KEY ;;
+        *\"*\"": {") PREVIOUS_LEVEL=$LEVEL; LEVEL="$((LEVEL + 1))"; FIRST_KEY=true; line_DICT ;;
+        *\"*\"": [") PREVIOUS_LEVEL=$LEVEL; LEVEL="$((LEVEL + 1))"; FIRST_KEY=true; line_LIST ;;
+        *"}"|*"},") PREVIOUS_LEVEL=$LEVEL; LEVEL="$((LEVEL - 1))"; reset_PREVIOUS_KEY ;;
+        *"]"|*"],") PREVIOUS_LEVEL=$LEVEL; LEVEL="$((LEVEL - 1))"; echo "\""; reset_PREVIOUS_KEY ;;
+        *\"*\"": "*) line_DICT ;;
+        *) line_LIST ;;
+      esac
+    done
+    exit
+  fi
 
   echo=false; json="{"; odd=true
 
   for arg; do
     case "$arg" in
       '^{'*|'"{'*|"{\""*)
-        echo "${arg}" | sed -E 's/","/"\x7"/g; s/":"/=/g; s/(^{|^"{|}$|}"$)//g' | tr "\7" "\n"
-#        | while IFS=: read -r var value; do
-#          echo "$(echo "${var}" | tr -d \" )=${value}"
-#        done
-#        echo "${arg}" | sed -E 's/(^{|^"{|}$|}"$)//g' | tr "," "\n" | while IFS=: read -r var value; do
-#          echo "$(echo "${var}" | tr -d \" )=${value}"
-#        done
+        # One line json
+        echo "${arg}" | sed -E 's/(","|,")/"\x7"/g; s/[{}"]//g' | tr "\7" "\n" |while IFS=: read -r var value; do
+          echo "$var"="\"$value\""
+        done
         ;;
       --help|-h) help ;;
       *)
@@ -66,7 +126,13 @@ main() {
   ! $echo || echo "${json}" | sed 's/,$/}/'
 }
 
-if test -s /dev/stdin; then
+if test -f "${1:-}"; then
+  file="$1"
+  set --
+  while read -r word; do
+    set -- "$@" "${word}"
+  done < "${file}"
+elif test -f "${1:-}" || test -p /dev/stdin || { [ ! -t 0 ] && [ ! -p /dev/stdin ]; }; then
   while read -r word; do
     set -- "$@" "${word}"
   done

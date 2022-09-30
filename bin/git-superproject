@@ -1,0 +1,45 @@
+#!/bin/sh
+
+set -eu
+
+#######################################
+# git spec
+# Globals:
+#   SCRIPT
+# Arguments:
+#  None
+#######################################
+spec() {
+  cat <<EOF
+${GIT_COMMAND}
+${COLOR_SCRIPT} [$(git magenta "<path>")]
+
+${COLOR_SCRIPT} - super project repository path from file or directory in a submodule (default: $(git magenta "cwd"))
+                   Empty if $(git magenta "<path>") in git repository but not on a submodule.
+
+                   Error would be given if file/dir is in the submodule index but is not cloned:
+                      .../git-dirname: line ..: cd: <path>: No such file or directory
+--
+h,help    Show help and exit.
+
+EOF
+}
+
+#######################################
+# git superproject path if submodule or empty
+# Arguments:
+#  [<path>]     path (default: cwd)
+#######################################
+main() {
+  for arg; do
+    case "${arg}" in
+    -h|--help) . git-parse.sh || exit ;;
+    esac
+  done
+
+  git ${1:+-C "$(git dirname "$1")"} rev-parse --show-superproject-working-tree
+}
+
+main "$@"
+
+

@@ -2,5 +2,4 @@
 
 #
 # Like pbcopy
-
-sudo yum install xclip -y
+sudo pacman -S expect

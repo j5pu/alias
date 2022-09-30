@@ -17,7 +17,8 @@
 # printf "%s\n" protocol=https host=mygithost username=bob password=s3cre7 | git credential-store erase
 # printf "%s\n" protocol=https host=mygithost username=bob | git credential fill
 
-# To get the default (checks keychain, or store): printf "%s\n" host=github.com protocol=https | git credential fill
+# To get the default (checks keychain, or store and does not check ssh):
+# printf "%s\n" host=github.com protocol=https | git credential fill
 # Since I have it on keychain internet password then works.. this would never be used on macOS..
 # how does it know the default user?
 # IF I enter: printf "%s\n" host=github.com protocol=https username=foo | git credential fill
@@ -25,19 +26,28 @@
 
 set -eu
 
+# FIXME: ¿Que hago si se puede con SSH, no haría falta el token, sino descargar el secrets?
+#   por eso cuando le doy a has debería ir a fetch o mirar si puedo con ssh y entonces descargar el secrets...
+#   y si hay mas usuarios como miro si esta el TOKEN en environment? le añado el usuario al final y el
+#   de por defecto sin usuario... pero un repositorio de secrets cada uno y le llamo como el usuario en vez de secrets y que en rc.d
+#   cambie segun el usuario siempre aunque este exportada, y deberia el
+#   'git token' darme el token de la variable de GITHUB, y seria en rc.d pero sin que sea PS1.
+
 [ ! "${TRACE-}" ] || set -x
 TOKEN_FILE="/tmp/${0##*/}.app_access_token"
+TOKEN_TEST="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"
 
+# TODO: pillar un token definitivo ---
 exec 19>/Users/j5pu/rc/.log
 export BASH_XTRACEFD=19
-set -x
+set +x
 trap _trap EXIT
 
 # 1 for GitHub App, 0 for OAuth App
 #
 APP=0
 
-IGET="curl"
+IGET="wget"
 RC_DOTFILES_GIT_CREDENTIALS="${HOME}/.git-credentials"
 # GitHub App; https://docs.github.com/en/developers/apps/building-github-apps/identifying-and-authorizing-users-for-github-apps
 # (expire in 8 hours, should use refresh token)
@@ -176,7 +186,7 @@ _curl() {
   QUERY="$*"
   RESPONSE="$("$@")"
   if [ "${RESPONSE-}" ]; then
-    json="$(json "${RESPONSE}")" || _die "Fail to parse response to json: ${RESPONSE}"
+    json="$(echo "${RESPONSE}" | json)" || _die "Fail to parse response to json: ${RESPONSE}"
     eval "${json}"
   else
     _die "Empty response: $*"
@@ -198,14 +208,42 @@ _die() {
 # Arguments:
 #  None
 #######################################
-_finish() {
-  [ ! "${FINISH_TEST-}" ] || access_token="$(cat "${TOKEN_FILE}")"
+_expect() {
+  cmd expect || return 1
+  for arg; do
+    case "${arg}" in
+    --quiet) quiet="log_user 0"; shift ;;
+    *) username="${arg}"; shift ;;
+   esac
+  done
+  expect <<EOF
+${quiet-}
+spawn git credential fill
+send "host=github.com\r"
+send "protocol=https\r"
+send "username=${username:-${USERNAME}}\r"
+send \x04
+expect -timeout 30 -re "Password for" { exit 10 }
+EOF
+}
 
+#######################################
+# description
+# Arguments:
+#  None
+#######################################
+_finish() {
+  [ ! "${TOKEN_TEST-}" ] || access_token="${TOKEN_TEST}"
+  login=""
   HEADER="Authorization: Bearer ${access_token}"
-  URL="${URL_API}/"
+  URL="${URL_API}/user"
+  "_${IGET}"
+  echo "${login}"
+  set -x
   : get_permanent_token and secrets
   : set_env_var_tokens_gh_and_github
   : store and update gitconfig with: credential.helper rc
+  exit
 }
 
 #######################################
@@ -245,12 +283,13 @@ _poll() {
     elif [ "${error-}" ]; then
       _die "${error}: ${error_description} [${error_uri}]"
     elif [ "${access_token-}" ]; then
-      >&2 echo "Authenticated with ${token_type} token: $(blue "${access_token}"), and scopes: $(blue "$(echo )${scope}")"
+      >&2 echo "Authenticated, $(magenta "${token_type}") token: $(green "${access_token}"), \
+and scopes: $(blue "$(echo )${scope}")"
       _browser review_authorization
       echo
       echo "${MSG_BROWSER}: "${URL_REVIEW_AUTHORIZATION}/${CLIENT_ID}"), you can review application authorizations"
       _browser open "${URL_REVIEW_AUTHORIZATION}/${CLIENT_ID}"
-      [ "${FINISH_TEST-}" ] || echo "${access_token}" > "${TOKEN_FILE}"
+      echo "${access_token}" > "${TOKEN_FILE}"
       break
     fi
   done
@@ -265,7 +304,6 @@ _poll() {
 #######################################
 _trap() {
   ERROR=$?
-  [ "${FINISH_TEST-}" ] || rm -f "${TOKEN_FILE}"
   case $ERROR in
     0) rm -f "/tmp/${0##*/}.interval" ;;
     1) : ;;
@@ -276,10 +314,40 @@ _trap() {
 
 #######################################
 # description
+# Globals:
+#   COOKIES
+#   CURLOPT_COOKIEJAR
+#   URL
+#   response
+# Arguments:
+#  None
+# Returns:
+#   1 ...
+#######################################
+_wget() {
+  [ ! "${1-}" ] || set -- --post-data "$(json "$@")"
+  ! echo "${URL}" | grep -q "//github.com" || set -- --load-cookies "${CURLOPT_COOKIEJAR}" "$@"
+  [ ! "${TRACE-}" ] || set -- "$@" -v
+  [ ! "${HEADER-}" ] || set -- "$@" --header "${HEADER}"
+  set -- wget -O - --quiet --no-verbose "$@" --header "Accept: application/json" \
+    --header "Content-Type: application/json" "${URL}"
+
+  QUERY="$*"
+  RESPONSE="$("$@")" || _die "Empty response: $*"
+  if [ "${RESPONSE-}" ]; then
+    json="$(echo "${RESPONSE}" | json)" || _die "Fail to parse response to json: ${RESPONSE}"
+    eval "${json}"
+  else
+    _die "Empty response: $*"
+  fi
+}
+
+#######################################
+# description
 # Arguments:
 #  None
 #######################################
-erase() { echo "$@" | git credential-store erase; }
+erase() { printf "%s\n" host=github.com protocol=https username="${1:-$(git user-default)}" | git credential-store erase; }
 
 #######################################
 # description
@@ -303,7 +371,7 @@ erase() { echo "$@" | git credential-store erase; }
 fetch() {
   device_code=""; user_code=""; verification_uri=""; expires_in=""; interval=""
 
-  [ ! "${FINISH_TEST-}" ] || ! test -f "${TOKEN_FILE}" || test -s "${TOKEN_FILE}" || _finish
+  [ ! "${TOKEN_TEST-}" ] || _finish
 
   URL="${URL_CODE}"
   if [ $APP -eq 1 ]; then
@@ -342,57 +410,42 @@ fetch() {
 # Arguments:
 #  None
 #######################################
-get() { echo "$@" | git credential-store get; }
+get() { printf '%s\n' host=github.com protocol=https username="${1:-$(git user-default)}" | git credential-store get; }
 
 #######################################
 # check if credentials are needed
 # Arguments:
-#  user   default: repo owner-> $SUDO_USER -> $USER
+#  user   default: repo owner --> $RC_GITHUB_DEFAULT_USER -> $SUDO_USER -> $USER
 #######################################
-has() {
-  args="$*"
-  for arg in ${args}; do
-    case "${arg}" in
-      username=*) username="${arg#*=}" ;;
-    esac
-  done
-  if [ ! "${1-}" ]; then
-    url="$(git config remote.origin.url 2>/dev/null || true)"
-    if [ "${url-}" ]; then
-      dirname="$(basename "${url%/*}")"
-      username="${dirname##*:}"
-      username="${username##*:}"
-      echo "${username}"
-    fi
-  fi
-  username="${1:-${username:-${SUDO_USER:-${USER}}}}"
-expect <<EOF
-log_user 0
-spawn git credential fill
-send "host=github.com\r"
-send "protocol=https\r"
-send "username=${username}\r"
-send \x04
-expect -timeout 30 -re "Password for" { exit 10 }
-EOF
-}
+has() { USERNAME="${1:-$(git user-default)}"; _expect "${USERNAME}" --quiet || test -n "$(get "${USERNAME}")" ; }
 
 #######################################
 # Show help and exit
 #######################################
 help() {
+  rc=$?
   >&2 cat <<EOF
-usage: ${0##*/} [erase|fetch|get|store]
+usage: ${0##*/} [erase|fetch|get|has|store] [password|username]
 
 git credential helper
 
 Commands:
    -h, --help   display this help and exit.
   erase         store the credential, if applicable to the helper
+                \$1: username (default: git user-default)
   fetch         session to get a GitHub token
-  get           return a matching credential, if any exists
-  store         remove a matching credential, if any, from the helper’s storage
+  get           return a matching credential, if any exists;
+                \$1: username (default: git user-default)
+  has           check if credentials are needed and calls fetch if needed
+                \$1: username (default: git user-default)
+  store         remove a matching credential, if any, from the helper’s storage:
+                \$1: password
+                \$2: username (default: git user-default)
+  token         return the token, if any exists, or error
+                \$1: username (default: git user-default)
+
 EOF
+ exit
 }
 
 #######################################
@@ -400,7 +453,19 @@ EOF
 # Arguments:
 #  None
 #######################################
-store() { echo "$@" | git credential-store get; }
+store() { printf "%s\n" host=github.com protocol=https username="${2:-$(git user-default)}" password="$1" | git credential-store get; }
+
+# TODO: añadir el osxkeychain para mac en git config como variable
+
+#######################################
+# description
+# Arguments:
+#  None
+#######################################
+token() {
+  USERNAME="${1:-$(git user-default)}";
+  { _expect "${USERNAME}" || get "${USERNAME}"; } | awk -F= '/^password/ { print $2 }' | grep -v "^$"
+}
 
 #######################################
 # description
@@ -413,13 +478,13 @@ store() { echo "$@" | git credential-store get; }
 main() {
   for arg; do
     case "$arg" in
-      -h|--help|help) : ;;
-      erase|fetch|get|has|store) function="${arg}"; shift ;;
+      -h|--help|help) help; ;;
+      erase|fetch|get|has|store|token) function="${arg}"; shift ;;
+      -*) _die "Unknown option: ${arg}" ;;
     esac
   done
-  # TODO: if no command and get no da credential then fetch (afecta el que este el instead of
-  # TODO: para que me diga que si hay credentials???? si no habría que inhibirlo temporalmente
-  "${function:-get}" "$@"
+
+  "${function:-token}" "$@"
 }
 
 main "$@"

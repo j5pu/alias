@@ -5,22 +5,80 @@ set -eu
 trap 'rc=$?; [ $rc -eq 0 ] || printf "%s\n" "$0: Output ->" ${OUTPUT}' EXIT
 
 EXPECTED="$(cat <<EOF
-"foo=1"
-"bar=2"
-"foo=1"
-"bar=2"
-"foo=1"
-"bar=2"
-"foo=1"
-"bar=2"
+foo="1"
+bar="2"
+foo="1"
+bar="2"
+foo="1"
+bar="2"
+foo="1"
+bar="2"
 {"foo":"1","bar":"2"}
 {"foo":"1","bar":"2"}
-"access_token=hola"
-"token_type=bearer"
-"scope=admin:gpg_key,admin:org,admin:org_hook,admin:public_key,admin:repo_hook,delete:packages,delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages"
-"access_token=hola"
-"token_type=bearer"
-"scope=admin:gpg_key,admin:org,admin:org_hook,admin:public_key,admin:repo_hook,delete:packages,delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages"
+access_token="hola"
+token_type="bearer"
+scope="admin:gpg_key,admin:org,admin:org_hook,admin:public_key,admin:repo_hook,delete:packages,delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages"
+access_token="hola"
+token_type="bearer"
+scope="admin:gpg_key,admin:org,admin:org_hook,admin:public_key,admin:repo_hook,delete:packages,delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages"
+device_code="82f50b433ba7c975321f72b090a953518125b23f"
+user_code="E78C-1DDD"
+verification_uri="https://github.com/login/device"
+expires_in="899"
+interval="5"
+login="j5pu"
+id="63794670"
+node_id="MDQ6VXNlcjYzNzk0Njcw"
+avatar_url="https://avatars.githubusercontent.com/u/63794670?v=4"
+gravatar_id=""
+url="https://api.github.com/users/j5pu"
+html_url="https://github.com/j5pu"
+followers_url="https://api.github.com/users/j5pu/followers"
+following_url="https://api.github.com/users/j5pu/following{/other_user}"
+gists_url="https://api.github.com/users/j5pu/gists{/gist_id}"
+starred_url="https://api.github.com/users/j5pu/starred{/owner}{/repo}"
+subscriptions_url="https://api.github.com/users/j5pu/subscriptions"
+organizations_url="https://api.github.com/users/j5pu/orgs"
+repos_url="https://api.github.com/users/j5pu/repos"
+events_url="https://api.github.com/users/j5pu/events{/privacy}"
+received_events_url="https://api.github.com/users/j5pu/received_events"
+type="User"
+site_admin="false"
+name="José"
+company="null"
+blog="https://j5pux.github.io/data"
+location="null"
+email="null"
+hireable="null"
+bio="null"
+list="
+0,
+1,
+list___dict___key="value"
+"
+other___dict___key="value"
+twitter_username="null"
+public_repos="2"
+public_gists="22"
+followers="3"
+following="0"
+created_at="2020-04-16T13:09:49Z"
+updated_at="2022-09-29T08:10:02Z"
+private_gists="0"
+total_private_repos="3"
+owned_private_repos="3"
+disk_usage="151235"
+collaborators="0"
+two_factor_authentication="true"
+plan___name="free"
+plan___space="976562499"
+plan___collaborators="0"
+plan___private_repos="10000"
+plan___list="
+0,
+1
+"
+plan___hello="world"
 EOF
 )"
 
@@ -36,7 +94,9 @@ OUTPUT="$(
 delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages\"}" | json; \
   json "{\"access_token\":\"hola\",\
 \"token_type\":\"bearer\",\"scope\":\"admin:gpg_key,admin:org,admin:org_hook,admin:public_key,admin:repo_hook,delete:packages,\
-delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages\"}"
+delete_repo,gist,notifications,read:project,repo,user,workflow,write:discussion,write:packages\"}"; \
+  json '{"device_code":"82f50b433ba7c975321f72b090a953518125b23f","user_code":"E78C-1DDD","verification_uri":"https://github.com/login/device","expires_in":899,"interval":5}'; \
+  json "$(dirname "$0")/data/test.json";
 )"
 
 [ "${EXPECTED}" = "${OUTPUT}" ]

@@ -3,4 +3,4 @@
 #
 # Like pbcopy
 
-sudo pacman xclip
+sudo pacman -S xclip

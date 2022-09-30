@@ -1,0 +1,149 @@
+#!/bin/sh
+
+set -eu
+
+#######################################
+# die with error
+# Arguments:
+#  None
+#######################################
+die() {
+  rc=$?
+  >&2 echo "${0##*/}: $*"
+  exit $rc
+}
+
+#######################################
+# git spec
+# Globals:
+#   SCRIPT
+# Arguments:
+#  None
+#######################################
+spec() {
+  cat <<EOF
+${GIT_COMMAND} [$(git blue "ARGUMENT")] [$(git red "FORMAT")] [$(git magenta "OPTION")]
+${COLOR_SCRIPT} [$(git blue "<remote>")|$(git blue "<owner/repo>")|$(git blue "<url>")] \
+[$(git red "--file")|$(git red "--git")|$(git red "--https")|$(git red "--insteadOf")|$(git red "--pip")|\
+$(git red "--raw")| $(git red "--ssh")|$(git red "--web")]
+${COLOR_SCRIPT} $(git blue "<remote>")
+${COLOR_SCRIPT} $(git blue "<remote>") $(git red "--insteadOf")
+${COLOR_SCRIPT} $(git blue "<owner/repo>")
+${COLOR_SCRIPT} $(git blue "<url>")
+${COLOR_SCRIPT} $(git blue "<url>") $(git magenta "--ping")
+${COLOR_SCRIPT} $(git blue "<url>") $(git magenta "--ping") $(git red "--git")
+${COLOR_SCRIPT} $(git blue "<remote>") $(git magenta "--ping") $(git red "--ssh")
+${COLOR_SCRIPT} $(git blue "<remote>") $(git red "--ssh")
+${COLOR_SCRIPT} $(git blue "<url>") $(git red "--raw")
+${COLOR_SCRIPT} $(git red "--web") $(git blue "<owner/repo>")
+${COLOR_SCRIPT} $(git red "--pip")
+${COLOR_SCRIPT} $(git red "--ssh")
+
+${COLOR_SCRIPT} - remote from config $(git blue "<remote>"), $(git blue "<url>") or \
+$(git blue "<owner/repo>") (default: $(git blue "origin"))
+          Valid $(git blue "ARGUMENTS"): $(git blue "<remote>"), $(git blue "<url>") or \
+$(git blue "<owner/repo>").
+          Only one $(git blue "ARGUMENT") and/or one $(git red "FORMAT") can be provided.
+          Any $(git red "FORMAT") can be used for $(git blue "<url>") as $(git blue "ARGUMENT").
+          Default branch is used for $(git red "--raw").
+          Use ${COLOR_SCRIPT} instead of ${GIT_COMMAND} when running outside a git repository \
+with an $(git blue "ARGUMENT") of type $(git blue "<owner/repo>") or $(git blue "<url>").
+--
+h,help      Show help and exit.
+
+ $(git blue "FORMATS"):
+file!        Local url: i.e.: $(git magenta "git+file://<user>/<repo>")
+git!         $(git green "Default") url, i.e.: $(git magenta "https://github.com/<user>/<repo>.git")
+https!       HTTPS url, i.e.: $(git magenta "git+https://github.com/<user>/<repo>.git")
+insteadOf!   insteadOf url for a $(git blue "<remote>"), i.e.: $(git magenta "https://github.com/<user>/<repo>.git")
+pip!         PIP url, i.e: $(git magenta "git+ssh://git@github.com/<user>/<repo>.git")
+raw!         GitHub raw url, i.e: $(git magenta "https://raw.githubusercontent.com/<user>/<repo>/<branch>")
+ssh!         SSH url, i.e: $(git magenta "git@github.com:<user>/<repo>.git")
+web!         GitHub web url, i.e.: $(git magenta "https://github.com/<user>/<repo>")
+
+ $(git magenta "OPTIONS"):
+ping         Check reachability of url, only for $(git red "--git") and $(git red "--ssh").
+EOF
+}
+
+#######################################
+# format url
+# Globals:
+#   opt
+# Arguments:
+#  [<remote>|<owner/repo>|<url>]     remote name, owner/repo or path (default: origin)
+#######################################
+format() {
+  name="$(git-name "$1")"; [ "${name-}" ] || die url repo: "$@"
+  owner="$(git-owner "$1")"; [ "${owner-}" ] || die url name: "$@"
+  prefix="https://github.com/"
+  suffix=".git"
+  case "${format:-git}" in
+    --file) prefix="git+file://"; suffix="" ;;
+    --git|--insteadOf) : ;;
+    --https) prefix="git+https://github.com/" ;;
+    --pip) prefix="git+ssh://git@github.com/" ;;
+    --raw) prefix="https://raw.githubusercontent.com/"; suffix="/$(git default "$("$0" "$1")")" ;;
+    --ssh) prefix="git@github.com:" ;;
+    --web) suffix="" ;;
+  esac
+  echo "${prefix}${owner}/${name}${suffix}"
+}
+
+#######################################
+# git url
+# Globals:
+#   opt
+#######################################
+main() {
+  insteadOf=false
+  for arg; do
+    case "${arg}" in
+      -h|--help) . git-parse.sh || exit ;;
+      --insteadOf)
+        [ ! "${format-}" ] || die "${arg}, ${format}: only one format can be provided"
+        insteadOf=true
+        format="${arg}"
+        ;;
+      --file|--git|--https|--pip|--raw|--ssh|--web)
+        [ ! "${format-}" ] || die "${arg}, ${format}: only one format can be provided"
+        format="${arg}"
+        ;;
+      --ping) ping="${arg}" ;;
+      *)
+        [ ! "${argument-}" ] || die "${arg}, ${argument}: only one argument can be provided <remote>|<owner/repo>|<url>"
+        argument="${arg}" ;;
+    esac
+  done
+
+  argument="${argument:-origin}"
+  : "${format=--git}"
+
+  # shellcheck disable=SC2086,SC2046
+  if echo "${argument}" | grep -q '/' || [ "${opt-}" ]; then
+    ! $insteadOf || die "${format}: cannot be used with a path"
+    url="$(format "${argument}")"
+  else
+    remotes="$(git remote)"
+    [ "${remotes-}" ] || die "${PWD}: no remote configured"
+    inargs "${argument}" $(git remote) || die "${PWD}: ${argument}: invalid remote"
+    if $insteadOf; then
+      url="$(git ls-remote --get-url "${argument}")"
+    else
+      url="$(git config remote."${argument}".url)"
+    fi
+
+    { [ ! "${format-}" ] || $insteadOf; } || url="$("$0" "${url}" "${format}" ${ping-})"
+  fi
+
+  if [ "${ping-}" ]; then
+    case "${format}" in
+      --git|--insteadOf|--ssh) git ls-remote "${url}" CHECK_GIT_REMOTE_URL_REACHABILITY ;;
+      *) false || die "--ping: can only be used with --git|--insteadOf|--ssh" ;;
+    esac
+  fi
+
+  echo "${url}"
+}
+
+main "$@"

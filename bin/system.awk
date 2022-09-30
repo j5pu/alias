@@ -25,6 +25,10 @@
 # TODO: sacar variables de path a vars_path y si eso las otras aunque se repita el if para que sea todo mas legible.
 # TODO: "RC dotfiles for SSH keys, config (mirar si para authorized_keys o hay que poner todo con escritura y no funciona)
 # TODO: Generate python stubs and var in PYTHONPATH y si hay variable de sitecustomize.py
+# TODO: BAT_STYLE BAT_CONFIG_PATH bat --generate-config-file; bat --config-file (--style=plain,header,grid,header-filename,header-filesize) --style=numbers,changes,grid,header-filename,header-filesize,grid,rule,
+#              numbers, snip --style=full, -p|--plain = --style=plain, -pp adds --pager=never
+# TODO: CURL variables and configuration and one with headers
+# TODO: .netrc y env variables y que git-token lo meta
 
 BEGIN {
     SCRIPT = "system.awk"

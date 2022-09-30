@@ -1,0 +1,65 @@
+{
+  "login": "j5pu",
+  "id": 63794670,
+  "node_id": "MDQ6VXNlcjYzNzk0Njcw",
+  "avatar_url": "https://avatars.githubusercontent.com/u/63794670?v=4",
+  "gravatar_id": "",
+  "url": "https://api.github.com/users/j5pu",
+  "html_url": "https://github.com/j5pu",
+  "followers_url": "https://api.github.com/users/j5pu/followers",
+  "following_url": "https://api.github.com/users/j5pu/following{/other_user}",
+  "gists_url": "https://api.github.com/users/j5pu/gists{/gist_id}",
+  "starred_url": "https://api.github.com/users/j5pu/starred{/owner}{/repo}",
+  "subscriptions_url": "https://api.github.com/users/j5pu/subscriptions",
+  "organizations_url": "https://api.github.com/users/j5pu/orgs",
+  "repos_url": "https://api.github.com/users/j5pu/repos",
+  "events_url": "https://api.github.com/users/j5pu/events{/privacy}",
+  "received_events_url": "https://api.github.com/users/j5pu/received_events",
+  "type": "User",
+  "site_admin": false,
+  "name": "José",
+  "company": null,
+  "blog": "https://j5pux.github.io/data",
+  "location": null,
+  "email": null,
+  "hireable": null,
+  "bio": null,
+  "list": [
+    0,
+    1,
+    {
+      "dict": {
+        "key": "value"
+      }
+    }
+  ],
+  "other": {
+    "dict": {
+      "key": "value"
+    }
+  },
+  "twitter_username": null,
+  "public_repos": 2,
+  "public_gists": 22,
+  "followers": 3,
+  "following": 0,
+  "created_at": "2020-04-16T13:09:49Z",
+  "updated_at": "2022-09-29T08:10:02Z",
+  "private_gists": 0,
+  "total_private_repos": 3,
+  "owned_private_repos": 3,
+  "disk_usage": 151235,
+  "collaborators": 0,
+  "two_factor_authentication": true,
+  "plan": {
+    "name": "free",
+    "space": 976562499,
+    "collaborators": 0,
+    "private_repos": 10000,
+    "list": [
+      0,
+      1
+    ],
+    "hello": "world"
+  }
+}

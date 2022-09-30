@@ -1,0 +1,21 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="json [stdin]" type="BashProRunConfiguration" singleton="false">
+    <option name="redirectInput" value="true" />
+    <option name="redirectInputPath" value="$PROJECT_DIR$/tests/data/test.json" />
+    <scriptContent>cat $PROJECT_DIR$/tests/data/test.json | $PROJECT_DIR$/bin/json</scriptContent>
+    <option name="scriptPath" value="$PROJECT_DIR$/bin/json" />
+    <option name="sourceType" value="snippet" />
+    <EXTENSION ID="net.ashald.envfile">
+      <option name="IS_ENABLED" value="false" />
+      <option name="IS_SUBST" value="false" />
+      <option name="IS_PATH_MACRO_SUPPORTED" value="false" />
+      <option name="IS_IGNORE_MISSING_FILES" value="false" />
+      <option name="IS_ENABLE_EXPERIMENTAL_INTEGRATIONS" value="false" />
+      <ENTRIES>
+        <ENTRY IS_ENABLED="true" PARSER="runconfig" />
+      </ENTRIES>
+    </EXTENSION>
+    <RunnerSettings bashdbVersion="Automatic" bashPathMapper="Automatic" RunnerId="pro.bashsupport.shDebugRunner" />
+    <method v="2" />
+  </configuration>
+</component>

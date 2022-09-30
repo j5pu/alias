@@ -1,0 +1,39 @@
+#!/bin/sh
+
+: git rev-parse
+
+#######################################
+# git spec
+# Globals:
+#   SCRIPT
+# Arguments:
+#  None
+#######################################
+spec() {
+  cat <<EOF
+${GIT_COMMAND}
+${COLOR_SCRIPT} [$(git magenta "<path>")]
+
+${COLOR_SCRIPT} - Top repository path from file or directory (default: $(git magenta "cwd"))
+--
+h,help    Show help and exit.
+
+EOF
+}
+
+#######################################
+# git top path
+# Arguments:
+#  [<path>]     path (default: cwd)
+#######################################
+main() {
+  for arg; do
+    case "${arg}" in
+    -h|--help) . git-parse.sh || exit ;;
+    esac
+  done
+
+  git ${1:+-C "$(git dirname "$1")"} rev-parse --show-toplevel
+}
+
+main "$@"

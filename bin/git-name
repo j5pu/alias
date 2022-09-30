@@ -1,0 +1,51 @@
+#!/bin/sh
+
+set -eu
+
+#######################################
+# basename
+# Arguments:
+#  path
+#######################################
+base() { basename -- "$1" .git; exit; }
+
+#######################################
+# git spec
+# Globals:
+#   SCRIPT
+# Arguments:
+#  None
+#######################################
+spec() {
+  cat <<EOF
+${GIT_COMMAND}
+${COLOR_SCRIPT} [$(git magenta "<remote>")|$(git magenta "<url>")]
+${COLOR_SCRIPT} $(git magenta "<remote>")
+${COLOR_SCRIPT} $(git magenta "<url>")
+
+${COLOR_SCRIPT} - repository name from config remote url or url (default: $(git magenta "origin"))
+--
+h,help    Show help and exit.
+EOF
+}
+
+#######################################
+# git repository name
+# Arguments:
+#  [<remote>|<url>]     remote name or url (default: cwd)
+#######################################
+main() {
+  for arg; do
+    case "${arg}" in
+    -h|--help) . git-parse.sh || exit ;;
+    esac
+  done
+
+  if [ "${1-}" ] && { echo "${1-}" | grep -q '/'; }; then
+    base "$(echo "$1" | sed 's|https://raw.githubusercontent.com/||g')"
+  else
+    url="$(git url "${1-}")" && base "${url}"
+  fi
+}
+
+main "$@"
