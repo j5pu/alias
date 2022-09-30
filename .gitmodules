@@ -1,0 +1,6 @@
+[submodule "config/Safari/Tampers"]
+	path = config/Safari/Tampers
+	url = https://github.com/j5pu/Tampers.git
+	branch = main
+	update = merge
+	fetchRecurseSubmodules = true
