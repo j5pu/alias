@@ -24,6 +24,7 @@ ${COLOR_SCRIPT} $(git magenta "<remote>")
 ${COLOR_SCRIPT} $(git magenta "<url>")
 
 ${COLOR_SCRIPT} - repository owner from config remote url or url (default: $(git magenta "origin"))
+
 --
 h,help    Show help and exit.
 EOF

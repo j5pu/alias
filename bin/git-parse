@@ -71,95 +71,94 @@ ${COLOR_SCRIPT} $(git red "-h|--help")
 OPTIONS_KEEPDASHDASH=1 . ${COLOR_SCRIPT}
 OPTIONS_STOPATNONOPTION=1 . ${COLOR_SCRIPT}
 
-. ${COLOR_SCRIPT} - Parsing using stuck long option if $(git magenta spec\(\)) defined.
-              Parsing $(git magenta '-C <path') if defined in the options spec $(git magenta '^C=path'), \
+  . ${COLOR_SCRIPT} - Parsing using stuck long option if $(git magenta spec\(\)) defined.
+              Parsing $(git magenta '-C <path') if defined in the options spec $(git magenta '^C=path'),
 and change to $(git magenta '<path>')
 
-            Globals:
-              $(git magenta SCRIPT)       =>  $(git green git-foo)
-              $(git magenta COMMAND)      =>  $(git green foo)
-              $(git magenta GIT_COMMAND)  =>  $(git green 'git foo')
+$(git blue Globals):
+  $(git magenta SCRIPT)       =>  $(git green git-foo)
+  $(git magenta COMMAND)      =>  $(git green foo)
+  $(git magenta GIT_COMMAND)  =>  $(git green 'git foo')
 
-            Defaults:
-              $(git magenta OPTIONS_KEEPDASHDASH)     =>  $(git blue 0)
-              $(git magenta OPTIONS_STOPATNONOPTION)  =>  $(git blue 0)
+$(git blue Defaults):
+  $(git magenta OPTIONS_KEEPDASHDASH)     =>  $(git blue 0)
+  $(git magenta OPTIONS_STOPATNONOPTION)  =>  $(git blue 0)
 
-            Stuck Long \$OPTIONS_SPEC:
-              f,foo       $(git magenta '-f --foo --no-foo')             =>  $(git blue '-f --foo --no-foo')
-              m,moo!      $(git magenta '-m --moo')                      =>  $(git blue '--moo --moo')
-              b,bar=      $(git magenta '-bbar1 --bar bar2 --bar=bar3')  =>  \
+$(git blue Stuck Long \$OPTIONS_SPEC):
+  f,foo       $(git magenta '-f --foo --no-foo')             =>  $(git blue '-f --foo --no-foo')
+  m,moo!      $(git magenta '-m --moo')                      =>  $(git blue '--moo --moo')
+  b,bar=      $(git magenta '-bbar1 --bar bar2 --bar=bar3')  =>  \
 $(git blue '--bar=bar1 --bar=bar2 --bar=bar3')
-              q,qux?path  $(git magenta '--qux -qqux1 --qux=qux2')      =>  $(git blue '--qux --qux=qux1 --qux=qux2')
-              continue!   $(git magenta '--continue')                    =>  $(git blue '--continue')
-              a,abort!    $(git magenta '-a --abort')                    =>  $(git blue '--abort --abort')
-              A!path      $(git magenta '-A')                            =>  $(git blue '-A')
-              C=path      $(git magenta '-C c')                          =>  $(git blue '-Cc')
-              E?path      $(git magenta '-E -Ee')                        =>  $(git blue '-E -Ee')
+  q,qux?path  $(git magenta '--qux -qqux1 --qux=qux2')      =>  $(git blue '--qux --qux=qux1 --qux=qux2')
+  continue!   $(git magenta '--continue')                    =>  $(git blue '--continue')
+  a,abort!    $(git magenta '-a --abort')                    =>  $(git blue '--abort --abort')
+  A!path      $(git magenta '-A')                            =>  $(git blue '-A')
+  C=path      $(git magenta '-C c')                          =>  $(git blue '-Cc')
+  E?path      $(git magenta '-E -Ee')                        =>  $(git blue '-E -Ee')
 
-            Stuck Long Parser:
-              $(git magenta 'while') $(git magenta '[') $(git red "\$#") -ne 0 $(git magenta ']'); $(git magenta "do")
-                $(git magenta case) $(git blue "\"")$(git yellow "\$1")$(git blue "\"") $(git magenta in)
-                  --foo) $(git red "foo")=$(git blue "\"\$((")foo+$(git blue "1))\"") $(git magenta ";;")
-                  --no-foo) $(git red "foo_no")=1 $(git magenta ";;")
-                  --moo) $(git red "moo")=1 $(git magenta ";;")
-                  --bar=*) $(git red "bar")=$(git blue "\"\${")bar:+$(git green "\${")bar$(git green "}") \
+$(git blue Stuck Long Parser):
+  $(git magenta 'while') $(git magenta '[') $(git red "\$#") -ne 0 $(git magenta ']'); $(git magenta "do")
+    $(git magenta case) $(git blue "\"")$(git yellow "\$1")$(git blue "\"") $(git magenta in)
+      --foo) $(git red "foo")=$(git blue "\"\$((")foo+$(git blue "1))\"") $(git magenta ";;")
+      --no-foo) $(git red "foo_no")=1 $(git magenta ";;")
+      --moo) $(git red "moo")=1 $(git magenta ";;")
+      --bar=*) $(git red "bar")=$(git blue "\"\${")bar:+$(git green "\${")bar$(git green "}")
 $(git blue "}\${")$(git yellow 1)#$(git yellow "--bar=")$(git blue "}\"") $(git magenta ";;")
-                  --qux) $(git red "qux")=true $(git magenta ";;")
-                  --qux=*) $(git red "qux_values")=$(git blue "\"\${")qux_values:+$(git green "\${")\
-qux_values$(git green "}") $(git blue "}\${")$(git yellow 1)#$(git yellow "--qux=")$(git blue "}\"") \
-$(git magenta ";;")
-                  --continue) $(git red "continue")=1 $(git magenta ";;")
-                  --abort) $(git red "abort")=1 $(git magenta ";;")
-                  -A) $(git red "A")=1 $(git magenta ";;")
-                  -C*) $(git red "C")=$(git blue "\"\${")$(git yellow 1)#$(git yellow "-C")$(git blue "}\"") \
-      $(git magenta ";;")
-                  -E) $(git red "E")=true $(git magenta ";;")
-                  -E*) $(git red "E_value")=$(git blue "\"\${")E_value:+$(git green "\${")E_value$(git green "}") \
+      --qux) $(git red "qux")=true $(git magenta ";;")
+      --qux=*) $(git red "qux_values")=$(git blue "\"\${")qux_values:+$(git green "\${")\
+qux_values$(git green "}") $(git blue "}\${")$(git yellow 1)#$(git yellow "--qux=")$(git blue "}\"") $(git magenta ";;")
+      --continue) $(git red "continue")=1 $(git magenta ";;")
+      --abort) $(git red "abort")=1 $(git magenta ";;")
+      -A) $(git red "A")=1 $(git magenta ";;")
+      -C*) $(git red "C")=$(git blue "\"\${")$(git yellow 1)#$(git yellow "-C")$(git blue "}\"") $(git magenta ";;")
+      -E) $(git red "E")=true $(git magenta ";;")
+      -E*) $(git red "E_value")=$(git blue "\"\${")E_value:+$(git green "\${")E_value$(git green "}")
 $(git blue "}\${")$(git yellow 1)#$(git yellow "-E")$(git blue "}\"") $(git magenta ";;")
-                  --) $(git cyan 'shift'); $(git cyan 'break') $(git magenta ";;")
-                $(git magenta 'esac')
-                $(git cyan 'shift')
-              $(git magenta 'done')
+      --) $(git cyan 'shift'); $(git cyan 'break') $(git magenta ";;")
+    $(git magenta 'esac')
+    $(git cyan 'shift')
+  $(git magenta 'done')
 
-              $(git green "\$") git-parse @1 -f --foo --no-foo --moo @2 -bbar1 --bar bar2 --bar=bar3 @3 \
+  $(git green "\$") git-parse @1 -f --foo --no-foo --moo @2 -bbar1 --bar bar2 --bar=bar3 @3 \
 --qux -qqux1 --qux=qux2 @4 -A -C c -E -Ee @5 --continue @6 -a --abort -- DASH
-              $(git blue "A=1 C=c E=true E_value=e abort=1 bar='bar1 bar2 bar3' continue=1 foo=2 foo_no=1 moo=1 \
+  $(git blue "A=1 C=c E=true E_value=e abort=1 bar='bar1 bar2 bar3' continue=1 foo=2 foo_no=1 moo=1 \
 qux=true qux_values='qux1 qux2'")
-              $(git blue "\$@=@1 @2 @3 @4 @5 @6 DASH")
+  $(git blue "\$@=@1 @2 @3 @4 @5 @6 DASH")
 
-            Helper Functions:
-              $(git magenta 'invalid()')   =>  $(git blue 'show invalid argument/option value message and exit')
-              $(git magenta 'required()')  =>  $(git blue 'show argument required message and exit')
-Section:
-            How Git Formats Output:
-              - All lines, one line after $(git magenta usage:) section and before git $(git magenta --)
-                options declaration line, are prefixed with "    " ($(git yellow 4) spaces).
-              - Any line, one line after git $(git magenta --) options declaration section are always adjusted to the
-                beginning of the line with no spaces, so becomes a paragraph.
-              - Git $(git magenta --) options declaration is shown at the end of help output
+$(git blue Helper Functions):
+  $(git magenta 'invalid()')   =>  $(git blue 'show invalid argument/option value message and exit')
+  $(git magenta 'required()')  =>  $(git blue 'show argument required message and exit')
 
-            Color Guide:
-              - $(git red Commands) - "$(git red brew) $(git green install) $(git cyan --verbose) file"
-              - $(git blue Sections:) - one line after $(git blue usage:) section
-              - $(git yellow "Warning!") - for warnings, notice and alerts.
-              - $(git magenta \`other --command\`) - for any reference, i.e: to other commands
+$(git blue How Git Formats Output):
+  - All lines, one line after $(git magenta usage:) section and before git $(git magenta --)
+    options declaration line, are prefixed with "    " ($(git yellow 4) spaces).
+  - Any line, one line after git $(git magenta --) options declaration section are always adjusted to the
+    beginning of the line with no spaces, so becomes a paragraph.
+  - Git $(git magenta --) options declaration is shown at the end of help output
 
-            Man Pages Generation $(git yellow "Mandatory!") for $(git cyan --help)|$(git green help) :
-              - $(git blue SYNOPSIS) section in man page will use: $(git blue usage:) section of spec.
-              - $(git blue NAME) section in man page will use: first line after $(git magenta usage:) section
-                of the spec:
-                    "$(git green command) - description of the command"
-              - $(git blue OTHER SECTIONS) in man page will use: $(git blue Other Section:)
-                Should be written with line after $(git blue NAME) section and one line
-                before git $(git magenta --) and before.
-                No padding for title and "  " ($(git yellow 2)) spaces for text under $(git blue Section:) title.
-              - $(git blue NOTE) section in man page will use any line (no spaces), one line after
-                git $(git magenta --) options declaration as one paragraph.
+$(git blue Color Guide:)
+  - $(git red Commands) - "$(git red brew) $(git green install) $(git cyan --verbose) file"
+
+  - $(git blue Sections:) - one line after $(git blue usage:) section
+  - $(git yellow "Warning!") - for warnings, notice and alerts.
+  - $(git magenta \`other --command\`) - for any reference, i.e: to other commands
+
+$(git blue Man Pages Generation): $(git yellow "Mandatory!") for $(git cyan -- "--help")|$(git green help) :
+  - $(git blue SYNOPSIS) section in man page will use: $(git blue usage:) section of spec.
+  - $(git blue NAME) section in man page will use: first line after $(git magenta usage:) section
+    of the spec:
+        "$(git green command) - description of the command"
+  - $(git blue OTHER SECTIONS) in man page will use: $(git blue Other Section:)
+    Should be written with line after $(git blue NAME) section and one line
+    before git $(git magenta --) and before.
+    No padding for title and "  " ($(git yellow 2)) spaces for text under $(git blue Section:) title.
+  - $(git blue NOTE) section in man page will use any line (no spaces), one line after
+    git $(git magenta --) options declaration as one paragraph.
 
 --
 h,help    Show help and exit.
 
-This will be the $(git blue NOTE)  section in generated man page.
+    This will be the $(git blue NOTE)  section in generated man page.
 EOF
 }
 

@@ -38,7 +38,6 @@ cd "$(dirname "$0")/.." && pwd -P
 #
 ####################################### Vars - generated/profile.d/rc.sh - End
 
-
 ####################################### Vars - generated/profile.d/git.sh - End
 
 ####################################### Vars - generated/profile.d/git.sh - End

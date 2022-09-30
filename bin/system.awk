@@ -29,6 +29,8 @@
 #              numbers, snip --style=full, -p|--plain = --style=plain, -pp adds --pager=never
 # TODO: CURL variables and configuration and one with headers
 # TODO: .netrc y env variables y que git-token lo meta
+# TODO: que el install path sea por defecto ~/Shared y eso para todos los repositories
+
 
 BEGIN {
     SCRIPT = "system.awk"
