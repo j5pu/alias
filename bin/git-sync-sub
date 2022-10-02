@@ -5,6 +5,8 @@
 
 set -eu
 
+. "$(dirname "$0")/utils.sh"
+
 main() {
   [ $# -ge 1 ] || set -- .
   for arg; do

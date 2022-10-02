@@ -10,6 +10,8 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
     <mapping directory="$JETBRAINS$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../GitHub" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../Subtree" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../bbin" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/../media" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/config/Safari/Tampers" vcs="Git" />

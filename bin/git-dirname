@@ -1,0 +1,48 @@
+#!/bin/sh
+
+set -eu
+
+. "$(dirname "$0")/utils.sh"
+
+#######################################
+# git spec
+# Globals:
+#   SCRIPT
+# Arguments:
+#  None
+#######################################
+spec() {
+  cat <<EOF
+${GIT_COMMAND}
+${COLOR_SCRIPT} [$(git magenta "<path>")]
+
+${COLOR_SCRIPT} - absolute physical path of dirname if $(git magenta "<path>") is a file or for the argument \
+(default: $(git magenta "cwd"))
+--
+h,help    Show help and exit.
+EOF
+}
+
+#######################################
+# git dirname
+# Arguments:
+#  [<path>]     path (default: cwd)
+#######################################
+main() {
+  set -e
+  for arg; do
+    case "${arg}" in
+    -h|--help) . git-parse.sh || exit ;;
+    esac
+  done
+
+  if [ "${1-}" ] && [ -d "${1:-.}" ]; then
+    cd "${1:-.}"
+  elif [ "${1-}" ]; then
+    cd "$(dirname "$1")"
+  fi
+  pwd -P
+}
+
+. git-parse.sh; shift
+main "$@"

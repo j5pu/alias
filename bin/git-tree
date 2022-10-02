@@ -1,0 +1,117 @@
+#!/bin/sh
+
+set -eu
+
+. "$(dirname "$0")/utils.sh"
+
+#######################################
+# subtree add remote to .git/config/remote with: repo name from repo url and path (default: repo name)
+# Always does not store entire history of subproject into main repository (--stash)
+# Arguments:
+#   1   url/repository name in .git/config/remote
+#   2   path
+#   3   branch/ref
+#######################################
+add() {
+  for arg; do
+    shift
+    case "$arg" in
+      -d|--debug) set -- "$@" "-d" ;;
+      -q|--quiet) set -- "$@" "-q" ;;
+      -m|--message) echo "add" and "merge" only: message for the merge commit ;;
+      --ref=*) set -- "$@" "--ref=${arg#*=}" ;;  # for add and pull
+      add|merge|pull|push) function="${arg}" ;;
+      -*) >&2 echo "Unknown option: ${arg}" ;;
+    esac
+  done
+
+  echo $1 $2 $3
+  name="$(basename "$1" .git)"
+  path="${2:-${name}}"
+  git remote add -f
+  git subtree add --prefix="${path}" "$1" --squash
+}
+
+#######################################
+# subtree merge
+# Always does not store entire history of subproject into main repository (--stash)
+# Arguments:
+#   1  path
+#   2  branch/ref
+#######################################
+merge() {
+  echo $1 $2
+
+}
+
+#######################################
+# subtree pull
+# Always does not store entire history of subproject into main repository (--stash)
+# Arguments:
+#   1   url/repository name in .git/config/remote
+#   2   path
+#   3   branch/ref
+#######################################
+pull() {
+  echo $1 $2 $3
+
+}
+
+#######################################
+# subtree push
+# Arguments:
+#   1   url/repository name in .git/config/remote
+#   2   path
+#   3   branch/refspec
+#######################################
+push() {
+  echo $1 $2 $3
+
+}
+
+#######################################
+# subtree push
+# Arguments:
+#   1   url/repository name in .git/config/remote
+#   2   path
+#   3   branch/refspec
+#######################################
+push() {
+  echo $1 $2 $3
+
+}
+
+#######################################
+# subtree rm
+# Arguments:
+#   1   url/repository name in .git/config/remote
+#   2   path
+#   3   branch/refspec
+#######################################
+rm(){
+ :
+}
+
+#######################################
+# description
+# Globals:
+#   arg
+#   function
+# Arguments:
+#  None
+#######################################
+main() {
+  for arg; do
+    shift
+    case "$arg" in
+      -d|--debug) set -- "$@" "-d" ;;
+      -q|--quiet) set -- "$@" "-q" ;;
+      -m|--message) echo "add" and "merge" only: message for the merge commit ;;
+      --branch=*|--ref=*|--refspec=*) REF="${arg#*=}" ;;  # for add and pull
+      add|merge|pull|push) function="${arg}" ;;
+      -*) >&2 echo "Unknown option: ${arg}" ;;
+    esac
+  done
+}
+
+main "$@"

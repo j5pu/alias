@@ -2,6 +2,9 @@
 
 #
 # Wrapper for system.awk since env -S does not work on busybox
+
+. "$(dirname "$0")/.rc"
+
 if ! cmd awk && cmd nix-channel; then
   nix-channel --update --quiet 2>/dev/null
   nix-env -iA nixpkgs.gawk --quiet

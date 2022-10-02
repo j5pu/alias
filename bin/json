@@ -10,6 +10,10 @@
 #   printf "%s\n" foo 1 bar 2 | json
 #   json foo 1 bar 2
 
+set -eu
+
+. "$(dirname "$0")/utils.sh"
+
 #exec 19>/Users/j5pu/rc/.log
 #export BASH_XTRACEFD=19
 #set -x

@@ -1,0 +1,9 @@
+#!/usr/bin/env /Users/j5pu/rc/dev/bash
+touch mierda
+exit
+nohup /Applications/PyCharm.app/Contents/MacOS/pycharm --args "${RC}" &>/tmp/pycharm.log &
+#dev="$(command dirname "$0")"
+#"${dev}/bash" -c "command nohup /Applications/PyCharm.app/Contents/MacOS/pycharm --args \"${dev}/..\" &>/tmp/pycharm.log &"
+
+#bash --login --init-file <(echo ". /Users/j5pu/rc/.profile.tmp; echo $PATH; open /Applications/PyCharm.app --args '$(pwd -P)'")
+#bash --init-file /Users/j5pu/rc/.profile.tmp -c "nohup /Applications/PyCharm.app/Contents/MacOS/pycharm --args \"$(pwd -P)\" &>/tmp/pycharm.log &"

@@ -17,6 +17,7 @@
       <var name="base_images" />
       <var name="device_code" />
       <var name="error_description" />
+      <var name=".sh.file" />
     </globalVariables>
   </component>
 </project>

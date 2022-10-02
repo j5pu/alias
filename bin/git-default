@@ -1,0 +1,62 @@
+#!/bin/sh
+
+set -eu
+
+. "$(dirname "$0")/utils.sh"
+
+#######################################
+# die with error
+# Arguments:
+#  None
+#######################################
+die() {
+  rc=$?
+  >&2 echo "${0##*/}: $*"
+  exit $rc
+}
+
+#######################################
+# git spec
+# Globals:
+#   SCRIPT
+# Arguments:
+#  None
+#######################################
+spec() {
+  cat <<EOF
+${GIT_COMMAND}
+${COLOR_SCRIPT} [$(git magenta "<remote>")|$(git magenta "<url>")]
+
+${COLOR_SCRIPT} - remote default branch from $(git magenta "<url>") or $(git magenta "<remote>") \
+name (default: $(git magenta "origin"))
+--
+h,help    Show help and exit.
+EOF
+}
+
+#######################################
+# git basename
+# Arguments:
+#  [<remote>|<url>]  remote name or url
+#######################################
+main() {
+  for arg; do
+    case "${arg}" in
+    -h|--help) . git-parse.sh || exit ;;
+    esac
+  done
+
+  if ! echo "${1:-origin}" | grep -q '/'; then
+    remotes="$(git remote)"
+    [ "${remotes-}" ] || die "${PWD}: no remote configured"
+  fi
+
+  refs="$(git ls-remote --quiet --exit-code "${1:-origin}")"
+  ref="$(echo "${refs}" | awk '/\tHEAD$/ { print $1 }')"
+  [ "${ref-}" ] || die "${PWD}: no HEAD ref found: ${refs}"
+  branch="$(echo "${refs}" | awk -F '/' "/^${ref}\t/ && !/\tHEAD$/ { print \$3 }" )"
+  [ "${branch-}" ] || die "${PWD}: no branch found for ref: ${ref}: ${refs}"
+  echo "${branch}"
+}
+
+main "$@"

@@ -5,6 +5,8 @@
 
 set -eu
 
+. "$(dirname "$0")/utils.sh"
+
 #######################################
 # show usage
 # Arguments:

@@ -5,6 +5,8 @@
 
 set -eu
 
+. "$(dirname "$0")/utils.sh"
+
 if stat --version 2>/dev/null | grep -q GNU; then
     stat --printf "%U" "$1"
 else

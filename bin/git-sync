@@ -5,13 +5,15 @@
 
 set -eu
 
+. "$(dirname "$0")/utils.sh"
+
 admin() { git config remote.origin.url | grep -qE "j5pu|bizeu|mnopi" ; }
 
 sync() {
   cd "$1"
 
   if test -f "$(git rev-parse --show-toplevel)/.gitmodules" && ! $skip; then
-    git submodule foreach --recursive "$0 --skip-submodules"
+    git submodule foreach --recursive "$0"
   fi
 
   git fetch --quiet
@@ -26,8 +28,13 @@ sync() {
     return 1
   fi
   if git status | grep -q "Your branch is behind"; then
-    git pull --quiet
-    git pull --quiet --tags
+    if admin; then
+      git pull --quiet
+      git pull --quiet --tags
+    else
+      git pull --quiet --rebase
+      git pull --quiet --tags --rebase
+    fi
     return 0
   fi
   if test -n "$(git status --porcelain)" && admin; then
@@ -39,16 +46,18 @@ sync() {
 }
 
 main() {
-  [ $# -ge 1 ] || set -- .
-
   skip=false
-
   for arg; do
     case "$arg" in
       -h|--help) help; exit ;;
-      --skip-submodules) skip=true ;;
+      --skip-submodules) skip=true; shift ;;
       *) sync "${arg}" ;;
     esac
+  done
+
+  [ $# -ge 1 ] || set -- .
+  for arg; do
+    sync "${arg}"
   done
 }
 

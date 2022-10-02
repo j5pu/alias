@@ -3,6 +3,8 @@
 #
 # Local IP address and interface name
 
+. "$(dirname "$0")/utils.sh"
+
 if has ifconfig; then
   ifconfig | awk \
     '/BROADCAST/ && ! /docker/ {

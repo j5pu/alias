@@ -4,6 +4,8 @@
 #
 set -eu
 
+. "$(dirname "$0")/utils.sh"
+
 #######################################
 # checks connection
 # Arguments:

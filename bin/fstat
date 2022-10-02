@@ -3,6 +3,10 @@
 #
 # stat print for Darwin and Linux (default --id)
 
+set -eu
+
+. "$(dirname "$0")/utils.sh"
+
 Darwin() {
   case "${OPTION}" in
     --access) FMT="Sa"; set -- -t "%F %T %z" "$@" ;;

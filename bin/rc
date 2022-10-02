@@ -5,6 +5,8 @@
 
 set -eu
 
+. "$(dirname "$0")/utils.sh"
+
 # Force creation of .env.sh (can be set with --force) [Variable Not added to file]
 # Use when:
 #   hostname changes,

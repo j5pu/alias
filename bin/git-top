@@ -2,6 +2,8 @@
 
 : git rev-parse
 
+. "$(dirname "$0")/utils.sh"
+
 #######################################
 # git spec
 # Globals:

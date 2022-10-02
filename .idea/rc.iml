@@ -8,6 +8,8 @@
     <orderEntry type="module" module-name="bbin" />
     <orderEntry type="module" module-name="JetBrains" />
     <orderEntry type="module" module-name="media" />
+    <orderEntry type="module" module-name="GitHub" />
+    <orderEntry type="module" module-name="Subtree" />
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="pyproject.toml" />

@@ -26,6 +26,8 @@
 
 set -eu
 
+. "$(dirname "$0")/utils.sh"
+
 # FIXME: ¿Que hago si se puede con SSH, no haría falta el token, sino descargar el secrets?
 #   por eso cuando le doy a has debería ir a fetch o mirar si puedo con ssh y entonces descargar el secrets...
 #   y si hay mas usuarios como miro si esta el TOKEN en environment? le añado el usuario al final y el

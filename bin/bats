@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+set -eu
+
+. "${0}.bash"
+
+#######################################
+# clone or pull bats-core and bats libs
+# Globals:
+#   BATS_REPOS
+#   BATS_SHARE
+# Arguments:
+#  None
+# Returns:
+#   0 ...
+#######################################
+_update() {
+  local c i
+
+  for i in ${BATS_REPOS}; do
+    c="${BATS_SHARE}/${i}"
+    if test -d "${c}"; then
+      git -C "${c}" pull --rebase --force --quiet
+    else
+      git -C "${BATS_SHARE}" clone --quiet --depth 1 "https://github.com/bats-core/${i}"
+    fi
+  done
+}
+
+#######################################
+# description
+# Arguments:
+#  None
+#######################################
+main() {
+
+  _update
+
+  exec "${BATS_EXECUTABLE}" --print-output-on-failure "${@}"
+}

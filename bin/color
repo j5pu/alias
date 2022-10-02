@@ -5,8 +5,7 @@
 #
 # show colors and helper functions output, or generate color lib
 
-. helper.sh
-. arrays.bash
+. "$(dirname "$0")/utils.bash"
 
 e="\033["  # dash needs \033[
 _SCRIPT="${0##*/}"

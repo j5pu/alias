@@ -5,6 +5,8 @@
 
 set -eu
 
+. "$(dirname "$0")/utils.sh"
+
 for arg; do
   case "${arg}" in
     -*) : ;;

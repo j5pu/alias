@@ -3,6 +3,8 @@
 #
 # Silent Curl o wget to stdout
 
+. "$(dirname "$0")/utils.sh"
+
 if has curl; then
   curl -s "$@"
 elif has wget; then

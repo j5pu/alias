@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+
+#
+# checks if function is exported
+
+set -eu
+
+. "$(dirname "$0")/utils.sh"
+
+#######################################
+# die with return or exit
+# Globals:
+#   RETURN
+# Arguments:
+#   None
+#######################################
+die() {
+  local rc=$?
+  >&2 printf '%b\n' "\033[1;31m✘\033[0m ${0##*/}: $*"
+  "${RETURN:-exit}" $rc
+}
+
+#######################################
+# show usage
+# Arguments:
+#   1
+#######################################
+help() {
+  local rc
+  if test $# -gt 0; then
+    case "$1" in
+      -h|--help|help) rc=0 ;;
+      -*) RETURN="return" die "$1: invalid option/argument\n" ;;
+      *) return 0 ;;
+    esac
+  fi
+
+  >&2 cat <<EOF
+usage: ${0##*/} <function>
+   or: ${0##*/} -h|--help|help
+
+checks if function is exported
+
+Arguments:
+  function            name of function
+
+Commands:
+   -h, --help, help   display this help and exit.
+EOF
+  exit "${rc:-1}"
+}
+
+#######################################
+# checks if function is exported
+# Globals:
+#   FUNCNAME
+# Arguments:
+#   1   function name
+# Returns:
+#   1 if function is not exported,
+#   0 if function is exported
+#######################################
+main() {
+  help "$@"
+  declare -Fp "$1" 2>/dev/null | grep -q "declare -fx ${1}" >/dev/null || die "${1}: not exported"
+}
+
+main "$@"
+

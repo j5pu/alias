@@ -3,4 +3,6 @@
 #
 # My public IP address
 
+. "$(dirname "$0")/utils.sh"
+
 iget ifconfig.me

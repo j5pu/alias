@@ -1,0 +1,58 @@
+#!/bin/sh
+
+. "$(dirname "$0")/utils.sh"
+
+#######################################
+# show usage
+# Arguments:
+#   1
+#######################################
+help() {
+  test $# -gt 0 || return 0
+
+  case "$1" in
+    -h|--help|help) rc=0 ;;
+    *)
+      >&2 echo "${0##*/}: $1: invalid option/argument"
+      >&2 echo
+      ;;
+  esac
+
+  >&2 cat <<EOF
+usage: ${0##*/}
+   or: ${0##*/} [-h|--help|help]
+
+starts Docker daemon if not running
+
+Commands:
+   -h, --help, help   display this help and exit.
+EOF
+  exit "${rc:-1}"
+}
+
+#######################################
+# starts Docker daemon if not running
+# Arguments:
+#   None
+#######################################
+main() {
+  help "$@"
+
+  if (! docker-running); then
+    if [ -e /Applications/Docker.app ]; then
+      open /Applications/Docker.app
+    else
+      sudo systemctl start docker
+    fi
+
+    echo >&2 "${0##*/}: Docker: Starting"
+
+    while (! docker-running); do
+      sleep 1
+    done
+
+    echo >&2 "${0##*/}: Docker: Started"
+  fi
+}
+
+main "$@"

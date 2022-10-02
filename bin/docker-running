@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -eu
+
+. "$(dirname "$0")/utils.sh"
+
+#######################################
+# show usage
+# Arguments:
+#   1
+#######################################
+help() {
+  test $# -gt 0 || return 0
+
+  case "$1" in
+    -h|--help|help) rc=0 ;;
+    *)
+      >&2 echo "${0##*/}: $1: invalid option/argument"
+      >&2 echo
+      ;;
+  esac
+
+  >&2 cat <<EOF
+usage: ${0##*/}
+   or: ${0##*/} [-h|--help|help]
+
+is Docker daemon running?
+
+Commands:
+   -h, --help, help   display this help and exit.
+
+Returns:
+   0 if Docker daemon is running
+   1 if Docker daemon is not running
+EOF
+  exit "${rc:-1}"
+}
+
+#######################################
+# is Docker daemon running?
+# Globals:
+#   DOCKER_HUB_TOKEN
+#   GHCR_IO_TOKEN
+#   GIT
+# Arguments:
+#   None
+#######################################
+main() {
+  help "$@"
+
+  cmd docker
+
+  docker version >/dev/null 2>&1
+}
+
+main "$@"
