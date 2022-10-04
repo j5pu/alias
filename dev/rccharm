@@ -1,4 +1,6 @@
 #!/usr/bin/env /Users/j5pu/rc/dev/bash
+
+
 touch mierda
 exit
 nohup /Applications/PyCharm.app/Contents/MacOS/pycharm --args "${RC}" &>/tmp/pycharm.log &

@@ -1,5 +1,5 @@
 # env
-
+Estabaa con el git-tree, e iba a probar el stdin.sh y poner las funciones de bash y me fui a poner el bash para el PATH.. y antes con las man pages y los helps por eso me faltaban commandos de git y los traje
 ## [Install](./install)
 Installs to /etc/profile to source `env.sh` which is only source in interactive shells and when sudo is installed.
 

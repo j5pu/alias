@@ -1,3 +1,3 @@
 # shellcheck shell=shell
 
-echo .bashrc
+echo dev/.bashrc

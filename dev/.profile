@@ -1,6 +1,6 @@
 # shellcheck shell=shell
-echo .profile
-set -x
+echo dev/.profile
+
 ( : "${RC?}" ) || return 1
 
 PATH="${RC?}/bin:${RC}/dev:${RC}/generated/bin:${RC}/generated/color:${RC}/tests:\
