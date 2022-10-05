@@ -3,11 +3,11 @@
 #
 # Silent Curl o wget to stdout
 
-. "$(dirname "$0")/utils.sh"
+. "$(dirname "$0")/../.profile.dev"
 
-if has curl; then
-  curl -s "$@"
-elif has wget; then
+if cmd curl; then
+  curl -sL "$@"
+elif cmd wget; then
   wget -q -O - "$@"
 else
     echo "No curl or wget found" >&2

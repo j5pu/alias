@@ -26,6 +26,15 @@ if [ "${BASH_VERSION%%.*}" -ge 4 ]; then
   # Shared array to copy array used by cparray(), getkey(), getvalue() and inarray()
 #
   declare -Axg _ARRAY
+
+  enable -f mypid enable_mypid
+  enable -f truefalse false
+  enable -f truefalse true
+  for i in accept basename csv cut dirname dsv fdflags finfo getconf \
+    head id ln logname mkdir mkfifo mktemp pathchk print printenv \
+    push realpath rm rmdir seq setpgid sleep stat strftime sync tee tty uname unlink whoami; do
+      enable -f "$i" "$i"
+  done
 fi
 
 ####################################### Source: BASH. KSH and SH

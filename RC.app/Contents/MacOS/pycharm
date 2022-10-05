@@ -4,14 +4,4 @@ cd "$(command -p dirname "$0")" || exit
 cd "$(command -p git rev-parse --show-toplevel)" || exit
 export ENV="${PWD}/.profile.dev"
 export RC="${PWD}"
-bash --posix -c "open /Applications/PyCharm.app"
-
-
-#bash --init-file /Users/j5pu/rc/dev/.profile --rcfile /Users/j5pu/rc/dev/.bashrc -il -c "echo hola"
-
-
-#cd "$(command -p dirname "$0")" || exit
-#cd "$(command -p git rev-parse --show-toplevel)" || exit
-#./dev/bash -c "command nohup /Applications/PyCharm.app/Contents/MacOS/pycharm --args \"$(pwd -P)\" &>/tmp/pycharm.log &"
-#bash --login --init-file <(echo ". /Users/j5pu/rc/.profile.tmp; echo $PATH; open /Applications/PyCharm.app --args '$(pwd -P)'")
-#bash --init-file /Users/j5pu/rc/.profile.tmp -c "nohup /Applications/PyCharm.app/Contents/MacOS/pycharm --args \"$(pwd -P)\" &>/tmp/pycharm.log &"
+"${RC}/bin/bash" -c "open /Applications/PyCharm.app"

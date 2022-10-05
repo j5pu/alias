@@ -1,0 +1,222 @@
+#!/bin/sh
+
+#
+# Install or shows version and/or url of product to be installed from url
+# Arguments:
+#   product     bash or python
+#   --install
+#   --pattern   i.e: 3.10 (default for python: 3.10, bash: 5)
+#   --prefix    (default: /usr/local)
+#   --version
+#   --url
+# Defaults:
+#   product: python
+#   option: --version
+
+set -eu
+
+[ ! "${TRACE-}" ] || set -x
+
+. "$(dirname "$0")/../.profile.dev"
+
+PREFIX="/usr/local"
+PRODUCT="python"
+PATTERN_BASH="5"
+PATTERN_PYTHON="3.10"
+
+#######################################
+# install bash
+# Globals:
+#    --enable-alias  # ALIAS ["expand_aliases"]
+#    --enable-alt-array-implementation  # ALT_ARRAY_IMPLEMENTATION: prioritizes speed (O(1) access) over space
+#    --enable-arith-for-command  # ARITH_FOR_COMMAND: for (( init; test; step )) do list; done
+#    --enable-array-variables  # ARRAY_VARS
+#    --enable-brace-expansion  # BRACE_EXPANSION ["braceexpand"]: (foo{a,b} -> fooa foob
+#    --enable-casemod-attributes  # CASEMOD_ATTRS: case-modifying variable attributes; variables modified on assignment
+#    --enable-casemod-expansions  # CASEMOD_EXPANSIONS: case-modifying word expansions [a-z] -> [A-Z]
+#    --enable-command-timing  # COMMAND_TIMING: time pipelines, functions and builtins
+#    --enable-cond-command  # COND_COMMAND: [[...]]
+#    --enable-cond-regexp  # COND_REGEXP: [[ =~]]
+#    --enable-coprocesses  # COPROCESS_SUPPORT; "coproc" reserved word
+#    --enable-debugger  # DEBUGGER: compile in some features used only by the bash debugger
+#    --enable-direxpand-default  # DIRCOMPLETE_EXPAND_DEFAULT ["direxpand"]:
+#    --enable-directory-stack  # PUSHD_AND_POPD
+#    --enable-disabled-builtins  # DISABLED_BUILTINS
+#    --enable-dparen-arithmetic  # DPAREN_ARITHMETIC: ((...))
+#    --enable-extended-glob-default  # EXTGLOB_DEFAULT ["extglob"]: [*+@?!](patlist)
+#    --enable-function-import  # FUNCTION_IMPORT: allow functions to be imported from the environment
+#    --enable-glob-asciiranges-default  # GLOBASCII_DEFAULT ["globasciiranges"]
+#    --enable-help-builtin  # HELP_BUILTIN
+#    --enable-history  # HISTORY
+#    --enable-job-control  # JOB_CONTROL
+#    --enable-largefile
+#    --enable-mem-scramble  # MEMSCRAMBLE
+#    --enable-multibyte  # NO_MULTIBYTE_SUPPORT, oppsoite of --enable-multibyte
+#    --enable-net-redirections  # NETWORK_REDIRECTIONS: open /dev/(tcp|udp)/host/port socket connections
+#    --enable-process-substitution  # PROCESS_SUBSTITUTION; "<(file)"
+#    --enable-progcomp  # PROGRAMMABLE_COMPLETION ["progcomp"]
+#    --enable-prompt-string-decoding  # PROMPT_STRING_DECODE: expand \[
+#    --enable-readline  # READLINE
+#    --enable-restricted  # RESTRICTED_SHELL
+#    --enable-select  # SELECT_COMMAND
+#    --enable-separate-helpfiles
+#    --enable-strict-posix-default  # STRICT_POSIX
+#    --enable-translatable-strings  # TRANSLATABLE_STRINGS: support for $"..." translatable strings
+#    --enable-threads=posix
+#    --enable-xpg-echo-default  # DEFAULT_ECHO_TO_XPG (interpret \ by default)
+#    --with-included-gettext
+#    ARRAY_EXPORT  # export indexed arrays to processes
+#    CASEMOD_CAPCASE  # (declare -c), i.e: declare -c a=fOO; echo $a -> Foo
+#    CASEMOD_TOGGLECASE  # case-toggling operators (~[~]),
+#       i.e: VAR_3="Reverse Cases"; echo ${VAR_3~} -> reverse Cases
+#       i.e: VAR_3="Reverse Cases"; echo ${VAR_3~~} -> rEVERSE cASES
+#    CHECKWINSIZE_DEFAULT  # ["checkwinsize"]
+#    DEFAULT_BASHRC="${FILES}/.bashrc"
+#    DEFAULT_INPUTRC="${FILES}/.inputrc"
+#    # for enable -f, will be set if BASH_LOADABLES_PATH unset (gives segmentation fault)
+#    DEFAULT_LOADABLE_BUILTINS_PATH="'${PREFIX}/lib/bash:/usr/local/lib/bash'"
+#    will set if PATH is unset
+#    NOTE: does not work
+#    DEFAULT_PATH_VALUE="'${FILES}/bin:${FILES}/custom/bin:${FILES}/generated/bin:${FILES}/generated/color:${PATHBASE}'"
+#    HISTEXPAND_DEFAULT  # to enable when shell is interactive
+#    HISTCONTROL="erasedups"
+#    HISTFILE="${FILES}/.bash_history"
+#    HISTFILESIZE  # env var HISTSIZE
+#    HISTSIZE
+#    HISTSIZE_DEFAULT
+#    HISTTIMEFORMAT="[%F %T]"
+#    MULTIPLE_COPROCS  # enable code that implements multiple "coprocs" executing simultaneously
+#    OPTIMIZE_SEQUENTIAL_ARRAY_ASSIGNMENT  # optimize for sequential array assignment when using indexed arrays
+#    PROMPT="{\[\e[32m\]\u\[\e[m\]@\[\e[36m\]\h\[\e[m\]:\W_\$?}$ "
+#    SPROMPT="{\[\e[32m\]>\[\e[m\]} "
+#    SSH_SOURCE_BASHRC  # to try to check whether it's being run by sshd and source the .bashrc
+#    # NOTE: does not work
+#    STANDARD_UTILS_PATH="'${PATHBASE}'"  # `command -p'
+#    SYS_BASH_LOGOUT="'${FILES}/bash_logout'"
+#    SYS_BASHRC="'${FILES}/bashrc'"  # works when no posix mode
+#    SYS_INPUTRC="${FILES}/inputrc"
+#    SYS_PROFILE="${FILES}/profile"
+# Arguments:
+#  None
+#######################################
+install_bash() {
+  [ "$("${PREFIX}/bin/bash" --version 2>/dev/null | awk -F'[ (]' '{ print $4; exit }')" != "${VERSION}" ] || return 0
+
+  _extract
+
+  ./configure --prefix="${PREFIX}" \
+    --enable-alias \
+    --enable-alt-array-implementation \
+    --enable-arith-for-command \
+    --enable-array-variables \
+    --enable-brace-expansion \
+    --enable-casemod-attributes \
+    --enable-casemod-expansions \
+    --enable-command-timing \
+    --enable-cond-command \
+    --enable-cond-regexp \
+    --enable-coprocesses \
+    --enable-debugger \
+    --enable-direxpand-default \
+    --enable-directory-stack \
+    --enable-disabled-builtins \
+    --enable-dparen-arithmetic \
+    --enable-extended-glob-default \
+    --enable-function-import \
+    --enable-glob-asciiranges-default \
+    --enable-help-builtin \
+    --enable-history \
+    --enable-job-control \
+    --enable-largefile \
+    --enable-mem-scramble \
+    --enable-multibyte \
+    --enable-net-redirections \
+    --enable-process-substitution \
+    --enable-progcomp \
+    --enable-prompt-string-decoding \
+    --enable-readline \
+    --enable-restricted \
+    --enable-select \
+    --enable-separate-helpfiles \
+    --enable-strict-posix-default \
+    --enable-translatable-strings \
+    --enable-threads=posix \
+    --enable-xpg-echo-default \
+    --with-included-gettext \
+    CFLAGS="\
+      -DARRAY_EXPORT='1' \
+      -DHISTFILESIZE='-1' \
+      -DHISTEXPAND_DEFAULT='1' \
+      -DHISTCONTROL='erasedups' \
+      -DHISTSIZE='-1' \
+      -DHISTSIZE_DEFAULT='-1' \
+      -DHISTTIMEFORMAT='\"[%F\\ %T]\"' \
+      -DMULTIPLE_COPROCS=1 \
+      -DSSH_SOURCE_BASHRC=1 \
+      -DSYS_BASH_LOGOUT='\"${ETC}/bash_logout\"' \
+      -DSYS_BASHRC='\"${ETC}/bashrc\"' \
+      -DSYS_INPUTRC='\"${ETC}/inputrc\"' \
+      -DSYS_PROFILE='\"${ETC}/profile\"' \
+    "
+    make
+    make install
+}
+
+install_python() {
+  _extract
+}
+
+_extract() {
+  TMP="$(mktemp -d)"
+  iget "${URL}" | tar --extract --directory "${TMP}" --strip-components=1 --file -
+  test -n "$(find "${TMP}" -mindepth 1 -maxdepth 1 -print -quit)" || echo >&2 "${URL}; extract empty: ${TMP}"
+  echo >&2 "${URL}: extracted to: ${TMP}"
+  cd "${TMP}"
+}
+
+_url_gnu() {
+  URL="https://ftp.gnu.org/gnu/${1}"
+  VERSION="$(iget "${URL}" | awk -F '"' "!/-[a-z]/ && !/\.sig/ && /${1}-${PATTERN:-${PATTERN_BASH}}.*tar\.gz/ \
+   { gsub(\"${1}-\", \"\"); gsub(\".tar.gz\", \"\"); print \$8 }" | sort -V | tail -1)"
+  URL="${URL}/${1}-${VERSION}.tar.gz"
+}
+
+_url_python() {
+  URL="https://www.python.org/ftp/python"
+  VERSION="$(iget "${URL}" | awk -F '["/]' -v v="${PATTERN:-${PATTERN_PYTHON}}." '$2 ~ v { print $2 }' \
+    | sort -V | tail -1)"
+  URL="${URL}/${VERSION}/Python-${VERSION}.tar.xz"
+}
+
+main() {
+  install=false; url=false; version=false
+
+  for arg; do
+    case "$arg" in
+      -h | --help | help) help ;;
+      --install) install=true ;;
+      --pattern=*) PATTERN="${arg#*=}" ;;
+      --prefix=*) PREFIX="${arg##*=}" ;;
+      --url) url=true ;;
+      --version) version=true ;;
+      bash) PRODUCT="${arg}"; _url_gnu "${PRODUCT}" ;;
+      python) PRODUCT="${arg}" ;;
+      *) echo >&2 "Unknown argument: ${arg}"; help ;;
+    esac
+  done
+
+  ETC="${PREFIX}/etc"
+
+  [ "${VERSION-}" ] || "_url_${PRODUCT}"
+  [ "${VERSION-}" ] || echo >&2 "${PRODUCT}: no version"
+
+  if $install; then
+    "install_${PRODUCT}"
+  else
+    ! $url || echo "${URL}"
+    ! $version || echo "${VERSION}"
+    $url || $version || echo "${URL}"
+  fi
+}
+
+main "$@"

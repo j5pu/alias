@@ -1,0 +1,67 @@
+#!/bin/sh
+
+#
+# extracts tar to directory
+
+set -eu
+
+. "$(dirname "$0")/../.profile.dev"
+
+#######################################
+# die helper
+# Arguments:
+#  None
+#######################################
+_die() {
+  rc=$?
+  >&2 printf -- "%s\n" "$(git config --get-color "" "red bold")✘$(git config --get-color "" reset) ${0##*/}: $*"
+  exit $rc
+}
+
+#######################################
+# show usage
+# Globals:
+#   USER
+# Arguments:
+#   0
+#######################################
+help() {
+  rc=$?
+  [ ! "${1-}" ] || { echo "${0##*/}: : $1"; echo; }
+  >&2 cat <<EOF
+usage: ${0##*/} <url>
+   or: ${0##*/} -h|--help|help
+
+check if url exists
+
+Commands:
+   help         show help and exit
+EOF
+
+  exit $rc
+}
+
+#######################################
+# checks if url exists
+#  None
+#######################################
+main() {
+  if [ "${1-}" ]; then
+    case "${1-}" in
+      --help|-h|help) help ;;
+      *) : ;;
+    esac
+  else
+    help "Missing url"
+  fi
+
+  if cmd curl; then
+    curl --head --silent --fail "$1" >/dev/null || _die "$1: Invalid url"
+  elif cmd wget; then
+    wget --method=HEAD --quiet "$1" || _die "$1: Invalid url"
+  else
+    _die "curl or wget not found"
+  fi
+}
+
+main "$@"
