@@ -167,6 +167,8 @@ BEGIN {
     VALUES["RC_CUSTOM_COMPLETIONS"] = VALUES["RC_CUSTOM"]"/completions"
     VALUES["RC_CUSTOM_PROFILE_D"] = VALUES["RC_CUSTOM"]"/profile.d"
     VALUES["RC_CUSTOM_RC_D"] = VALUES["RC_CUSTOM"]"/rc.d"
+    # TODO: Aqui lo dejo... DOTFILES y ver si EL PREFIX lo dejo fijo o no y como añado el RC final si esta el DEV
+    # TODO: Esto es una chorrada, generar los PATHS de RC etc. con un puto script y genero el codigo C y esto.
     VALUES["RC_DOTFILES"] = dirname(RC)"/dotfiles"
     VALUES["RC_DOTFILES_SSH"] = VALUES["RC_DOTFILES"]"/.ssh"
     VALUES["RC_ETC"] = RC"/etc"
@@ -186,7 +188,7 @@ BEGIN {
     VALUES["UNAME_OS"] = "unknown"
     VALUES["VGA"]="true"
 
-    VALUES["BASH_COMPLETION_USER_DIR"] = VALUES["RC_CUSTOM_COMPLETIONS"]
+    VALUES["BASH_COMPLETION_USER_DIR"] = VALUES["RC_CUSTOM"]
 
     # TODO: Ver si lo hago por usuario (symlink de comunes), o permisos de escritura para todos, hay que ver si las cambian las app o no.
     VALUES["XDG_CONFIG_HOME"] = VALUES["RC_DOTFILES"]

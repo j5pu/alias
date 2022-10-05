@@ -1,0 +1,438 @@
+#!/bin/sh
+
+#
+# Install or shows version and/or url of product to be installed from url
+# Arguments:
+#   product     bash or python
+#   --install
+#   --pattern   i.e: 3.10 (default for python: 3.10, bash: 5)
+#   --prefix    (default: /usr/local)
+#   --version
+#   --url
+
+set -eu
+
+[ ! "${TRACE-}" ] || set -x
+
+. "$(dirname "$0")/../.profile.dev"
+
+CUSTOMIZED="$(filefuncs "$0" | awk '/^install_/ { gsub("install_", ""); print }')"
+PREFIX="/usr/local"
+PRODUCT="python"
+PRODUCTS="$(cat <<EOF
+${PRODUCT}
+EOF
+)"
+PATTERN_BASH="5"
+PATTERN_PYTHON="3.10"
+URL_GNU="https://ftp.gnu.org/gnu"
+URL_PYTHON="https://www.python.org/ftp/python"
+
+_extract() {
+  TMP="$(mktemp -d)"
+  iget "${URL}" | tar --extract --directory "${TMP}" --strip-components=1 --file -
+  test -n "$(find "${TMP}" -mindepth 1 -maxdepth 1 -print -quit)" || echo >&2 "${URL}; extract empty: ${TMP}"
+  echo >&2 "${URL}: extracted to: ${TMP}"
+  cd "${TMP}"
+}
+
+_installed() {
+  _installed_version() {
+    case "$1" in
+      empty) return 1 ;;
+      bash) "${PREFIX}/bin/${1}" --version 2>/dev/null | awk -F'[ (]' '{ print $4; exit }' ;;
+      python) "${PREFIX}/bin/${1}3" --version  2>/dev/null | awk '{ print $2 }' ;;
+      *) >&2 echo "${0##*/}: installed version not supported: ${1}"; return 1 ;;
+    esac
+  }
+  INSTALLED="$(_installed_version "$1")"
+}
+
+_gnu_names() { iget ${URL_GNU} | awk -F '["/>]' '/\[DIR\]/ && ! /GNU/ && ! /L/ && ! /M/ { print $16 }'; }
+
+_url_gnu() {
+  _url_gnu_version() {
+    VERSION="$(iget "${URL}" | awk -F '"' "!/-[a-z]/ && !/\.sig/ && /${1}-${PATTERN:-${PATTERN_BASH}}.*tar\.gz/ \
+      { gsub(\"${1}-\", \"\"); gsub(\".tar.gz\", \"\"); print \$8 }" | sort -V | tail -1)"
+  }
+
+  URL="${URL_GNU}/${1}"
+  _url_gnu_version "${1}"
+  _installed "$1" || true
+
+  [ "${VERSION-}" ] || _url_gnu_version "$(upper "$1")"
+  VERSION="$(iget "${URL}" | awk -F '"' "!/-[a-z]/ && !/\.sig/ && /${1}-${PATTERN:-${PATTERN_BASH}}.*tar\.gz/ \
+   { gsub(\"${1}-\", \"\"); gsub(\".tar.gz\", \"\"); print \$8 }" | sort -V | tail -1)"
+  URL="${URL}/${1}-${VERSION}.tar.gz"
+}
+
+_url_python() {
+  VERSION="$(iget "${URL_PYTHON}" | awk -F '["/]' -v v="${PATTERN:-${PATTERN_PYTHON}}." '$2 ~ v { print $2 }' \
+    | sort -V | tail -1)"
+  URL="${URL_PYTHON}/${VERSION}/Python-${VERSION}.tar.xz"
+}
+
+help() {
+  [ ! "${1-}" ] || >&2 echo "${0##*/}: Invalid option: ${1}" && echo
+
+  >&2 cat <<EOF
+usage: ${0##*/} [command] [option]
+   or: ${0##*/} customized
+   or: ${0##*/} names
+   or: ${0##*/} list
+   or: ${0##*/} bash --install
+   or: ${0##*/} bash --installed
+   or: ${0##*/} python --pattern=3.11 --install --prefix=/opt
+   or: ${0##*/} autoconf
+
+install from url or shows latest version and/or url of product (defaults: product: python, option: --version)
+
+no command shows python latest version
+
+Commands:
+   -h, --help         display this help and exit.
+   <product>          product name
+                      gnu and python supported for --version and --url
+                      bash and python supported for --install option
+   customized         show product names that customized configure options or installed version is supported
+   list               show list of all packages with the following fields space separated:
+                      name latest-version url installed-version (in prefix)
+   names              show names of products names where --version and --url are supported
+
+Options:
+   --installed        show installed version if supported, returns 1 if installed version not supported or not installed
+   --install          to install product in --prefix (default: ${PREFIX})
+   --pattern          i.e: 3.10 (default for python: ${PATTERN_PYTHON}, bash: ${PATTERN_BASH})
+   --prefix           installation prefix (default: ${PREFIX})
+   --version          show product latest version
+   --url              show product latest download url
+EOF
+  exit "${1:-0}"
+}
+
+#######################################
+# install bash
+# Globals:
+#    --enable-alias  # ALIAS ["expand_aliases"]
+#    --enable-alt-array-implementation  # ALT_ARRAY_IMPLEMENTATION: prioritizes speed (O(1) access) over space
+#    --enable-arith-for-command  # ARITH_FOR_COMMAND: for (( init; test; step )) do list; done
+#    --enable-array-variables  # ARRAY_VARS
+#    --enable-brace-expansion  # BRACE_EXPANSION ["braceexpand"]: (foo{a,b} -> fooa foob
+#    --enable-casemod-attributes  # CASEMOD_ATTRS: case-modifying variable attributes; variables modified on assignment
+#    --enable-casemod-expansions  # CASEMOD_EXPANSIONS: case-modifying word expansions [a-z] -> [A-Z]
+#    --enable-command-timing  # COMMAND_TIMING: time pipelines, functions and builtins
+#    --enable-cond-command  # COND_COMMAND: [[...]]
+#    --enable-cond-regexp  # COND_REGEXP: [[ =~]]
+#    --enable-coprocesses  # COPROCESS_SUPPORT; "coproc" reserved word
+#    --enable-debugger  # DEBUGGER: compile in some features used only by the bash debugger
+#    --enable-direxpand-default  # DIRCOMPLETE_EXPAND_DEFAULT ["direxpand"]:
+#    --enable-directory-stack  # PUSHD_AND_POPD
+#    --enable-disabled-builtins  # DISABLED_BUILTINS
+#    --enable-dparen-arithmetic  # DPAREN_ARITHMETIC: ((...))
+#    --enable-extended-glob-default  # EXTGLOB_DEFAULT ["extglob"]: [*+@?!](patlist)
+#    --enable-function-import  # FUNCTION_IMPORT: allow functions to be imported from the environment
+#    --enable-glob-asciiranges-default  # GLOBASCII_DEFAULT ["globasciiranges"]
+#    --enable-help-builtin  # HELP_BUILTIN
+#    --enable-history  # HISTORY
+#    --enable-job-control  # JOB_CONTROL
+#    --enable-largefile
+#    --enable-mem-scramble  # MEMSCRAMBLE
+#    --enable-multibyte  # NO_MULTIBYTE_SUPPORT, oppsoite of --enable-multibyte
+#    --enable-net-redirections  # NETWORK_REDIRECTIONS: open /dev/(tcp|udp)/host/port socket connections
+#    --enable-process-substitution  # PROCESS_SUBSTITUTION; "<(file)"
+#    --enable-progcomp  # PROGRAMMABLE_COMPLETION ["progcomp"]
+#    --enable-prompt-string-decoding  # PROMPT_STRING_DECODE: expand \[
+#    --enable-readline  # READLINE
+#    --enable-restricted  # RESTRICTED_SHELL
+#    --enable-select  # SELECT_COMMAND
+#    --enable-separate-helpfiles
+#    --enable-strict-posix-default  # STRICT_POSIX
+#    --enable-translatable-strings  # TRANSLATABLE_STRINGS: support for $"..." translatable strings
+#    --enable-threads=posix
+#    --enable-xpg-echo-default  # DEFAULT_ECHO_TO_XPG (interpret \ by default)
+#    --with-included-gettext
+#    ARRAY_EXPORT  # export indexed arrays to processes
+#    CASEMOD_CAPCASE  # (declare -c), i.e: declare -c a=fOO; echo $a -> Foo
+#    CASEMOD_TOGGLECASE  # case-toggling operators (~[~]),
+#       i.e: VAR_3="Reverse Cases"; echo ${VAR_3~} -> reverse Cases
+#       i.e: VAR_3="Reverse Cases"; echo ${VAR_3~~} -> rEVERSE cASES
+#    CHECKWINSIZE_DEFAULT  # ["checkwinsize"]
+#    DEFAULT_BASHRC="${FILES}/.bashrc"
+#    DEFAULT_INPUTRC="${FILES}/.inputrc"
+#    # for enable -f, will be set if BASH_LOADABLES_PATH unset (gives segmentation fault)
+#    DEFAULT_LOADABLE_BUILTINS_PATH="'${PREFIX}/lib/bash:/usr/local/lib/bash'"
+#    will set if PATH is unset
+#    NOTE: does not work
+#    DEFAULT_PATH_VALUE="'${FILES}/bin:${FILES}/custom/bin:${FILES}/generated/bin:${FILES}/generated/color:${PATHBASE}'"
+#    HISTEXPAND_DEFAULT  # to enable when shell is interactive
+#    HISTCONTROL="erasedups"
+#    HISTFILE="${FILES}/.bash_history"
+#    HISTFILESIZE  # env var HISTSIZE
+#    HISTSIZE
+#    HISTSIZE_DEFAULT
+#    HISTTIMEFORMAT="[%F %T]"
+#    MULTIPLE_COPROCS  # enable code that implements multiple "coprocs" executing simultaneously
+#    OPTIMIZE_SEQUENTIAL_ARRAY_ASSIGNMENT  # optimize for sequential array assignment when using indexed arrays
+#    PROMPT="{\[\e[32m\]\u\[\e[m\]@\[\e[36m\]\h\[\e[m\]:\W_\$?}$ "
+#    SPROMPT="{\[\e[32m\]>\[\e[m\]} "
+#    SSH_SOURCE_BASHRC  # to try to check whether it's being run by sshd and source the .bashrc
+#    # NOTE: does not work
+#    STANDARD_UTILS_PATH="'${PATHBASE}'"  # `command -p'
+#    SYS_BASH_LOGOUT="'${FILES}/bash_logout'"
+#    SYS_BASHRC="'${FILES}/bashrc'"  # works when no posix mode
+#    SYS_INPUTRC="${FILES}/inputrc"
+#    SYS_PROFILE="${FILES}/profile"
+# Arguments:
+#  None
+#######################################
+install_bash() {
+  [ "${INSTALLED}" != "${VERSION}" ] || return 0
+
+  _install_bash_line() {
+    tmp=$(mktemp)
+    sed "s|.*${2}.*|${3}|" "${1}" > "${tmp}"
+    case "${2}" in
+      *PROMPT*) : ;;
+      *) grep -q -- "^${3}" "${tmp}" || { echo "${0##*/}: not replaced: ${3}: ${1}: ${tmp}"; exit 1; }
+    esac
+    mv "${tmp}" "${1}"
+  }
+
+  _install_bash_block() {
+    tmp=$(mktemp)
+    {
+      sed "/^${2}$/q" "$1"
+      echo "$3"
+      sed -e "1,/^${2}$/ d" "$1"
+    } > "${tmp}"
+    grep -qF -- "${2}" "${tmp}" || { echo "${0##*/}: not replaced: ${2}: ${1}: ${tmp}"; exit 1; }
+    _first="$(echo "$3" | head -1)"
+    grep -qF -- "${_first}" "${tmp}" || { echo "${0##*/}: not replaced: ${_first}: ${1}: ${tmp}"; exit 1; }
+    grep -qF -- "$4" "${tmp}" || { echo "${0##*/}: not replaced: ${4}: ${1}: ${tmp}"; exit 1; }
+    mv "${tmp}" "${1}"
+  }
+
+  _extract
+
+  _install_bash_line config-top.h ' #define ARRAY_EXPORT 1 ' '#define ARRAY_EXPORT 1'
+  _install_bash_line config-top.h '#define HISTSIZE_DEFAULT "500"' '#define HISTSIZE_DEFAULT -1'
+  _install_bash_line config-top.h '#  define MULTIPLE_COPROCS 0' '#  define MULTIPLE_COPROCS 1'
+  _install_bash_line config-top.h ' #define SSH_SOURCE_BASHRC ' '#define SSH_SOURCE_BASHRC'
+  # \[: must be escaped \\[
+  _install_bash_line config-top.h '#define PPROMPT ' \
+   "#define PPROMPT '\\\[\\\e[0;32m\\\]\\\u\\\[\\\e[m\\\] \\\[\\\e[1;34m\\\]\\\w\\\[\\\e[m\\\]\
+ \\\\\$? \\\[\\\e[1;32m\\\]\\\$\\\[\\\e[m\\\]\\\[\\\e[1;37m\\\] '"
+  _install_bash_line config-top.h '#define SPROMPT ' "#define SPROMPT '\\\[\\\e[0;35m\\\]>\\\[\\\e[m\\\] '"
+
+  id='""'; id_like="${id}"
+  if test -f /etc/os-release; then
+    id="$(grep '^ID=' /etc/os-release | cut -d= -f2)"
+    id_like="$(grep '^ID_LIKE=' /etc/os-release | cut -d= -f2)"
+  fi
+  conftypes_h="$(cat <<EOF
+
+#ifndef DEFAULT_RC
+#  define BASE_INFOPATH "/usr/local/share/info:/usr/share/info"
+#  define BASE_MANPATH "/usr/local/share/man:/usr/share/man:"
+#  define BASE_PATH "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+#  define DEFAULT_RC "${PREFIX}/rc"
+#  define DEFAULT_RC_BIN DEFAULT_RC "/bin"
+#  define DEFAULT_RC_CONFIG DEFAULT_RC "/config"
+#  define DEFAULT_RC_CUSTOM DEFAULT_RC "/custom"
+#  define DEFAULT_RC_ETC DEFAULT_RC "/etc"
+#  define DEFAULT_RC_GENERATED DEFAULT_RC "/generated"
+#  define DEFAULT_RC_SHARE DEFAULT_RC "/share"
+
+#  define DEFAULT_RC_CUSTOM_BIN DEFAULT_RC_CUSTOM "/bin"
+#  define DEFAULT_RC_CUSTOM_SHARE DEFAULT_RC_CUSTOM "/share"
+
+#  define DEFAULT_RC_GENERATED_BIN DEFAULT_RC_GENERATED "/bin"
+#  define DEFAULT_RC_GENERATED_COLOR DEFAULT_RC_GENERATED "/color"
+#  define DEFAULT_RC_GENERATED_SHARE DEFAULT_RC_GENERATED "/share"
+
+#  define DEFAULT_RC_ENV DEFAULT_RC_ETC "/profile"
+#  define DEFAULT_RC_INFOPATH DEFAULT_RC_SHARE "/info:" DEFAULT_RC_CUSTOM_SHARE "/info:" DEFAULT_RC_GENERATED_SHARE
+ "/info"
+#  define DEFAULT_RC_MANPATH DEFAULT_RC_SHARE "/man:" DEFAULT_RC_CUSTOM_SHARE "/man:" DEFAULT_RC_GENERATED_SHARE "/man"
+#  define DEFAULT_RC_PATH DEFAULT_RC_BIN ":" DEFAULT_RC "/sbin:" DEFAULT_RC_CUSTOM_BIN ":" DEFAULT_RC_GENERATED_BIN ":"\
+ DEFAULT_RC_GENERATED_COLOR
+
+# define BASH_COMPLETION_USER_DIR DEFAULT_RC_CUSTOM
+
+#if defined (MACOSX)
+#  define BREW_PREFIX "/usr/local"
+#  define CLT "/Library/Developer/CommandLineTools"
+#  define ID "macOS"
+#  define ID_LIKE ID
+#  define MACOS	"true"
+#  define UNAME "Darwin"
+#  define BASE_INFOPATH BASE_INFOPATH ":" CLT "/share/info"
+#  define BASE_MANPATH BASE_MANPATH ":" CLT "/share/man:"
+#  define BASE_PATH BASE_PATH ":" CLT "/bin"
+#else
+#  define BREW_PREFIX "/home/linuxbrew/.linuxbrew"
+#  define CLT ""
+#  define ID ${id:-\"unknown\"}
+#  define ID_LIKE ${id_like:-${id:-\"unknown\"}}
+#  define MACOS	"false"
+#  define UNAME "Linux"
+#  define BASE_INFOPATH BREW_PREFIX "/share/info:" BASE_INFOPATH
+#  define BASE_MANPATH BREW_PREFIX "/share/man:" BASE_MANPATH
+#  define BASE_PATH BREW_PREFIX "/bin:" BASE_PATH
+#endif
+
+# define DEFAULT_INFOPATH_VALUE  DEFAULT_RC_INFOPATH ":" BASE_INFOPATH
+# define DEFAULT_MANPATH_VALUE  DEFAULT_RC_MANPATH ":" BASE_MANPATH
+# define DEFAULT_PATH_VALUE  DEFAULT_RC_PATH ":" BASE_PATH
+#endif
+EOF
+)"
+  variables_c="$(cat <<EOF
+
+  temp_var = set_if_not ("BASE_INFOPATH", BASE_INFOPATH);
+  temp_var = set_if_not ("BASE_MANPATH", BASE_MANPATH);
+  temp_var = set_if_not ("BASE_PATH", BASE_PATH);
+  temp_var = set_if_not ("BASH_COMPLETION_USER_DIR", BASH_COMPLETION_USER_DIR);
+  temp_var = set_if_not ("BREW_PREFIX", BREW_PREFIX);
+  temp_var = set_if_not ("CLT", CLT);
+  temp_var = set_if_not ("DEFAULT_INFOPATH_VALUE", DEFAULT_INFOPATH_VALUE);
+  temp_var = set_if_not ("DEFAULT_MANPATH_VALUE", DEFAULT_MANPATH_VALUE);
+  temp_var = set_if_not ("DEFAULT_PATH_VALUE", DEFAULT_PATH_VALUE);
+  temp_var = set_if_not ("ID", ID);
+  temp_var = set_if_not ("ID_LIKE", ID_LIKE);
+  temp_var = set_if_not ("MACOS", MACOS);
+
+  temp_var = set_if_not ("DEFAULT_RC", DEFAULT_RC);
+
+  temp_var = set_if_not ("DEFAULT_RC_BIN", DEFAULT_RC_BIN);
+
+  temp_var = set_if_not ("DEFAULT_RC_CONFIG", DEFAULT_RC_CONFIG);
+
+  temp_var = set_if_not ("DEFAULT_RC_CUSTOM", DEFAULT_RC_CUSTOM);
+  temp_var = set_if_not ("DEFAULT_RC_CUSTOM_BIN", DEFAULT_RC_CUSTOM_BIN);
+  temp_var = set_if_not ("DEFAULT_RC_CUSTOM_SHARE", DEFAULT_RC_CUSTOM_SHARE);
+
+  temp_var = set_if_not ("DEFAULT_RC_ETC", DEFAULT_RC_ETC);
+
+  temp_var = set_if_not ("DEFAULT_RC_GENERATED", DEFAULT_RC_GENERATED);
+  temp_var = set_if_not ("DEFAULT_RC_GENERATED_BIN", DEFAULT_RC_GENERATED_BIN);
+  temp_var = set_if_not ("DEFAULT_RC_GENERATED_COLOR", DEFAULT_RC_GENERATED_COLOR);
+  temp_var = set_if_not ("DEFAULT_RC_GENERATED_SHARE", DEFAULT_RC_GENERATED_SHARE);
+
+  temp_var = set_if_not ("DEFAULT_RC_INFOPATH", DEFAULT_RC_INFOPATH);
+  temp_var = set_if_not ("DEFAULT_RC_MANPATH", DEFAULT_RC_MANPATH);
+  temp_var = set_if_not ("DEFAULT_RC_PATH", DEFAULT_RC_PATH);
+
+  temp_var = set_if_not ("DEFAULT_RC_SHARE", DEFAULT_RC_SHARE);
+
+  temp_var = set_if_not ("ENV", DEFAULT_RC_ENV);
+  temp_var = set_if_not ("INFOPATH", DEFAULT_INFOPATH_VALUE);
+  temp_var = set_if_not ("MANPATH", DEFAULT_MANPATH_VALUE);
+  temp_var = set_if_not ("PATH", DEFAULT_PATH_VALUE);
+  temp_var = set_if_not ("UNAME", UNAME);
+EOF
+)"
+
+  pattern="#define _CONFTYPES_H_"
+  _install_bash_block conftypes.h "${pattern}" "${conftypes_h}" _CONFTYPES_H_
+  pattern='  temp_var = set_if_not ("HOSTNAME", current_host_name);'
+  _install_bash_block variables.c "${pattern}" "${variables_c}" set_maxchild
+
+  bat config-top.h
+  bat conftypes.h
+  bat variables.c
+  exit
+  ./configure --prefix="${PREFIX}" \
+    --enable-alias \
+    --enable-alt-array-implementation \
+    --enable-arith-for-command \
+    --enable-array-variables \
+    --enable-brace-expansion \
+    --enable-casemod-attributes \
+    --enable-casemod-expansions \
+    --enable-command-timing \
+    --enable-cond-command \
+    --enable-cond-regexp \
+    --enable-coprocesses \
+    --enable-debugger \
+    --enable-direxpand-default \
+    --enable-directory-stack \
+    --enable-disabled-builtins \
+    --enable-dparen-arithmetic \
+    --enable-extended-glob-default \
+    --enable-function-import \
+    --enable-glob-asciiranges-default \
+    --enable-history \
+    --enable-job-control \
+    --enable-largefile \
+    --enable-mem-scramble \
+    --enable-multibyte \
+    --enable-net-redirections \
+    --enable-process-substitution \
+    --enable-progcomp \
+    --enable-prompt-string-decoding \
+    --enable-readline \
+    --enable-restricted \
+    --enable-select \
+    --enable-separate-helpfiles \
+    --enable-strict-posix-default \
+    --enable-translatable-strings \
+    --enable-threads=posix \
+    --enable-xpg-echo-default \
+    --with-included-gettext
+
+    make
+    make install
+}
+
+install_python() {
+  _extract
+}
+
+main() {
+  install=false; installed=false; url=false; version=false
+
+  for arg; do
+    case "$arg" in
+      -h | --help | help) help ;;
+      --install) install=true ;;
+      --installed) installed=true ;;
+      --pattern=*) PATTERN="${arg#*=}" ;;
+      --prefix=*) PREFIX="${arg##*=}" ;;
+      --url) url=true ;;
+      --version) version=true ;;
+      bash) PRODUCT="${arg}"; _url_gnu "${PRODUCT}" ;;
+      customized) echo "${CUSTOMIZED}"; exit ;;
+      list) : ;;
+      names) { echo "${PRODUCTS}"; _gnu_names; } | sort; exit ;;
+      gnu)
+        PATTERN_BASH=""
+        for i in $(iget ${URL_GNU} | awk -F '["/>]' '/\[DIR\]/ && ! /GNU/ && ! /L/ && ! /M/ { print $16 }'); do
+          _url_gnu "${i}"
+          echo "${i}[${VERSION}]: ${URL}"
+        done
+        exit
+        ;;
+      python) PRODUCT="${arg}" ;;
+      *) help "${arg}" ;;
+    esac
+  done
+
+  ETC="${PREFIX}/etc"
+
+  ! $installed || { _installed "${PRODUCT}" && echo "${INSTALLED}" && exit; }
+
+  [ "${VERSION-}" ] || "_url_${PRODUCT}"
+  [ "${VERSION-}" ] || echo >&2 "${PRODUCT}: no version"
+
+  if $install; then
+    "install_${PRODUCT}"
+  else
+    ! $url || echo "${URL}"
+    ! $version || echo "${VERSION}"
+    $url || $version || echo "${URL}"
+  fi
+}
+
+main "$@"

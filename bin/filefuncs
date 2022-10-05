@@ -5,7 +5,7 @@
 
 set -eu
 
-. "$(dirname "$0")/utils.sh"
+. "$(dirname "$0")/../.profile.dev"
 
 #######################################
 # show usage
