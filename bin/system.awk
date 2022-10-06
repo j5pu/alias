@@ -169,6 +169,9 @@ BEGIN {
     VALUES["RC_CUSTOM_RC_D"] = VALUES["RC_CUSTOM"]"/rc.d"
     # TODO: Aqui lo dejo... DOTFILES y ver si EL PREFIX lo dejo fijo o no y como añado el RC final si esta el DEV
     # TODO: Esto es una chorrada, generar los PATHS de RC etc. con un puto script y genero el codigo C y esto.
+    # TODO: bash_completions install... si es que necesito el RC para instalar el BASH leches. esto tiene sentido
+    # TODO: si tengo el fork de BASH .. al final para instalar el RC necesito GIT..
+    # TODO: enseñar el path config.log si hay error
     VALUES["RC_DOTFILES"] = dirname(RC)"/dotfiles"
     VALUES["RC_DOTFILES_SSH"] = VALUES["RC_DOTFILES"]"/.ssh"
     VALUES["RC_ETC"] = RC"/etc"

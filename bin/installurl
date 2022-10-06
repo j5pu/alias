@@ -224,7 +224,6 @@ install_bash() {
  \\\\\$? \\\[\\\e[1;32m\\\]\\\$\\\[\\\e[m\\\]\\\[\\\e[1;37m\\\] '"
   _install_bash_line config-top.h '#define SPROMPT ' "#define SPROMPT '\\\[\\\e[0;35m\\\]>\\\[\\\e[m\\\] '"
 
-  id='""'; id_like="${id}"
   if test -f /etc/os-release; then
     id="$(grep '^ID=' /etc/os-release | cut -d= -f2)"
     id_like="$(grep '^ID_LIKE=' /etc/os-release | cut -d= -f2)"
@@ -252,7 +251,7 @@ install_bash() {
 #  define DEFAULT_RC_GENERATED_SHARE DEFAULT_RC_GENERATED "/share"
 
 #  define DEFAULT_RC_ENV DEFAULT_RC_ETC "/profile"
-#  define DEFAULT_RC_INFOPATH DEFAULT_RC_SHARE "/info:" DEFAULT_RC_CUSTOM_SHARE "/info:" DEFAULT_RC_GENERATED_SHARE
+#  define DEFAULT_RC_INFOPATH DEFAULT_RC_SHARE "/info:" DEFAULT_RC_CUSTOM_SHARE "/info:" DEFAULT_RC_GENERATED_SHARE\
  "/info"
 #  define DEFAULT_RC_MANPATH DEFAULT_RC_SHARE "/man:" DEFAULT_RC_CUSTOM_SHARE "/man:" DEFAULT_RC_GENERATED_SHARE "/man"
 #  define DEFAULT_RC_PATH DEFAULT_RC_BIN ":" DEFAULT_RC "/sbin:" DEFAULT_RC_CUSTOM_BIN ":" DEFAULT_RC_GENERATED_BIN ":"\
@@ -339,10 +338,10 @@ EOF
   pattern='  temp_var = set_if_not ("HOSTNAME", current_host_name);'
   _install_bash_block variables.c "${pattern}" "${variables_c}" set_maxchild
 
-  bat config-top.h
-  bat conftypes.h
-  bat variables.c
-  exit
+#  bat config-top.h
+#  bat conftypes.h
+#  bat variables.c
+
   ./configure --prefix="${PREFIX}" \
     --enable-alias \
     --enable-alt-array-implementation \
