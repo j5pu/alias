@@ -172,6 +172,8 @@ BEGIN {
     # TODO: bash_completions install... si es que necesito el RC para instalar el BASH leches. esto tiene sentido
     # TODO: si tengo el fork de BASH .. al final para instalar el RC necesito GIT..
     # TODO: enseñar el path config.log si hay error
+    # TODO: AQUI LO DEJO DEL TODO: estaba tambien con lo de git tree y con el git token además. y los manuales y su puta madre
+    # TODO: y estaba con el stdin.sh y probarlo que iba a meterlo en los lower, upper, etc. cuando estaba con los git y los help
     VALUES["RC_DOTFILES"] = dirname(RC)"/dotfiles"
     VALUES["RC_DOTFILES_SSH"] = VALUES["RC_DOTFILES"]"/.ssh"
     VALUES["RC_ETC"] = RC"/etc"

@@ -12,6 +12,7 @@
 
 set -eu
 
+# TODO: lo dejo sale error al compilar  "installurl bash --install --prefix=/Users/j5pu/rc/bash"
 [ ! "${TRACE-}" ] || set -x
 
 . "$(dirname "$0")/../.profile.dev"
@@ -218,11 +219,6 @@ install_bash() {
   _install_bash_line config-top.h '#define HISTSIZE_DEFAULT "500"' '#define HISTSIZE_DEFAULT -1'
   _install_bash_line config-top.h '#  define MULTIPLE_COPROCS 0' '#  define MULTIPLE_COPROCS 1'
   _install_bash_line config-top.h ' #define SSH_SOURCE_BASHRC ' '#define SSH_SOURCE_BASHRC'
-  # \[: must be escaped \\[
-  _install_bash_line config-top.h '#define PPROMPT ' \
-   "#define PPROMPT '\\\[\\\e[0;32m\\\]\\\u\\\[\\\e[m\\\] \\\[\\\e[1;34m\\\]\\\w\\\[\\\e[m\\\]\
- \\\\\$? \\\[\\\e[1;32m\\\]\\\$\\\[\\\e[m\\\]\\\[\\\e[1;37m\\\] '"
-  _install_bash_line config-top.h '#define SPROMPT ' "#define SPROMPT '\\\[\\\e[0;35m\\\]>\\\[\\\e[m\\\] '"
 
   if test -f /etc/os-release; then
     id="$(grep '^ID=' /etc/os-release | cut -d= -f2)"

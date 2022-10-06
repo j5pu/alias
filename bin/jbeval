@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+
+#
+# updates license
+
+set -euo pipefail
+
+APPLICATIONS="CLion IDEA PyCharm"
+JETBRAINS="/Users/Shared/JetBrains"
+
+cd "${JETBRAINS?}"
+
+applications="$(mktemp)"
+for i in ${APPLICATIONS}; do
+  find /Applications -mindepth 1 -maxdepth 1 -type d  -name "*${i}*.app" -exec basename "{}" \; >> "${applications}"
+done
+
+JETBRAINS_CONFIG="${PWD}/config"
+
+JETBRAINS_CONFIGS="$(find "${JETBRAINS_CONFIG}" -type d -mindepth 1 -maxdepth 1 -exec basename "{}" \;)"
+
+declare -A OPEN
+while read -r i; do
+  OPEN["${i}"]="/Applications/${i}"
+done < "${applications}"
+
+#######################################
+# description
+# Arguments:
+#   1
+#######################################
+show() { read -n 1 -s -r -p "${1} [press any key to continue]: "; echo; }
+
+#######################################
+# description
+# Globals:
+#   JETBRAINS_CONFIG
+#   JETBRAINS_CONFIGS
+#   OPEN
+# Arguments:
+#  None
+#######################################
+main() {
+  local file i tmp
+  open https://github.com
+  show "GitHub: Log in with gmail+MMYY"
+
+  open "https://github.com/settings/billing"
+  show "GitHub: Cancel Copilot and Delete previous gmail+MMYY"
+
+  open https://account.jetbrains.com/login
+  show "Safari: delete account, cookies and web form ⌘, for JetBrains and GitHub"
+
+  open /System/Applications/Utilities/Keychain\ Access.app/
+  show "Keychain <-: delete JetBrains account"
+
+  for i in "${!OPEN[@]}"; do
+    open "${OPEN["${i}"]}"
+    show "${i}: 'Manage Licenses...' ⇧⌘A and log out"
+    show "${i}: 'GitHub Copilot...' log out"
+  done
+  
+  for i in ${JETBRAINS_CONFIGS} Toolbox; do
+    pkill -9 -f "${i}" 2>/dev/null || true
+    pkill -9 -f "${i,,}" 2>/dev/null || true
+  done
+
+  for i in accounts.json download logs statistics; do
+    rm -rf ~/.local/share/JetBrains/Toolbox/"${i}"
+    # TODO: macOS
+  done
+
+  rm -f ~/Library/Preferences/com.apple.java.util.prefs.plist
+  sudo rm -rf ~/.java/.userPrefs
+
+  cd "${JETBRAINS_CONFIG}"
+  find . -type f -mindepth 2 -maxdepth 2 -name "*.key" -delete
+  find . -type f -mindepth 2 -maxdepth 2 -name "*.license" -delete
+  find . -type f -mindepth 2 -maxdepth 2 -name "port" -delete
+  find . -type f -mindepth 2 -maxdepth 2 -name "port.lock" -delete
+  find . -type f -mindepth 2 -maxdepth 2 -name "user.web.token" -delete
+  tmp="$(mktemp)"
+  while read -r file; do
+    sed '/evlsprt/d' "${file}" >"${tmp}"
+    cp "${tmp}" "${file}"
+  done < <(find . -type f -path "*/options/other.xml")
+  rm -rf ~/.config/JetBrains
+  rm -f ~/Library/Preferences/com.jetbrains.*.plist
+  rm -f ~/Library/Preferences/jetbrains.*.*.plist
+  killall cfprefsd 2>/dev/null || true
+  rm -f ~/.cache/log/JetBrains/*/token
+  
+#  open https://www.icloud.com/mail/
+#  show "iCloud: remove email alias and create new email alias"
+
+  open https://account.jetbrains.com/login
+  show "Safari: create new account using gmail+"
+
+  open https://github.com
+  show "GitHub: log out from ${GIT}"
+  show "GitHub: Sign up with gmail+MMYY and username gmailMMYY"
+  open https://gmail.com
+  show "Gmail: Copy Code"
+  open https://github.com/github-copilot/signup
+  show "GitHub: 100 Continental Dr, Newark, DE 19713, United States"
+  open /System/Applications/Calendar.app
+  show "Calendar: Set a reminder to cancel subscription"
+
+#  open https://www.icloud.com/mail/
+#  show "iCloud: confirm email"
+
+  for i in "${!OPEN[@]}"; do
+    open "${OPEN["${i}"]}"
+    show "${i}: login with the new account"
+    show "${i}: GitHub Copilot Login with gmailMMYY"
+  done
+
+  open https://github.com
+  show "GitHub: log in with ${GIT}"
+}
+
+main "$@"
