@@ -13,6 +13,8 @@
 set -eu
 
 # TODO: lo dejo sale error al compilar  "installurl bash --install --prefix=/Users/j5pu/rc/bash"
+# TODO: y me faltaba las opciones que estaba de listar los paquetes de gnu que daba error en la version algunos...
+
 [ ! "${TRACE-}" ] || set -x
 
 . "$(dirname "$0")/../.profile.dev"
