@@ -1,4 +1,5 @@
 .rc.sh
+system.sh
 custom/*.d/[A-Z,a-z,0-9]*
 generated/profile.d/bash.sh
 generated/profile.d/brew.sh

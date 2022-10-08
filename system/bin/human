@@ -1,0 +1,46 @@
+#!/usr/bin/env -S awk -f
+
+# toiec.awk 1023 1024
+# 1023B
+# 1K
+# toiec.awk 1048575 1048576
+# 1024.0K
+# 1M
+# toiec.awk 1073741823 1073741824
+# 1024.0M
+# 1G
+# toiec.awk 1099511627775 1099511627776
+# 1024.0G
+# 1.0T
+
+BEGIN {
+    if ( ARGC == 1 ) { print "toiec.awk: provide at least one argument with the number of bytes"; exit 1 }
+    for ( _index = 1; _index < ARGC; _index++ ) {
+        FORMAT = ".1f"
+        VALUE = ARGV[_index]
+        if ( value("B", "K") == 0 ) { if ( SYMBOL == "B" ) { FORMAT = "d" } }
+        else if ( value("K", "M" ) == 0 ) { }
+        else if ( value("M", "G") == 0 ) { }
+        else if ( value("G", "T") == 0 ) { }
+        else if ( value("T", "P") == 0 ) { }
+        else if ( value( "P") == 0 ) { }
+        else exit 1
+        printf("%" FORMAT SYMBOL "\n", PRINT)
+    }
+    exit
+}
+
+function value (min, max) {
+    PREV = VALUE
+    VALUE = PREV / 1024
+    if ( VALUE < 1 ) {
+        PRINT = PREV
+        SYMBOL = min
+        return 0
+    } else if ( VALUE == 1 ) {
+        PRINT = VALUE
+        SYMBOL = max
+        return 0
+    }
+    return 1
+}

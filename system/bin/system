@@ -1,0 +1,89 @@
+#!/bin/sh
+
+set -eu
+
+hook() {
+  if ! command -v "${0##*/}" >/dev/null || [ ! "${SYSTEM_SH-}" ] || ! test -f "$0".sh; then
+    tmp="$(mktemp)"
+    BASE_INFOPATH="/usr/local/share/info:/usr/share/info"
+    BASE_MANPATH="/usr/local/share/man:/usr/share/man:"
+    BASE_PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    BREW_PREFIX="/usr/local"
+    DOCKER_CONTAINER=true; test -f /.dockerenv || DOCKER_CONTAINER=false
+    PATH="${BASE_PATH}"
+    UNAME="$(uname -s)"
+
+    if [ "${UNAME}" = "Darwin" ]; then
+      BASE_INFOPATH="${BASE_INFOPATH}:${CLT}/usr/share/info"
+      BASE_MANPATH="${BASE_MANPATH}${CLT}/usr/share/man:"
+      BASE_PATH="${BASE_PATH}:${CLT}/usr/bin"
+      CLT="/Library/Developer/CommandLineTools"
+      dist_id="${UNAME}"
+      dist_id_like="${UNAME}"
+      MACOS=true
+      OSNAME="macOS"
+    else
+      BREW_PREFIX="/home/linuxbrew/.linuxbrew"
+      BASE_INFOPATH="${BREW_PREFIX}/share/info:${BASE_INFOPATH}"
+      BASE_MANPATH="${BREW_PREFIX}/share/man:${BASE_MANPATH}"
+      BASE_PATH="${BREW_PREFIX}/bin:${BASE_PATH}"
+      MACOS=false
+      if test -f /etc/os-release; then
+        sed 's/^/DIST_/g; s/"rhel fedora"/"fedora"/' /etc/os-release > "${tmp}"
+        . "${tmp}"
+        [ "${DIST_ID_LIKE-}" ] || dist_id_like="${DIST_ID-}"
+      elif test -f /etc/nix/nix.conf; then
+        dist_id=""
+        dist_id_like="nix"
+      elif test -f /bin/busybox; then
+        dist_id=""
+        dist_id_like="busybox"
+      fi
+    fi
+
+    bin="$(cd "$(dirname "$0")"; pwd -P)"
+    : "${dist_id_like=${DIST_ID_LIKE}}"
+    BASE_PATH="${bin}:${dist_id_like:+${bin}:${dist_id_like}:}${BASE_PATH}"
+
+# TODO: meter lo que tenia del puto sistema del procesador y del brew.sh y el manpath... y el rc... a tomar por culo
+#    y el MANTPATH y solo iba a instalar el puto x11 joderrrrrrrrrrrrrrrr solo reset del path actualiozar path si el comando no esta en PATH
+#     poner un bin.d o shims o
+    cat >> "${tmp}" <<EOF
+
+BASE_INFOPATH="${BASE_INFOPATH}"
+BASE_MANPATH="${BASE_MANPATH}"
+BASE_PATH="${BASE_PATH}"
+BREW_PREFIX="${BREW_PREFIX}"
+CLT="${CLT-}"
+$([ "${DIST_ID-}" ] || echo "DIST_ID=\"${dist_id-}\"")
+$([ "${DIST_ID_LIKE-}" ] || echo "DIST_ID_LIKE=\"${dist_id_like-}\"")
+DOCKER_CONTAINER=${DOCKER_CONTAINER}
+MACOS=${MACOS}
+MACHINE="$(uname -m)"
+OSNAME="${OSNAME:-$(uname -o)}"
+SSH=true; [ "\${SSH_CONNECTION-}" ] || SSH=false
+SYSTEM="${bin%/*}"
+SYSTEM_SH="${bin}/${0##*/}.sh"
+UNAME="${UNAME}"
+EOF
+
+    . "${tmp}"
+
+    cmp -s "${tmp}" "${SYSTEM_SH}" 2>/dev/null || mv "${tmp}" "${SYSTEM_SH}"
+  fi
+  [ ! "${SYSTEM_SH-}" ] || . "$0".sh
+}
+
+main() {
+  hook=false
+  for arg; do
+    case "${arg}" in
+      hook) hook=true ;;
+      shims) : ;;
+    esac
+  done
+  hook
+  ! $hook || { echo "${SYSTEM_SH}"; exit; }
+}
+
+main "$@"

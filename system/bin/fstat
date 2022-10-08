@@ -1,13 +1,12 @@
 #!/bin/sh
 
 #
-# stat print for Darwin and Linux (default --id)
+# stat print for Darwin and Linux (default --owner and cwd)
 
 set -eu
 
-. "$(dirname "$0")/utils.sh"
-
 Darwin() {
+  # shellcheck disable=SC2046
   case "${OPTION}" in
     --access) FMT="Sa"; set -- -t "%F %T %z" "$@" ;;
     --access@) FMT="a" ;;
@@ -18,7 +17,7 @@ Darwin() {
     --change@) FMT="c" ;;
     --gid) FMT="g" ;;
     --group) FMT="Sg" ;;
-    --human) FMT="z"; "${OPTION##--}" "$@" ;;
+    --human) FMT="z"; "$(dirname "$0")/${OPTION##--}" $("${UNAME}_stat" "$@"); exit; ;;
     --id) FMT="u" ;;
     --links) FMT="l" ;;
     --modification) FMT="Sm"; set -- -t "%F %T %z" "$@" ;;
@@ -33,20 +32,26 @@ Darwin() {
   "${UNAME}_stat" "$@"
 }
 
-Darwin_birth() { date -j -r "$("${UNAME}_stat" "$@")" +"%F %T %z"; exit; }
+Darwin_birth() {
+  for arg; do
+    date -j -r "$("${UNAME}_stat" "${arg}")" +"%F %T %z";
+  done
+  exit
+}
 
 Darwin_stat() { stat -f "%${FMT}" "$@"; }
 
 help() {
-  [ ! "${1-}" ] || >&2 echo "${0##*/}: Invalid option: ${OPTION}" && echo
-
-  >&2 cat <<EOF
-usage: ${0##*/}
-   or: ${0##*/} [option] file...
+  cat >&2 <<EOF
+usage: ${0##*/} [option] [file...]
+   or: ${0##*/}
    or: ${0##*/} <file>
-   or: ${0##*/} -id <file1> <file2>
+   or: ${0##*/} --id <file>
+   or: ${0##*/} <file> --human
+   or: ${0##*/} --access <file1> <file2>
+   or: ${0##*/} <file1> <file2> --birth
 
-stat print parser for Linux an Darwin (default: --owner)
+stat print parser for Linux an Darwin (default: --owner, and cwd)
 
 Commands:
    -h, --help         display this help and exit.
@@ -75,12 +80,12 @@ Options:
                       Regular File/regular file, Symbolic Link/symbolic link) will be converted to:
                       block, directory, regular and symbolic
 EOF
+  [ ! "${1-}" ] || echo >&2 && echo "${0##*/}: invalid option/one option allowed: ${OPTION}${2:+, $2}"
   exit "${1:-0}"
 }
 
-human() { numfmt --to=iec "$("${UNAME}_stat" "$@")"; exit; }
-
 Linux() {
+  # shellcheck disable=SC2046
   case "${OPTION}" in
     --access) FMT="x"; "${UNAME}_seconds" "$@" ;;
     --access@) FMT="X" ;;
@@ -91,7 +96,7 @@ Linux() {
     --change@) FMT="Z" ;;
     --gid) FMT="g" ;;
     --group) FMT="G" ;;
-    --human) FMT="s"; "${OPTION##--}" "$@" ;;
+    --human) FMT="s"; "$(dirname "$0")/${OPTION##--}" $("${UNAME}_stat" "$@"); exit; ;;
     --id) FMT="u" ;;
     --links) FMT="h" ;;
     --modification) FMT="y"; "${UNAME}_seconds" "$@" ;;
@@ -115,12 +120,22 @@ type() { "${UNAME}_stat" "$@" | awk '{ print tolower($1) }'; exit; }
 main() {
   [ "${UNAME-}" ] || UNAME="$(uname -s)"
 
-  case "$1" in
-    -h|--help) help ;;
-    --list) grep -o -- " --[a-z].*) " "$0" | awk -F ')' '{ print $1 }' | sort -u; exit ;;
-    --*) OPTION="$1"; shift ;;
-    *) OPTION="--owner"
-  esac
+  test $# -ne 0 || set -- .
+
+  for arg; do
+    shift
+    case "${arg}" in
+      -h|--help) help ;;
+      --list) grep -o -- " --[a-z].*) " "$0" | awk -F ')' '{ print $1 }' | sort -u; exit ;;
+      --*)
+        [ ! "${OPTION-}" ] || help 1 "${arg}"
+        OPTION="${arg}"; continue ;;
+    esac
+    set -- "$@" "${arg}"
+  done
+  [ "${OPTION-}" ] || OPTION="--owner"
+
+  test $# -ne 0 || set -- .
 
   "${UNAME}" "$@"
 }
