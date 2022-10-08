@@ -1,0 +1,7 @@
+#!/bin/sh
+
+#
+# Like pbcopy
+
+add ppa...
+pm install "${0##/*}"

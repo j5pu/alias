@@ -4,4 +4,4 @@
 
 set -eu
 
-cat "$1"/* 2>/dev/null | tr '\n' ':' | sed 's/:$//g'
+cat "$1"/* 2>/dev/null | tr '\n' ':' | sed 's/:$//g' | grep -v "^$" | sed 's/^/:/'

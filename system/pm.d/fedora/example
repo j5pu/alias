@@ -1,0 +1,6 @@
+#!/bin/sh
+
+#
+# Like pbcopy
+
+pm install "${0##/*}"

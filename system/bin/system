@@ -11,9 +11,15 @@ hook() {
     BREW_PREFIX="/usr/local"
     DOCKER_CONTAINER=true; test -f /.dockerenv || DOCKER_CONTAINER=false
     PATH="${BASE_PATH}"
+    MACHINE="$(uname -m)"
     UNAME="$(uname -s)"
+    Homebrew="/Homebrew"
 
     if [ "${UNAME}" = "Darwin" ]; then
+      if [ "${MACHINE}" = "arm64" ]; then
+        BREW_PREFIX="/opt/homebrew"
+        repo=""
+      fi
       BASE_INFOPATH="${BASE_INFOPATH}:${CLT}/usr/share/info"
       BASE_MANPATH="${BASE_MANPATH}${CLT}/usr/share/man:"
       BASE_PATH="${BASE_PATH}:${CLT}/usr/bin"
@@ -54,6 +60,7 @@ BASE_INFOPATH="${BASE_INFOPATH}"
 BASE_MANPATH="${BASE_MANPATH}"
 BASE_PATH="${BASE_PATH}"
 BREW_PREFIX="${BREW_PREFIX}"
+BREW_SH="${BREW_PREFIX}${Homebrew}/Library/Homebrew/brew.sh"
 CLT="${CLT-}"
 $([ "${DIST_ID-}" ] || echo "DIST_ID=\"${dist_id-}\"")
 $([ "${DIST_ID_LIKE-}" ] || echo "DIST_ID_LIKE=\"${dist_id_like-}\"")
