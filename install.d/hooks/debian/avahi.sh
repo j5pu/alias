@@ -19,9 +19,6 @@ if ! dpkg -s avahi-daemon | grep -q "Status: install ok installed"; then
   RESTART=true
 fi
 
-sudo mkdir -p /etc/systemd/system
-sudo x11vnc -storepasswd "$(cat /etc/password)" /etc/x11vnc.passwd
-
 pattern="#enable-reflector=no"
 if grep "^${pattern}$" /etc/avahi/avahi-daemon.conf; then
   sed -i "s/^${pattern}$/enable-reflector=yes/"

@@ -2,8 +2,8 @@
 
 set -eu
 
-REBOOT=false
 tmp="$(mktemp)"
+: "${PASSWORD=$(cat /etc/password 2>/dev/null ||true)}"
 
 compare() {
   tee "${tmp}" >/dev/null
@@ -21,7 +21,7 @@ if ! dpkg -s x11vnc | grep -q "Status: install ok installed"; then
 fi
 
 sudo mkdir -p /etc/systemd/system
-sudo x11vnc -storepasswd "$(cat /etc/password)" /etc/x11vnc.passwd
+sudo x11vnc -storepasswd "${PASSWORD}" /etc/x11vnc.passwd
 
 compare /etc/systemd/system/x11vnc.service <<EOF
 [Unit]
