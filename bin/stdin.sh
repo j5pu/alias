@@ -3,6 +3,7 @@
 #
 # Append stdin lines to arguments if not tty, and either stdin has content or is piped
 # Demo: /Users/Shared/JetBrains/scratch/scratches/Shell/shell/stdin show
+# TODO: estaba con los tests
 echo $PATH
 echo $ENV
 set -eu
