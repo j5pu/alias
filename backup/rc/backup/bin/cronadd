@@ -1,0 +1,54 @@
+#!/bin/sh
+
+STDERR=1 . helper.sh
+
+#######################################
+# check if line in file
+# Arguments:
+#   file        the file
+#   line        the line to add to cron
+# Returns:
+#  1 if line not in file or empty
+#######################################
+hasline() {
+  while read -r line; do
+    [ "$*" != "${line}" ] || return 0
+  done
+  false
+}
+
+#######################################
+# list cron jobs
+# Arguments:
+#   None
+#######################################
+list() { crontab -l 2>/dev/null || true; }
+
+#######################################
+# remove line from file
+# Arguments:
+#   file        the file
+#   line        the line to add to cron
+#######################################
+remove() {
+  while read -r line; do
+    [ "$*" = "${line}" ] || echo "$*"
+  done
+}
+
+main() {
+  if [ "${1}" = 'rm' ]; then
+    shift
+    list | hasline "$*" || show Cron Not Found: "$*" || exit
+    list | remove "$*" | crontab
+    ! list | hasline "$*" || show Cron Not Removed: "$*" || exit
+    show Cron Deleted: "$*"
+  else
+    ! list | hasline "$*" || exit 0
+    printf '%s\n' "$(list)" "$*" | awk 'NF' | uniq | crontab
+    list | hasline "$*" || show Cron Not Added: "$*" || exit
+    show Cron Added: "$*"
+  fi
+}
+
+main "$@"

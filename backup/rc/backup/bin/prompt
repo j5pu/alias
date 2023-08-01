@@ -1,0 +1,87 @@
+#!/bin/sh
+# shellcheck disable=SC3028,SC3054,SC2153
+
+. color.sh
+
+brackets() { show "${Grey}" "["; show "$1" "$2"; show "${Grey}" "] "; }
+
+container() { [ "${CONTAINER-0}" -eq 0 ] || { host "${CubeIcon}"; brackets "${host}" "${DIST_ID}"; }; }
+
+directory() {
+  pwd="$(pwd)"
+  home="$(echo "${HOME}" | awk -v RS=/ 'END{print NR-1}')"
+  total="$(echo "${pwd}" | awk -v RS=/ 'END{print NR-1}')"
+  color="${Blue}"; test -w "${pwd}" || color="${Blue}"
+  case "${pwd}" in
+    "/") color="${Red}"; directories="/" ;;
+    "${HOME}") directories="${TildeIcon}" ;;
+    "${HOME}"*)
+      directories="${pwd##"${HOME}/"}"
+      home="$(echo "${HOME}" | awk -v RS=/ 'END{print NR-1}')"
+      final="$((total-home))"
+      [ $final -lt "$((directory+1))" ] || ellipsis "${EllipsisIcon} " "${directories}"
+      ;;
+    *)
+      directories="${pwd#?}"
+      final="$((total-home))"
+      [ "${total}" -lt "$((directory))" ] || ellipsis "${EllipsisIcon} " "${directories}"
+      ;;
+  esac
+  show "${color}" "${directories} "
+}
+
+ellipsis() { directories="${2:+$1}$(echo "${2:-"${pwd}"}" | tr '/' '\n' | tail -3 | newline-to "/")"; }
+
+host() { show "${host}" "$1 ${HOST} "; }
+
+ps2() { if [ "${1-}" = "ps2" ]; then show "${Magenta}" "${VerboseIcon}"; else exit; fi; }
+
+rc() {
+  if [ "${rc}" -eq 0 ]; then
+    show "${Green}" "${OkIcon} "
+  else
+    show "${Red}" "${rc} "
+  fi
+}
+
+shell() { [ ! "${1-}" ] || [ "$1" = "bash-4" ] || [ ! "${1-}" ] || show "${Grey}" "${1#posix-} "; }
+
+show() { printf -- "%${string}" "${open}${1}${close}" "${2}" "${normal}"; }
+
+ssh() { [ "${SSH-0}" -eq 0 ] || host "${HarpoonIcon}"; }
+
+title() { printf -- "%${string}" "${open}\033]0;\h@\u: \w\a${close}"; if [ "${1-}" = "title" ]; then exit; fi; }
+
+user() { color="${Red}"; [ "$(id -u)" -eq 0 ] || color="${Green}"; show "${color}" "${RightIcon}"; }
+
+vcs() { cmd git || return 0 ; }
+
+main() {
+  rc="$(($1))"
+  directory=3
+  host="${CyanDim}"
+  string="b"
+  suffix=""
+  case "$2" in
+    dash|ksh) open=""; close="" ;;  # printf -- "%b" '\033]0;\h@\u: \w\a'
+    zsh) suffix="Zsh"; open="%{"; close="%}" ;;
+    *) string="s"; open="\["; close="\]" ;;  # printf -- "%s" "\[\e]0;\h@\u: \w\a\]"
+  esac
+  normal="${open}${Normal}${close}"
+
+  ps2 "$1"
+
+  title "$1"
+
+  rc
+  directory
+  ssh
+  container
+  shell "$2"
+  vcs
+  user
+
+  exit $rc
+}
+
+main "$@"

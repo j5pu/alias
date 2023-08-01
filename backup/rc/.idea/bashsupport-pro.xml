@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="bashsupport-pro.project">
+    <scriptLibraries>
+      <library name="bats.bash" />
+      <library name="git" />
+      <library name="rc">
+        <sources>
+          <source path="rc/lib" recursive="true" />
+          <source path="rc/profile.d" recursive="true" />
+          <source path="rc/rc.d" recursive="true" />
+        </sources>
+        <targets>
+          <target path="tests" recursive="true" />
+          <target path="rc" recursive="true" />
+        </targets>
+      </library>
+    </scriptLibraries>
+    <globalVariables>
+      <var name=".sh.file" />
+      <var name="endif" />
+      <var name="if" />
+    </globalVariables>
+  </component>
+</project>
