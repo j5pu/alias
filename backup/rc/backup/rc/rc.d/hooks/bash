@@ -1,3 +1,0 @@
-# shellcheck shell=bash disable=SC2046
-shopt -s checkwinsize execfail histappend
-declare -fx $(compgen -A function)  # to have them in sudo if I do not add .bashrc
