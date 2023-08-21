@@ -1,2 +1,0 @@
-# shellcheck shell=sh
-PS1="\$(prompt \$? ${SH})"

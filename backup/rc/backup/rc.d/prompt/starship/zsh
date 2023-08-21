@@ -1,3 +1,0 @@
-# shellcheck shell=zsh disable=SC2034
-
-precmd_functions+=(_title)
